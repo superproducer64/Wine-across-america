@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect } from 'react';
-import { View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -15,7 +15,9 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from '@/navigation/RootNavigator';
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -28,24 +30,18 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (Platform.OS !== 'web' && (fontsLoaded || fontError)) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded || fontError) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) {
+  if (Platform.OS !== 'web' && !fontsLoaded && !fontError) {
     return null;
   }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <View style={{ flex: 1 }}>
         <RootNavigator />
       </View>
     </GestureHandlerRootView>
