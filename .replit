@@ -26,7 +26,10 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx expo start --web --port 5000 --clear"
+args = """
+printf 'EXPO_PUBLIC_SUPABASE_URL=%s
+EXPO_PUBLIC_SUPABASE_ANON_KEY=%s
+' \"$EXPO_PUBLIC_SUPABASE_URL\" \"$EXPO_PUBLIC_SUPABASE_ANON_KEY\" > .env.local && npx expo start --web --port 5000 --clear"""
 waitForPort = 5000
 
 [[ports]]
