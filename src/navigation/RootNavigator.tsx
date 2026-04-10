@@ -23,6 +23,8 @@ export function RootNavigator() {
       if (session?.user) {
         checkSubscription(session.user.id);
       }
+    }).catch(() => {
+      setSession(null);
     });
 
     // Listen for auth state changes
