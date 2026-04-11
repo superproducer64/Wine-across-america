@@ -55,5 +55,9 @@
     "babel-plugin-module-resolver": "^5.0.3",
     "typescript": "~5.3.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@xmldom/xmldom": "^0.8.12",
+    "tar": "^7.5.11"
+  }
 }
