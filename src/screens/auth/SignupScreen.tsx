@@ -40,12 +40,18 @@ export function SignupScreen({ navigation }: Props) {
     }
     setLoading(true);
     try {
-      await signUpWithEmail(email.trim(), password, name.trim());
-      Alert.alert(
-        'Check your email',
-        'We sent a confirmation link. Please verify your email before signing in.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-      );
+      const data = await signUpWithEmail(email.trim(), password, name.trim());
+      if (data.session) {
+        // Email confirmation is disabled — user is already signed in.
+        // The auth listener in RootNavigator will navigate to the main app automatically.
+      } else {
+        // Email confirmation is required — prompt the user to check their inbox.
+        Alert.alert(
+          'Check your email',
+          'We sent a confirmation link. Please verify your email before signing in.',
+          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        );
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign up failed.';
       Alert.alert('Error', message);
