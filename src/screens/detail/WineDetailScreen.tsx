@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Pressable,
   ActivityIndicator,
+  Share,
+  Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -20,12 +22,68 @@ import { MainStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'WineDetail'>;
 
+function buildShareText(entry: WineEntry): string {
+  const lines: string[] = [];
+
+  const vintage = entry.vintage ? ` ${entry.vintage}` : '';
+  lines.push(`🍷 ${entry.name || 'Untitled Wine'}${vintage}`);
+
+  if (entry.producer) lines.push(entry.producer);
+
+  const origin = [entry.appellation, entry.region, entry.country]
+    .filter(Boolean)
+    .join(', ');
+  if (origin) lines.push(origin);
+
+  lines.push('');
+
+  if (entry.technical_score) {
+    lines.push(`Technical Score: ${entry.technical_score}/100`);
+  }
+
+  if (entry.aromas_l1.length > 0) {
+    lines.push(`Aromas: ${entry.aromas_l1.join(', ')}`);
+  }
+
+  if (entry.grapes.length > 0) {
+    lines.push(`Grapes: ${entry.grapes.join(', ')}`);
+  }
+
+  if (entry.free_notes) {
+    lines.push('');
+    lines.push(`"${entry.free_notes}"`);
+  }
+
+  lines.push('');
+
+  if (entry.location_name) {
+    lines.push(`📍 ${entry.location_name}`);
+  }
+
+  lines.push(
+    `🗓 ${new Date(entry.tasting_date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })}`
+  );
+
+  if (entry.want_another_glass) lines.push('🥂 Would have another glass');
+  if (entry.want_to_buy) lines.push('🛒 Would buy a bottle');
+
+  lines.push('');
+  lines.push('Logged with Pour Across America');
+
+  return lines.join('\n');
+}
+
 export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const [entry, setEntry] = useState<WineEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [shareToast, setShareToast] = useState('');
   const { removeEntry } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
 
@@ -43,6 +101,37 @@ export function WineDetailScreen({ route, navigation }: Props) {
     setDeleting(true);
     await removeEntry(entryId);
     navigation.goBack();
+  };
+
+  const handleShare = async () => {
+    if (!entry) return;
+    const text = buildShareText(entry);
+    const title = `${entry.name || 'Wine'}${entry.vintage ? ` ${entry.vintage}` : ''}`;
+
+    if (Platform.OS === 'web') {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          await navigator.share({ title, text });
+        } catch {
+          // user cancelled — do nothing
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(text);
+          setShareToast('Copied to clipboard!');
+          setTimeout(() => setShareToast(''), 3000);
+        } catch {
+          setShareToast('Could not copy — please copy manually.');
+          setTimeout(() => setShareToast(''), 3000);
+        }
+      }
+    } else {
+      try {
+        await Share.share({ message: text, title });
+      } catch {
+        // user cancelled — do nothing
+      }
+    }
   };
 
   if (loading) {
@@ -73,21 +162,39 @@ export function WineDetailScreen({ route, navigation }: Props) {
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn}>
           <Text style={styles.navBtnText}>‹ Back</Text>
         </Pressable>
-        {confirmDelete ? (
-          <View style={styles.deleteConfirmRow}>
-            <Pressable onPress={() => setConfirmDelete(false)} style={styles.navBtn}>
-              <Text style={styles.navBtnText}>Cancel</Text>
+
+        <View style={styles.navRight}>
+          {/* Share button */}
+          {!confirmDelete && (
+            <Pressable onPress={handleShare} style={styles.navBtn}>
+              <Text style={styles.shareText}>Share</Text>
             </Pressable>
-            <Pressable onPress={handleDelete} disabled={deleting} style={styles.navBtn}>
-              <Text style={styles.deleteText}>{deleting ? 'Deleting…' : 'Confirm Delete'}</Text>
+          )}
+
+          {/* Delete flow */}
+          {confirmDelete ? (
+            <View style={styles.deleteConfirmRow}>
+              <Pressable onPress={() => setConfirmDelete(false)} style={styles.navBtn}>
+                <Text style={styles.navBtnText}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleDelete} disabled={deleting} style={styles.navBtn}>
+                <Text style={styles.deleteText}>{deleting ? 'Deleting…' : 'Confirm Delete'}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable onPress={() => setConfirmDelete(true)} style={styles.navBtn}>
+              <Text style={styles.deleteText}>Delete</Text>
             </Pressable>
-          </View>
-        ) : (
-          <Pressable onPress={() => setConfirmDelete(true)} style={styles.navBtn}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </Pressable>
-        )}
+          )}
+        </View>
       </View>
+
+      {/* Clipboard toast (web fallback) */}
+      {shareToast !== '' && (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>{shareToast}</Text>
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -142,6 +249,11 @@ export function WineDetailScreen({ route, navigation }: Props) {
           </View>
         )}
 
+        {/* Share button at bottom */}
+        <Pressable onPress={handleShare} style={styles.shareButton}>
+          <Text style={styles.shareButtonText}>⬆ Share this Wine Card</Text>
+        </Pressable>
+
         <View style={{ height: Spacing.huge }} />
       </ScrollView>
     </SafeAreaView>
@@ -159,6 +271,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
   },
+  navRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
   navBtn: {
     paddingVertical: 6,
     paddingHorizontal: 4,
@@ -173,10 +290,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.gold,
   },
+  shareText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 15,
+    color: Colors.gold,
+  },
   deleteText: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 15,
     color: Colors.red,
+  },
+  toast: {
+    backgroundColor: Colors.ink,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  toastText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.white,
   },
   content: {
     padding: Spacing.xl,
@@ -242,6 +378,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 14,
     color: Colors.inkMid,
+  },
+  shareButton: {
+    borderWidth: 1,
+    borderColor: Colors.borderStrong,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+  },
+  shareButtonText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 14,
+    color: Colors.gold,
+    letterSpacing: 0.3,
   },
   loadingContainer: {
     flex: 1,
