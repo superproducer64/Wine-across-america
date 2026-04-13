@@ -33,6 +33,10 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=%s
 waitForPort = 5000
 
 [[ports]]
+localPort = 3001
+externalPort = 3002
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
@@ -45,7 +49,7 @@ externalPort = 3001
 [userenv.shared]
 
 [deployment]
-deploymentTarget = "static"
-run = ["npx", "expo", "start", "--web", "--port", "5000", "--no-dev"]
+deploymentTarget = "autoscale"
+run = ["bash", "-c", "npx serve dist -l 5000 --single"]
 build = ["bash", "-c", "echo EXPO_PUBLIC_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL > .env.local && echo EXPO_PUBLIC_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY >> .env.local && npx expo export --platform web"]
 publicDir = "dist"
