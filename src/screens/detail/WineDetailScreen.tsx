@@ -12,11 +12,10 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
-import { WineIdentityCard } from '@/components/wine/WineIdentityCard';
+import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { Button } from '@/components/ui/Button';
 import { getWineEntry } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
-import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { WineEntry } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -85,7 +84,6 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [shareToast, setShareToast] = useState('');
   const { removeEntry } = useWineStore();
-  const { isSubscribed } = useSubscriptionStore();
 
   useEffect(() => {
     (async () => {
@@ -222,11 +220,8 @@ export function WineDetailScreen({ route, navigation }: Props) {
           </View>
         ) : null}
 
-        {/* Wine Identity Card */}
-        <WineIdentityCard
-          entry={entry}
-          showSignatureScore={isSubscribed}
-        />
+        {/* Vivino-style Wine Card */}
+        <VivinoStyleCard entry={entry} />
 
         {/* Price info */}
         {entry.price.length > 0 && (
