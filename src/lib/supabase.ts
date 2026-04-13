@@ -169,3 +169,45 @@ export async function getUserProfile(userId: string) {
 export async function updateUserProfile(userId: string, updates: Record<string, unknown>) {
   return supabase.from('user_profiles').update(updates).eq('id', userId).select().single();
 }
+
+// ─── User Search ──────────────────────────────────────────────────────────────
+
+export async function searchUserByEmail(email: string) {
+  return supabase
+    .from('user_profiles')
+    .select('id, email, display_name')
+    .ilike('email', email.trim())
+    .limit(5);
+}
+
+// ─── Wine Sharing ─────────────────────────────────────────────────────────────
+
+export async function shareWineWithUser(
+  senderId: string,
+  senderName: string,
+  recipientId: string,
+  wineSnapshot: Record<string, unknown>
+) {
+  return supabase.from('shared_wines').insert({
+    sender_id: senderId,
+    sender_name: senderName,
+    recipient_id: recipientId,
+    wine_snapshot: wineSnapshot,
+  });
+}
+
+export async function getSharedWithMe(userId: string) {
+  return supabase
+    .from('shared_wines')
+    .select('*')
+    .eq('recipient_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(30);
+}
+
+export async function markShareSeen(shareId: string) {
+  return supabase
+    .from('shared_wines')
+    .update({ seen: true })
+    .eq('id', shareId);
+}

@@ -16,6 +16,8 @@ import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { Button } from '@/components/ui/Button';
 import { getWineEntry } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
+import { useAuthStore } from '@/stores/authStore';
+import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
 import { WineEntry } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -83,7 +85,9 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [shareToast, setShareToast] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
   const { removeEntry } = useWineStore();
+  const { user, profile } = useAuthStore();
 
   useEffect(() => {
     (async () => {
@@ -244,13 +248,29 @@ export function WineDetailScreen({ route, navigation }: Props) {
           </View>
         )}
 
-        {/* Share button at bottom */}
-        <Pressable onPress={handleShare} style={styles.shareButton}>
-          <Text style={styles.shareButtonText}>⬆ Share this Wine Card</Text>
-        </Pressable>
+        {/* Share buttons at bottom */}
+        <View style={styles.shareButtons}>
+          <Pressable onPress={handleShare} style={styles.shareButton}>
+            <Text style={styles.shareButtonText}>⬆ Share via Text / Email</Text>
+          </Pressable>
+          <Pressable onPress={() => setShowShareModal(true)} style={[styles.shareButton, styles.shareButtonInApp]}>
+            <Text style={[styles.shareButtonText, styles.shareButtonInAppText]}>🍷 Share with App Member</Text>
+          </Pressable>
+        </View>
 
         <View style={{ height: Spacing.huge }} />
       </ScrollView>
+
+      {/* In-app share modal */}
+      {user && (
+        <ShareWithUserModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          entry={entry}
+          senderId={user.id}
+          senderName={profile?.display_name ?? profile?.email ?? 'A member'}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -374,6 +394,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.inkMid,
   },
+  shareButtons: {
+    gap: Spacing.sm,
+  },
   shareButton: {
     borderWidth: 1,
     borderColor: Colors.borderStrong,
@@ -382,11 +405,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surfaceAlt,
   },
+  shareButtonInApp: {
+    backgroundColor: Colors.ink,
+    borderColor: Colors.ink,
+  },
   shareButtonText: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 14,
     color: Colors.gold,
     letterSpacing: 0.3,
+  },
+  shareButtonInAppText: {
+    color: Colors.gold,
   },
   loadingContainer: {
     flex: 1,

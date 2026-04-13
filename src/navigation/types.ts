@@ -21,6 +21,7 @@ export type TabParamList = {
 export type MainStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   WineDetail: { entryId: string };
+  SharedWineDetail: { snapshot: Record<string, unknown>; senderName: string };
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
