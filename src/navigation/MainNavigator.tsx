@@ -91,8 +91,8 @@ export function MainNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: Colors.ink,
-    borderTopColor: 'rgba(201,168,76,0.2)',
+    backgroundColor: '#EFE4E1',
+    borderTopColor: 'rgba(196,132,122,0.3)',
     borderTopWidth: 0.5,
     height: 70,
     paddingBottom: 8,
