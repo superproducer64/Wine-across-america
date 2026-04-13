@@ -34,7 +34,6 @@ export function ScoreSlider({
   accentColor = Colors.gold,
 }: ScoreSliderProps) {
   const trackWidth = useRef(0);
-  const trackX = useRef(0);
 
   const clampValue = useCallback(
     (raw: number) => {
@@ -44,31 +43,31 @@ export function ScoreSlider({
     [min, max, step]
   );
 
-  const positionToValue = useCallback(
-    (x: number) => {
-      const ratio = (x - trackX.current) / trackWidth.current;
+  // locationX is already relative to the track element — no need to subtract trackX
+  const locationToValue = useCallback(
+    (locationX: number) => {
+      if (trackWidth.current === 0) return value;
+      const ratio = locationX / trackWidth.current;
       const raw = min + ratio * (max - min);
       return clampValue(raw);
     },
-    [min, max, clampValue]
+    [min, max, value, clampValue]
   );
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderGrant: (evt) => {
-      onChange(positionToValue(evt.nativeEvent.pageX));
+      onChange(locationToValue(evt.nativeEvent.locationX));
     },
     onPanResponderMove: (evt) => {
-      onChange(positionToValue(evt.nativeEvent.pageX));
+      onChange(locationToValue(evt.nativeEvent.locationX));
     },
   });
 
+  // Use layout.width directly — synchronous, works reliably on web and native
   const handleTrackLayout = (e: LayoutChangeEvent) => {
-    e.target.measure((_x, _y, width, _height, pageX) => {
-      trackWidth.current = width;
-      trackX.current = pageX;
-    });
+    trackWidth.current = e.nativeEvent.layout.width;
   };
 
   const fillRatio = (value - min) / (max - min);
