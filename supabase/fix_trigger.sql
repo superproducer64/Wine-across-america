@@ -1,5 +1,5 @@
 -- Run this in your Supabase project → SQL Editor
--- It is safe to run multiple times (IF NOT EXISTS / CREATE OR REPLACE)
+-- It is safe to run multiple times
 
 -- 1. Create the user_profiles table if it doesn't already exist
 CREATE TABLE IF NOT EXISTS user_profiles (
@@ -35,13 +35,15 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- 4. Row-level security (no-op if already enabled)
+-- 4. Row-level security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "user_profiles_self_select"
+DROP POLICY IF EXISTS "user_profiles_self_select" ON user_profiles;
+CREATE POLICY "user_profiles_self_select"
   ON user_profiles FOR SELECT
   USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "user_profiles_self_update"
+DROP POLICY IF EXISTS "user_profiles_self_update" ON user_profiles;
+CREATE POLICY "user_profiles_self_update"
   ON user_profiles FOR UPDATE
   USING (auth.uid() = id);
