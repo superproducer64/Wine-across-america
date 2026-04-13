@@ -45,5 +45,7 @@ externalPort = 3001
 [userenv.shared]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "static"
 run = ["npx", "expo", "start", "--web", "--port", "5000", "--no-dev"]
+build = ["bash", "-c", '''printf 'EXPO_PUBLIC_SUPABASE_URL=%s\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$EXPO_PUBLIC_SUPABASE_URL" "$EXPO_PUBLIC_SUPABASE_ANON_KEY" > .env.local && npx expo export --platform web''']
+publicDir = "dist"
