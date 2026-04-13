@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -22,17 +21,19 @@ export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async () => {
+    setError('');
     if (!email.trim() || !password) {
-      Alert.alert('Missing fields', 'Please enter your email and password.');
+      setError('Please enter your email and password.');
       return;
     }
     setLoading(true);
-    const { error } = await signInWithEmail(email.trim(), password);
+    const { error: authError } = await signInWithEmail(email.trim(), password);
     setLoading(false);
-    if (error) {
-      Alert.alert('Sign in failed', error.message);
+    if (authError) {
+      setError(authError.message);
     }
     // On success, auth listener in RootNavigator will redirect automatically
   };
@@ -56,6 +57,8 @@ export function LoginScreen({ navigation }: Props) {
         {/* Form */}
         <View style={styles.form}>
           <Text style={styles.formTitle}>Sign In</Text>
+
+          {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
 
           <TextInput
             label="Email"
@@ -152,6 +155,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.ink,
     marginBottom: Spacing.md,
+  },
+  errorBanner: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.red,
+    backgroundColor: 'rgba(220,53,69,0.1)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
   },
   submitBtn: {
     marginTop: Spacing.sm,

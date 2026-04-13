@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -24,18 +23,22 @@ export function SignupScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSignup = async () => {
+    setError('');
+    setSuccess('');
     if (!name.trim() || !email.trim() || !password) {
-      Alert.alert('Missing fields', 'Please fill in all fields.');
+      setError('Please fill in all fields.');
       return;
     }
     if (password !== confirm) {
-      Alert.alert('Passwords do not match', 'Please re-enter your password.');
+      setError('Passwords do not match. Please re-enter your password.');
       return;
     }
     if (password.length < 8) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters.');
+      setError('Password must be at least 8 characters.');
       return;
     }
     setLoading(true);
@@ -46,15 +49,11 @@ export function SignupScreen({ navigation }: Props) {
         // The auth listener in RootNavigator will navigate to the main app automatically.
       } else {
         // Email confirmation is required — prompt the user to check their inbox.
-        Alert.alert(
-          'Check your email',
-          'We sent a confirmation link. Please verify your email before signing in.',
-          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-        );
+        setSuccess('Account created! Check your email for a confirmation link, then sign in.');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign up failed.';
-      Alert.alert('Error', message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -78,6 +77,16 @@ export function SignupScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.form}>
+          {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
+          {success ? (
+            <View style={styles.successBanner}>
+              <Text style={styles.successText}>{success}</Text>
+              <Pressable onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.successLink}>Go to Sign In →</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <TextInput
             label="Your Name"
             value={name}
@@ -165,6 +174,35 @@ const styles = StyleSheet.create({
     gap: 4,
     borderWidth: 0.5,
     borderColor: Colors.borderStrong,
+  },
+  errorBanner: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.red,
+    backgroundColor: 'rgba(220,53,69,0.1)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  successBanner: {
+    backgroundColor: 'rgba(40,167,69,0.1)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    gap: 8,
+    alignItems: 'center',
+  },
+  successText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: '#28a745',
+    textAlign: 'center',
+  },
+  successLink: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.gold,
   },
   submitBtn: {
     marginTop: Spacing.sm,

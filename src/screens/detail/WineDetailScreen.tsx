@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -25,6 +24,8 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const [entry, setEntry] = useState<WineEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { removeEntry } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
 
@@ -38,22 +39,10 @@ export function WineDetailScreen({ route, navigation }: Props) {
     })();
   }, [entryId]);
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete this wine?',
-      'This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await removeEntry(entryId);
-            navigation.goBack();
-          },
-        },
-      ]
-    );
+  const handleDelete = async () => {
+    setDeleting(true);
+    await removeEntry(entryId);
+    navigation.goBack();
   };
 
   if (loading) {
@@ -84,9 +73,20 @@ export function WineDetailScreen({ route, navigation }: Props) {
         <Pressable onPress={() => navigation.goBack()} style={styles.navBtn}>
           <Text style={styles.navBtnText}>‹ Back</Text>
         </Pressable>
-        <Pressable onPress={handleDelete} style={styles.navBtn}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </Pressable>
+        {confirmDelete ? (
+          <View style={styles.deleteConfirmRow}>
+            <Pressable onPress={() => setConfirmDelete(false)} style={styles.navBtn}>
+              <Text style={styles.navBtnText}>Cancel</Text>
+            </Pressable>
+            <Pressable onPress={handleDelete} disabled={deleting} style={styles.navBtn}>
+              <Text style={styles.deleteText}>{deleting ? 'Deleting…' : 'Confirm Delete'}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable onPress={() => setConfirmDelete(true)} style={styles.navBtn}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </Pressable>
+        )}
       </View>
 
       <ScrollView
@@ -162,6 +162,11 @@ const styles = StyleSheet.create({
   navBtn: {
     paddingVertical: 6,
     paddingHorizontal: 4,
+  },
+  deleteConfirmRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   navBtnText: {
     fontFamily: Fonts.dmSansRegular,

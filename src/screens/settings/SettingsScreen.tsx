@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
-  Alert,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
@@ -16,30 +15,8 @@ import { useSubscriptionStore } from '@/stores/subscriptionStore';
 export function SettingsScreen() {
   const { user, profile, signOut } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
-
-  const handleSignOut = () => {
-    Alert.alert('Sign out?', 'You will need to sign in again to access your wines.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: signOut },
-    ]);
-  };
-
-  const handleUpgrade = () => {
-    Alert.alert(
-      'Upgrade to Pro',
-      'Pour Across America Pro — $9.99/month or $79/year.\n\nUnlock: full history, taste fingerprint, score-vs-price chart, compound search, creator database, and more.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Upgrade',
-          onPress: () => {
-            // TODO: integrate RevenueCat purchase flow
-            Alert.alert('Coming soon', 'Subscription purchase will be enabled after App Store review.');
-          },
-        },
-      ]
-    );
-  };
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -84,20 +61,32 @@ export function SettingsScreen() {
                 Full history • Taste fingerprint • Score vs. price chart{'\n'}
                 Compound search • Creator database • Recommendations
               </Text>
-              <Button
-                label="Upgrade — $9.99/mo"
-                onPress={handleUpgrade}
-                style={styles.upgradeBtn}
-                size="md"
-              />
+              {showUpgradeInfo ? (
+                <View style={styles.upgradeInfoBox}>
+                  <Text style={styles.upgradeInfoText}>
+                    Pour Across America Pro — $9.99/month or $79/year.{'\n\n'}
+                    Subscription purchase will be available after App Store review.
+                  </Text>
+                  <Pressable onPress={() => setShowUpgradeInfo(false)}>
+                    <Text style={styles.upgradeInfoClose}>Dismiss</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Button
+                  label="Upgrade — $9.99/mo"
+                  onPress={() => setShowUpgradeInfo(true)}
+                  style={styles.upgradeBtn}
+                  size="md"
+                />
+              )}
               <Text style={styles.upgradeAlt}>or $79/year (save 34%)</Text>
             </View>
           )}
 
           {isSubscribed && (
-            <Pressable onPress={() => Alert.alert('Restore', 'Checking your purchases…')}>
-              <Text style={styles.restoreText}>Restore purchase</Text>
-            </Pressable>
+            <View style={styles.restoreBlock}>
+              <Text style={styles.restoreText}>Restore purchase: checking your purchases…</Text>
+            </View>
           )}
         </View>
 
@@ -132,12 +121,33 @@ export function SettingsScreen() {
         </View>
 
         {/* Sign out */}
-        <Button
-          label="Sign Out"
-          onPress={handleSignOut}
-          variant="secondary"
-          style={styles.signOutBtn}
-        />
+        {confirmSignOut ? (
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>Sign out?</Text>
+            <Text style={styles.confirmSub}>You will need to sign in again to access your wines.</Text>
+            <View style={styles.confirmActions}>
+              <Button
+                label="Cancel"
+                onPress={() => setConfirmSignOut(false)}
+                variant="secondary"
+                style={styles.confirmBtn}
+              />
+              <Button
+                label="Sign Out"
+                onPress={signOut}
+                variant="destructive"
+                style={styles.confirmBtn}
+              />
+            </View>
+          </View>
+        ) : (
+          <Button
+            label="Sign Out"
+            onPress={() => setConfirmSignOut(true)}
+            variant="secondary"
+            style={styles.signOutBtn}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -252,10 +262,31 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     textAlign: 'center',
   },
+  upgradeInfoBox: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  upgradeInfoText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 19,
+  },
+  upgradeInfoClose: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.gold,
+    textAlign: 'right',
+  },
+  restoreBlock: {
+    paddingTop: Spacing.sm,
+  },
   restoreText: {
     fontFamily: Fonts.dmSans,
     fontSize: 13,
-    color: Colors.gold,
+    color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
   },
   freeDetails: {
@@ -319,4 +350,29 @@ const styles = StyleSheet.create({
   signOutBtn: {
     marginTop: Spacing.md,
   },
+  confirmBox: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  confirmTitle: {
+    fontFamily: Fonts.playfair,
+    fontSize: 18,
+    color: Colors.ink,
+  },
+  confirmSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  confirmBtn: { flex: 1 },
 });
