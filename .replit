@@ -47,5 +47,5 @@ externalPort = 3001
 [deployment]
 deploymentTarget = "static"
 run = ["npx", "expo", "start", "--web", "--port", "5000", "--no-dev"]
-build = ["bash", "-c", '''printf 'EXPO_PUBLIC_SUPABASE_URL=%s\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$EXPO_PUBLIC_SUPABASE_URL" "$EXPO_PUBLIC_SUPABASE_ANON_KEY" > .env.local && npx expo export --platform web''']
+build = ["bash", "-c", "echo EXPO_PUBLIC_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL > .env.local && echo EXPO_PUBLIC_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY >> .env.local && npx expo export --platform web"]
 publicDir = "dist"
