@@ -33,6 +33,12 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Pour Across America uses your location to log where you tasted each wine."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

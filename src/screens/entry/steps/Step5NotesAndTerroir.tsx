@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Switch,
   Pressable,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
@@ -23,11 +25,82 @@ const SOIL_ICONS: Record<TerriorSoil, string> = {
   sand: '🏖️',
 };
 
+async function reverseGeocodeWeb(lat: number, lon: number): Promise<string> {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+    { headers: { 'Accept-Language': 'en' } }
+  );
+  const json = await res.json();
+  const a = json.address ?? {};
+  const parts = [
+    a.restaurant ?? a.cafe ?? a.bar ?? a.amenity ?? a.building,
+    a.neighbourhood ?? a.suburb ?? a.quarter,
+    a.city ?? a.town ?? a.village ?? a.county,
+    a.state,
+    a.country,
+  ].filter(Boolean);
+  return parts.slice(0, 3).join(', ');
+}
+
+async function detectLocation(): Promise<{ name: string; lat: number; lng: number }> {
+  if (Platform.OS === 'web') {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            const name = await reverseGeocodeWeb(lat, lng);
+            resolve({ name, lat, lng });
+          } catch {
+            reject(new Error('Could not look up location name.'));
+          }
+        },
+        () => reject(new Error('Location access denied.')),
+        { timeout: 10000 }
+      );
+    });
+  } else {
+    const Location = await import('expo-location');
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      throw new Error('Location permission denied.');
+    }
+    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const { latitude: lat, longitude: lng } = pos.coords;
+    const [geo] = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+    const parts = [
+      geo?.name,
+      geo?.district ?? geo?.subregion,
+      geo?.city ?? geo?.region,
+    ].filter(Boolean);
+    const name = parts.slice(0, 3).join(', ') || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return { name, lat, lng };
+  }
+}
+
 export function Step5NotesAndTerroir() {
-  const { draft, setNotesAndTerroir } = useEntryDraftStore();
+  const { draft, setBasics, setNotesAndTerroir } = useEntryDraftStore();
+  const [locLoading, setLocLoading] = useState(false);
+  const [locError, setLocError] = useState('');
+
+  const handleDetectLocation = async () => {
+    setLocLoading(true);
+    setLocError('');
+    try {
+      const { name, lat, lng } = await detectLocation();
+      setBasics({ location_name: name, location_geo: { lat, lng } });
+    } catch (err: unknown) {
+      setLocError(err instanceof Error ? err.message : 'Could not detect location.');
+    } finally {
+      setLocLoading(false);
+    }
+  };
 
   const handleTagInput = (text: string) => {
-    // Parse comma-separated tags
     const tags = text
       .split(',')
       .map((t) => t.trim())
@@ -42,6 +115,46 @@ export function Step5NotesAndTerroir() {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.stepTitle}>Notes & Finishing Touches</Text>
+
+      {/* Location */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Where are you tasting?</Text>
+        <View style={styles.locationRow}>
+          <View style={styles.locationNameBox}>
+            {draft.location_name ? (
+              <>
+                <Text style={styles.locationEmoji}>📍</Text>
+                <Text style={styles.locationName} numberOfLines={1}>
+                  {draft.location_name}
+                </Text>
+                <Pressable onPress={() => setBasics({ location_name: '', location_geo: null })}>
+                  <Text style={styles.locationClear}>✕</Text>
+                </Pressable>
+              </>
+            ) : (
+              <Text style={styles.locationPlaceholder}>No location set</Text>
+            )}
+          </View>
+          <Pressable
+            style={[styles.locationBtn, locLoading && styles.locationBtnDisabled]}
+            onPress={handleDetectLocation}
+            disabled={locLoading}
+          >
+            {locLoading ? (
+              <ActivityIndicator size="small" color={Colors.surface} />
+            ) : (
+              <Text style={styles.locationBtnText}>📍 Detect</Text>
+            )}
+          </Pressable>
+        </View>
+        {locError ? <Text style={styles.locError}>{locError}</Text> : null}
+        <TextInput
+          label="Or type a location"
+          value={draft.location_name}
+          onChangeText={(v) => setBasics({ location_name: v, location_geo: null })}
+          placeholder="Restaurant, city, venue…"
+        />
+      </View>
 
       {/* Quick Questions */}
       <View style={styles.section}>
@@ -195,6 +308,65 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     marginBottom: Spacing.md,
   },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  locationNameBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    gap: 6,
+    minHeight: 42,
+  },
+  locationEmoji: { fontSize: 14 },
+  locationName: {
+    flex: 1,
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  locationClear: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+    paddingLeft: 4,
+  },
+  locationPlaceholder: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkFaint,
+  },
+  locationBtn: {
+    backgroundColor: Colors.gold,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    minWidth: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 42,
+  },
+  locationBtnDisabled: { opacity: 0.6 },
+  locationBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.surface,
+  },
+  locError: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.red,
+    marginBottom: Spacing.sm,
+  },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,9 +382,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     flex: 1,
   },
-  toggleEmoji: {
-    fontSize: 22,
-  },
+  toggleEmoji: { fontSize: 22 },
   toggleTitle: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 15,
@@ -270,9 +440,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.green,
     borderColor: Colors.green,
   },
-  terriorChipIcon: {
-    fontSize: 12,
-  },
+  terriorChipIcon: { fontSize: 12 },
   terriorChipText: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 12,
