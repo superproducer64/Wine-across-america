@@ -13,6 +13,7 @@ import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { COUNTRIES_AND_REGIONS, GRAPE_VARIETIES, PriceEntry } from '@/types';
 import { LabelScannerModal } from '@/components/wine/LabelScannerModal';
+import { USStateSearchPicker } from '@/components/wine/USStateSearchPicker';
 import { WineLabelData } from '@/utils/wineOcr';
 
 export function Step1Basics() {
@@ -136,8 +137,16 @@ export function Step1Basics() {
         </View>
       </ScrollView>
 
-      {/* Region Selector */}
-      {regions.length > 0 && (
+      {/* Region Selector — searchable list for US, chips for everything else */}
+      {draft.country === 'United States' ? (
+        <>
+          <Text style={styles.label}>State</Text>
+          <USStateSearchPicker
+            selected={draft.region}
+            onSelect={handleRegionSelect}
+          />
+        </>
+      ) : regions.length > 0 ? (
         <>
           <Text style={styles.label}>Region</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
@@ -156,7 +165,7 @@ export function Step1Basics() {
             </View>
           </ScrollView>
         </>
-      )}
+      ) : null}
 
       {/* Appellation Selector */}
       {appellations.length > 0 && (
