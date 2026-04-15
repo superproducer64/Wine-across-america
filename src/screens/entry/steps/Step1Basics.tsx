@@ -14,6 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { COUNTRIES_AND_REGIONS, PriceEntry } from '@/types';
 import { LabelScannerModal } from '@/components/wine/LabelScannerModal';
 import { USStateSearchPicker } from '@/components/wine/USStateSearchPicker';
+import { CountrySearchPicker } from '@/components/wine/CountrySearchPicker';
 import { GrapeBlendInput } from '@/components/wine/GrapeBlendInput';
 import { WineLabelData } from '@/utils/wineOcr';
 
@@ -22,7 +23,6 @@ export function Step1Basics() {
   const { user } = useAuthStore();
   const [scannerVisible, setScannerVisible] = useState(false);
 
-  const countries = Object.keys(COUNTRIES_AND_REGIONS).sort();
   const regions = draft.country ? Object.keys(COUNTRIES_AND_REGIONS[draft.country] ?? {}) : [];
   const appellations =
     draft.country && draft.region
@@ -111,21 +111,10 @@ export function Step1Basics() {
 
       {/* Country Selector */}
       <Text style={styles.label}>Country</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-        <View style={styles.chipRow}>
-          {countries.map((c) => (
-            <Pressable
-              key={c}
-              style={[styles.chip, draft.country === c && styles.chipSelected]}
-              onPress={() => handleCountrySelect(c)}
-            >
-              <Text style={[styles.chipText, draft.country === c && styles.chipTextSelected]}>
-                {c}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <CountrySearchPicker
+        selected={draft.country}
+        onSelect={handleCountrySelect}
+      />
 
       {/* Region Selector — searchable list for US, chips for everything else */}
       {draft.country === 'United States' ? (
