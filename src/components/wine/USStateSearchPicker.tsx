@@ -29,6 +29,7 @@ interface Props {
 
 export function USStateSearchPicker({ selected, onSelect }: Props) {
   const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const filtered = useMemo(() => {
@@ -40,12 +41,35 @@ export function USStateSearchPicker({ selected, onSelect }: Props) {
   const handleSelect = (state: string) => {
     onSelect(state);
     setQuery('');
+    setOpen(false);
     Keyboard.dismiss();
   };
 
+  const handleClear = () => {
+    onSelect('');
+    setQuery('');
+    setOpen(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  // ── State already chosen — show compact badge only ──────────────────────────
+  if (selected && !open) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.chosenRow}>
+          <Text style={styles.chosenIcon}>📍</Text>
+          <Text style={styles.chosenName}>{selected}</Text>
+          <Pressable onPress={handleClear} style={styles.changeBtn} hitSlop={8}>
+            <Text style={styles.changeBtnText}>Change</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // ── No state chosen — show search + grid ────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* Search box */}
       <View style={styles.searchRow}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
@@ -69,17 +93,6 @@ export function USStateSearchPicker({ selected, onSelect }: Props) {
         )}
       </View>
 
-      {/* Selected badge */}
-      {selected ? (
-        <View style={styles.selectedBadge}>
-          <Text style={styles.selectedBadgeText}>📍 {selected}</Text>
-          <Pressable onPress={() => handleSelect('')} hitSlop={8}>
-            <Text style={styles.selectedClear}>✕</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      {/* Scrollable state list */}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item}
@@ -88,19 +101,11 @@ export function USStateSearchPicker({ selected, onSelect }: Props) {
         showsVerticalScrollIndicator={false}
         numColumns={2}
         columnWrapperStyle={styles.row}
-        renderItem={({ item }) => {
-          const isSelected = item === selected;
-          return (
-            <Pressable
-              style={[styles.stateBtn, isSelected && styles.stateBtnSelected]}
-              onPress={() => handleSelect(item)}
-            >
-              <Text style={[styles.stateBtnText, isSelected && styles.stateBtnTextSelected]}>
-                {item}
-              </Text>
-            </Pressable>
-          );
-        }}
+        renderItem={({ item }) => (
+          <Pressable style={styles.stateBtn} onPress={() => handleSelect(item)}>
+            <Text style={styles.stateBtnText}>{item}</Text>
+          </Pressable>
+        )}
         ListEmptyComponent={
           <Text style={styles.empty}>No states match "{query}"</Text>
         }
@@ -110,9 +115,40 @@ export function USStateSearchPicker({ selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 4,
+  container: { marginTop: 4 },
+
+  // Chosen state row
+  chosenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    gap: Spacing.sm,
   },
+  chosenIcon: { fontSize: 16 },
+  chosenName: {
+    flex: 1,
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 15,
+    color: Colors.ink,
+  },
+  changeBtn: {
+    backgroundColor: Colors.ink,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+  },
+  changeBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+
+  // Search
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,37 +176,9 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
   },
 
-  selectedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.goldPale,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 5,
-    alignSelf: 'flex-start',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-    borderWidth: 0.5,
-    borderColor: Colors.borderStrong,
-  },
-  selectedBadgeText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 13,
-    color: Colors.ink,
-  },
-  selectedClear: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 11,
-    color: Colors.inkMuted,
-  },
-
-  list: {
-    maxHeight: 240,
-  },
-  row: {
-    gap: 6,
-    marginBottom: 6,
-  },
+  // Grid
+  list: { maxHeight: 240 },
+  row: { gap: 6, marginBottom: 6 },
   stateBtn: {
     flex: 1,
     paddingVertical: 9,
@@ -181,19 +189,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceAlt,
     alignItems: 'center',
   },
-  stateBtnSelected: {
-    backgroundColor: Colors.gold,
-    borderColor: Colors.gold,
-  },
   stateBtnText: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 13,
     color: Colors.ink,
     textAlign: 'center',
-  },
-  stateBtnTextSelected: {
-    fontFamily: Fonts.dmSansMedium,
-    color: Colors.ink,
   },
   empty: {
     fontFamily: Fonts.dmSansRegular,
