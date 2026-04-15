@@ -82,27 +82,42 @@ export function GrapeBlendInput({ value, onChange }: Props) {
                 </Pressable>
                 <Text style={styles.selectedName}>{entry.name}</Text>
               </View>
-              <View style={styles.pctWrap}>
+              <View style={[
+                styles.pctWrap,
+                entry.percentage !== null && styles.pctWrapFilled,
+              ]}>
                 <TextInput
                   style={styles.pctInput}
                   value={entry.percentage !== null ? String(entry.percentage) : ''}
                   onChangeText={(v) => handlePctChange(entry.name, v)}
                   keyboardType="number-pad"
                   maxLength={3}
-                  placeholder="—"
+                  placeholder="0"
                   placeholderTextColor={Colors.inkMuted}
                 />
-                <Text style={styles.pctSign}>%</Text>
+                <Text style={[
+                  styles.pctSign,
+                  entry.percentage !== null && styles.pctSignFilled,
+                ]}>%</Text>
               </View>
             </View>
           ))}
+
+          {/* Hint when no percentages entered yet */}
+          {!hasAnyPct && (
+            <View style={styles.pctHintRow}>
+              <Text style={styles.pctHintText}>
+                Tap the % field on each grape to enter blend percentages (optional)
+              </Text>
+            </View>
+          )}
 
           {/* Blend total */}
           {hasAnyPct && (
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Blend total</Text>
               <Text style={[styles.totalValue, { color: pctColor }]}>
-                {totalPct}%{totalPct === 100 ? ' ✓' : totalPct > 100 ? ' ↑ over 100' : ''}
+                {totalPct}%{totalPct === 100 ? '  ✓' : totalPct > 100 ? '  over 100' : ''}
               </Text>
             </View>
           )}
@@ -214,23 +229,44 @@ const styles = StyleSheet.create({
   pctWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    minWidth: 64,
     gap: 2,
+  },
+  pctWrapFilled: {
+    backgroundColor: Colors.goldPale,
+    borderColor: Colors.borderStrong,
   },
   pctInput: {
     fontFamily: Fonts.dmSansMedium,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.ink,
     textAlign: 'right',
-    width: 40,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    width: 36,
+    paddingVertical: 0,
   },
   pctSign: {
-    fontFamily: Fonts.dmSansRegular,
+    fontFamily: Fonts.dmSansMedium,
     fontSize: 13,
     color: Colors.inkMuted,
+  },
+  pctSignFilled: {
+    color: Colors.ink,
+  },
+  pctHintRow: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  pctHintText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    fontStyle: 'italic',
   },
   totalRow: {
     flexDirection: 'row',
