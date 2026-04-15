@@ -187,6 +187,9 @@ export interface WineEntry {
   sig_enjoyment: number | null;
   signature_score: number | null;
 
+  // Label photo
+  label_photo_url: string | null;
+
   created_at: string;
   updated_at: string;
 }

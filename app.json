@@ -33,6 +33,13 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pour Across America needs access to your photos to attach wine label photos.",
+          "cameraPermission": "Pour Across America uses your camera to photograph wine labels."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Pour Across America uses your location to log where you tasted each wine."

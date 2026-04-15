@@ -49,6 +49,9 @@ function makeDefaultDraft(): WineEntryDraft {
     sig_viticulture: null,
     sig_structure: null,
     sig_enjoyment: null,
+
+    // Label photo
+    label_photo_url: null,
   };
 }
 
@@ -73,6 +76,7 @@ interface EntryDraftStore {
     'free_notes' | 'tags' | 'want_another_glass' | 'want_to_buy' |
     'terroir_soil' | 'terroir_climate' | 'terroir_visible'>>) => void;
 
+  setLabelPhoto: (url: string | null) => void;
   setStep: (step: number) => void;
   reset: () => void;
   loadForEdit: (entry: WineEntryDraft) => void;
@@ -96,6 +100,9 @@ export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
 
   setNotesAndTerroir: (data) =>
     set((state) => ({ draft: { ...state.draft, ...data } })),
+
+  setLabelPhoto: (url) =>
+    set((state) => ({ draft: { ...state.draft, label_photo_url: url } })),
 
   setStep: (step) => set({ currentStep: step }),
 

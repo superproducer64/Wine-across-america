@@ -1,18 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   Pressable,
+  Image,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
+import { useAuthStore } from '@/stores/authStore';
 import { COUNTRIES_AND_REGIONS, GRAPE_VARIETIES, PriceEntry } from '@/types';
+import { LabelScannerModal } from '@/components/wine/LabelScannerModal';
+import { WineLabelData } from '@/utils/wineOcr';
 
 export function Step1Basics() {
-  const { draft, setBasics } = useEntryDraftStore();
+  const { draft, setBasics, setLabelPhoto } = useEntryDraftStore();
+  const { user } = useAuthStore();
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const countries = Object.keys(COUNTRIES_AND_REGIONS).sort();
   const regions = draft.country ? Object.keys(COUNTRIES_AND_REGIONS[draft.country] ?? {}) : [];
@@ -38,6 +44,18 @@ export function Step1Basics() {
     }
   };
 
+  const handleScanApply = (data: Partial<WineLabelData> & { photoUrl?: string }) => {
+    const updates: Parameters<typeof setBasics>[0] = {};
+    if (data.name) updates.name = data.name;
+    if (data.producer) updates.producer = data.producer;
+    if (data.vintage !== undefined) updates.vintage = data.vintage;
+    if (data.country) updates.country = data.country;
+    if (data.region) updates.region = data.region;
+    if (data.appellation) updates.appellation = data.appellation;
+    if (Object.keys(updates).length > 0) setBasics(updates);
+    if (data.photoUrl) setLabelPhoto(data.photoUrl);
+  };
+
   const handlePriceChange = (field: keyof PriceEntry, value: string) => {
     const existing = draft.price[0] ?? { amount: 0, currency: 'USD', date: '', location: '' };
     const updated: PriceEntry = {
@@ -50,12 +68,33 @@ export function Step1Basics() {
   const topGrapes = GRAPE_VARIETIES.slice(0, 30);
 
   return (
+    <>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.stepTitle}>Wine Basics</Text>
+
+      {/* Scan Label button */}
+      <Pressable style={styles.scanBtn} onPress={() => setScannerVisible(true)}>
+        <Text style={styles.scanBtnIcon}>📷</Text>
+        <View style={styles.scanBtnText}>
+          <Text style={styles.scanBtnLabel}>Scan Wine Label</Text>
+          <Text style={styles.scanBtnSub}>Auto-fill from photo · OCR powered</Text>
+        </View>
+        <Text style={styles.scanBtnArrow}>›</Text>
+      </Pressable>
+
+      {/* Label photo preview (if scanned) */}
+      {draft.label_photo_url ? (
+        <View style={styles.photoPreview}>
+          <Image source={{ uri: draft.label_photo_url }} style={styles.photoImg} />
+          <Pressable onPress={() => setLabelPhoto(null)} style={styles.photoRemove}>
+            <Text style={styles.photoRemoveText}>Remove photo</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <TextInput
         label="Wine Name"
@@ -209,6 +248,13 @@ export function Step1Basics() {
         placeholder="e.g., Le Bernardin, NYC"
       />
     </ScrollView>
+    <LabelScannerModal
+      visible={scannerVisible}
+      onClose={() => setScannerVisible(false)}
+      onApply={handleScanApply}
+      userId={user?.id ?? ''}
+    />
+    </>
   );
 }
 
@@ -234,6 +280,61 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: Spacing.md,
   },
+  // Scan label button
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  scanBtnIcon: { fontSize: 24 },
+  scanBtnText: { flex: 1 },
+  scanBtnLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 14,
+    color: Colors.ink,
+  },
+  scanBtnSub: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 1,
+  },
+  scanBtnArrow: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 20,
+    color: Colors.gold,
+  },
+
+  // Photo preview
+  photoPreview: {
+    marginBottom: Spacing.lg,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  photoImg: {
+    width: '100%',
+    height: 160,
+    resizeMode: 'cover',
+  },
+  photoRemove: {
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+  },
+  photoRemoveText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.red,
+  },
+
   chipScroll: {
     marginBottom: Spacing.md,
   },

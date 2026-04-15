@@ -27,6 +27,7 @@
     "expo-font": "~12.0.6",
     "expo-haptics": "~13.0.1",
     "expo-image-manipulator": "~12.0.4",
+    "expo-image-picker": "~15.0.7",
     "expo-linear-gradient": "~13.0.2",
     "expo-linking": "~6.3.1",
     "expo-location": "~17.0.1",
@@ -47,6 +48,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-view-shot": "3.8.0",
     "react-native-web": "^0.19.13",
+    "tesseract.js": "^5.1.1",
     "zustand": "^4.5.4"
   },
   "devDependencies": {

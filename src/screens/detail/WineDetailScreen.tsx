@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Share,
   Platform,
+  Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -248,6 +249,17 @@ export function WineDetailScreen({ route, navigation }: Props) {
           </View>
         )}
 
+        {/* Label photo */}
+        {entry.label_photo_url ? (
+          <View style={styles.labelPhotoBlock}>
+            <Text style={styles.labelPhotoLabel}>Label Photo</Text>
+            <Image
+              source={{ uri: entry.label_photo_url }}
+              style={styles.labelPhoto}
+            />
+          </View>
+        ) : null}
+
         {/* Share buttons at bottom */}
         <View style={styles.shareButtons}>
           <Pressable onPress={handleShare} style={styles.shareButton}>
@@ -393,6 +405,23 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 14,
     color: Colors.inkMid,
+  },
+  labelPhotoBlock: {
+    marginTop: Spacing.xl,
+  },
+  labelPhotoLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+    marginBottom: Spacing.sm,
+  },
+  labelPhoto: {
+    width: '100%',
+    height: 220,
+    borderRadius: Radius.lg,
+    resizeMode: 'cover',
   },
   shareButtons: {
     gap: Spacing.sm,

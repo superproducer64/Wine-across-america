@@ -170,6 +170,32 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   return supabase.from('user_profiles').update(updates).eq('id', userId).select().single();
 }
 
+// ─── Label Photo Upload ───────────────────────────────────────────────────────
+
+export async function uploadLabelPhoto(
+  userId: string,
+  imageDataUrl: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    // Convert data URL to blob
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    const path = `${userId}/${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('wine-labels')
+      .upload(path, blob, { contentType: blob.type, upsert: false });
+
+    if (error) return { url: null, error: error.message };
+
+    const { data } = supabase.storage.from('wine-labels').getPublicUrl(path);
+    return { url: data.publicUrl, error: null };
+  } catch (e: unknown) {
+    return { url: null, error: String(e) };
+  }
+}
+
 // ─── User Search ──────────────────────────────────────────────────────────────
 
 export async function searchUserByEmail(email: string) {

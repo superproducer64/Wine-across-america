@@ -2,6 +2,15 @@
 
 A professional wine tasting journal and intelligence app built with React Native (Expo) and Supabase.
 
+## Key Features
+
+- Multi-step wine entry flow (basics, structure, aromas, notes)
+- **Wine label scanning**: Camera/gallery photo + Tesseract.js OCR (web) to auto-fill entry form; label photo stored in Supabase Storage and displayed on the detail screen
+- Vivino-style wine card with ratings, flavor bars, food pairings, grape pills
+- Share wine cards via native share sheet or in-app user sharing
+- "Shared with Me" inbox with unread badge on HomeScreen
+- Wine history, search, and filtering
+
 ## Tech Stack
 
 - **Framework**: React Native with Expo SDK 51
