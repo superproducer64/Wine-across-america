@@ -11,13 +11,14 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
-import { COUNTRIES_AND_REGIONS, GRAPE_VARIETIES, PriceEntry } from '@/types';
+import { COUNTRIES_AND_REGIONS, PriceEntry } from '@/types';
 import { LabelScannerModal } from '@/components/wine/LabelScannerModal';
 import { USStateSearchPicker } from '@/components/wine/USStateSearchPicker';
+import { GrapeBlendInput } from '@/components/wine/GrapeBlendInput';
 import { WineLabelData } from '@/utils/wineOcr';
 
 export function Step1Basics() {
-  const { draft, setBasics, setLabelPhoto } = useEntryDraftStore();
+  const { draft, setBasics, setLabelPhoto, setGrapeBlends } = useEntryDraftStore();
   const { user } = useAuthStore();
   const [scannerVisible, setScannerVisible] = useState(false);
 
@@ -34,15 +35,6 @@ export function Step1Basics() {
 
   const handleRegionSelect = (region: string) => {
     setBasics({ region, appellation: '' });
-  };
-
-  const handleGrapeToggle = (grape: string) => {
-    const current = draft.grapes;
-    if (current.includes(grape)) {
-      setBasics({ grapes: current.filter((g) => g !== grape) });
-    } else {
-      setBasics({ grapes: [...current, grape] });
-    }
   };
 
   const handleScanApply = (data: Partial<WineLabelData> & { photoUrl?: string }) => {
@@ -65,8 +57,6 @@ export function Step1Basics() {
     };
     setBasics({ price: [updated] });
   };
-
-  const topGrapes = GRAPE_VARIETIES.slice(0, 30);
 
   return (
     <>
@@ -189,36 +179,12 @@ export function Step1Basics() {
         </>
       )}
 
-      {/* Grape Selection */}
+      {/* Grape Varieties */}
       <Text style={styles.label}>Grape Varieties</Text>
-      {draft.grapes.length > 0 && (
-        <View style={styles.selectedGrapes}>
-          {draft.grapes.map((g) => (
-            <Pressable
-              key={g}
-              style={styles.selectedChip}
-              onPress={() => handleGrapeToggle(g)}
-            >
-              <Text style={styles.selectedChipText}>{g} ✕</Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-        <View style={styles.chipRow}>
-          {topGrapes.map((g) => (
-            <Pressable
-              key={g}
-              style={[styles.chip, draft.grapes.includes(g) && styles.chipSelected]}
-              onPress={() => handleGrapeToggle(g)}
-            >
-              <Text style={[styles.chipText, draft.grapes.includes(g) && styles.chipTextSelected]}>
-                {g}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      <GrapeBlendInput
+        value={draft.grape_blends ?? draft.grapes.map((n) => ({ name: n, percentage: null }))}
+        onChange={setGrapeBlends}
+      />
 
       {/* Price */}
       <Text style={styles.label}>Price (optional)</Text>
@@ -372,25 +338,6 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: Colors.ink,
     fontFamily: Fonts.dmSansMedium,
-  },
-  selectedGrapes: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
-  },
-  selectedChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.goldPale,
-    borderWidth: 0.5,
-    borderColor: Colors.gold,
-  },
-  selectedChipText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 12,
-    color: Colors.inkMid,
   },
   priceRow: {
     flexDirection: 'row',

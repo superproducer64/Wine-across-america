@@ -145,6 +145,7 @@ export interface WineEntry {
   region: string;
   appellation: string;
   grapes: string[];
+  grape_blends: GrapeBlendEntry[] | null;
   price: PriceEntry[];
   tasting_date: string;
   location_name: string;
@@ -332,21 +333,34 @@ export const COUNTRIES_AND_REGIONS: Record<string, Record<string, string[]>> = {
   },
 };
 
+// ─── Grape Blend Entry ────────────────────────────────────────────────────────
+
+export interface GrapeBlendEntry {
+  name: string;
+  percentage: number | null;
+}
+
+// ─── Grape Varieties Reference List ──────────────────────────────────────────
+
 export const GRAPE_VARIETIES = [
   // White
   'Chardonnay', 'Sauvignon Blanc', 'Riesling', 'Pinot Gris', 'Pinot Grigio',
   'Gewürztraminer', 'Albariño', 'Grüner Veltliner', 'Viognier', 'Chenin Blanc',
   'Muscadet', 'Roussanne', 'Marsanne', 'Vermentino', 'Trebbiano', 'Fiano',
   'Greco di Tufo', 'Arneis', 'Gavi / Cortese', 'Falanghina', 'Verdejo',
-  'Torrontés', 'Assyrtiko', 'Muscat', 'Pinot Blanc',
+  'Torrontés', 'Assyrtiko', 'Muscat', 'Pinot Blanc', 'Sémillon', 'Malvasia',
+  'Palomino', 'Garganega', 'Friulano', 'Pecorino', 'Catarratto',
 
   // Red
   'Cabernet Sauvignon', 'Merlot', 'Pinot Noir', 'Syrah / Shiraz', 'Grenache',
   'Tempranillo', 'Sangiovese', 'Nebbiolo', 'Barbera', 'Dolcetto', 'Montepulciano',
-  'Aglianico', 'Primitivo / Zinfandel', 'Nero d\'Avola', 'Carménère', 'Malbec',
+  'Aglianico', 'Primitivo / Zinfandel', "Nero d'Avola", 'Carménère', 'Malbec',
   'Cabernet Franc', 'Mourvèdre', 'Gamay', 'Petite Sirah', 'Petit Verdot',
   'Garnacha', 'Bobal', 'Mencía', 'Touriga Nacional', 'Tinta Barroca',
-  'Blaufränkisch', 'Zweigelt', 'St. Laurent',
+  'Blaufränkisch', 'Zweigelt', 'St. Laurent', 'Corvina', 'Rondinella',
+  'Molinara', 'Sagrantino', 'Lagrein', 'Teroldego', 'Nerello Mascalese',
+  'Frappato', 'Cannonau', 'Monastrell', 'Cinsault', 'Carignan', 'Pinotage',
+  'Tannat', 'Loureiro', 'Alvarinho', 'Xinomavro', 'Agiorgitiko',
 ].sort();
 
 // ─── Structure Wheel ─────────────────────────────────────────────────────────
