@@ -47,6 +47,9 @@ export function Step1Basics() {
     if (data.appellation) updates.appellation = data.appellation;
     if (Object.keys(updates).length > 0) setBasics(updates);
     if (data.photoUrl) setLabelPhoto(data.photoUrl);
+    if (data.grapes && data.grapes.length > 0) {
+      setGrapeBlends(data.grapes.map((g) => ({ grape: g, percentage: null })));
+    }
   };
 
   const handlePriceChange = (field: keyof PriceEntry, value: string) => {

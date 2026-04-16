@@ -14,7 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
-import { runOcr, parseWineLabelText, WineLabelData } from '@/utils/wineOcr';
+import { analyzeWineLabelWithAI, WineLabelData } from '@/utils/wineOcr';
 import { uploadLabelPhoto } from '@/lib/supabase';
 
 interface Props {
@@ -38,8 +38,9 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   const [country, setCountry] = useState('');
   const [region, setRegion] = useState('');
   const [appellation, setAppellation] = useState('');
-  const [rawText, setRawText] = useState('');
+  const [grapes, setGrapes] = useState<string[]>([]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [aiSuccess, setAiSuccess] = useState(false);
 
   const reset = () => {
     setPhase('pick');
@@ -51,8 +52,9 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
     setCountry('');
     setRegion('');
     setAppellation('');
-    setRawText('');
+    setGrapes([]);
     setPhotoUrl(null);
+    setAiSuccess(false);
   };
 
   const handleClose = () => {
@@ -62,29 +64,18 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
 
   const processImage = async (uri: string) => {
     setImageUri(uri);
-    setPhase('scanning');
-
-    // Upload photo to Supabase Storage
     setPhase('uploading');
-    const { url } = await uploadLabelPhoto(userId, uri);
-    setPhotoUrl(url);
 
-    // OCR (web only)
-    setPhase('scanning');
-    let extracted: WineLabelData = {
-      name: '', producer: '', vintage: null,
-      country: '', region: '', appellation: '', rawText: '',
-    };
+    // Upload photo and run AI analysis in parallel
+    const [uploadResult, extracted] = await Promise.all([
+      uploadLabelPhoto(userId, uri),
+      analyzeWineLabelWithAI(uri),
+    ]);
 
-    if (Platform.OS === 'web') {
-      try {
-        const text = await runOcr(uri);
-        setRawText(text);
-        extracted = parseWineLabelText(text);
-      } catch {
-        // OCR failed — still show review with photo
-      }
-    }
+    setPhotoUrl(uploadResult.url);
+
+    const hasData = !!(extracted.name || extracted.producer || extracted.country || extracted.vintage);
+    setAiSuccess(hasData);
 
     setName(extracted.name);
     setProducer(extracted.producer);
@@ -92,6 +83,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
     setCountry(extracted.country);
     setRegion(extracted.region);
     setAppellation(extracted.appellation);
+    setGrapes(extracted.grapes ?? []);
     setPhase('review');
   };
 
@@ -143,6 +135,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
       country: country.trim() || undefined,
       region: region.trim() || undefined,
       appellation: appellation.trim() || undefined,
+      grapes: grapes.length > 0 ? grapes : undefined,
       photoUrl: photoUrl ?? undefined,
     });
     reset();
@@ -178,19 +171,14 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
             {phase === 'pick' && (
               <View style={styles.pickPhase}>
                 <Text style={styles.pickIcon}>📸</Text>
-                <Text style={styles.pickTitle}>Photograph the Label</Text>
+                <Text style={styles.pickTitle}>Scan Wine Label</Text>
                 <Text style={styles.pickSubtitle}>
-                  Point your camera at the wine label. The app will read the text and
-                  pre-fill the entry form for you.
+                  Take a photo of the label and AI will instantly identify the wine,
+                  winery, vintage, region, and grape varieties.
                 </Text>
-                {Platform.OS !== 'web' && (
-                  <View style={styles.nativeNote}>
-                    <Text style={styles.nativeNoteText}>
-                      Note: Text recognition works best in the web version.
-                      On mobile, the photo will be saved for reference.
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.aiBadge}>
+                  <Text style={styles.aiBadgeText}>✨ Powered by GPT-4o Vision</Text>
+                </View>
                 <View style={styles.pickButtons}>
                   <Pressable style={styles.pickBtn} onPress={pickFromCamera}>
                     <Text style={styles.pickBtnIcon}>📷</Text>
@@ -211,10 +199,8 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
                   <Image source={{ uri: imageUri }} style={styles.previewImage} />
                 )}
                 <ActivityIndicator color={Colors.gold} size="large" style={{ marginTop: 24 }} />
-                <Text style={styles.loadingText}>
-                  {phase === 'uploading' ? 'Saving photo…' : 'Reading label…'}
-                </Text>
-                <Text style={styles.loadingSubtext}>This may take a few seconds</Text>
+                <Text style={styles.loadingText}>Analyzing label with AI…</Text>
+                <Text style={styles.loadingSubtext}>GPT-4o Vision is reading your wine label</Text>
               </View>
             )}
 
@@ -233,11 +219,16 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
                   </View>
                 )}
 
-                <Text style={styles.reviewHint}>
-                  {Platform.OS === 'web' && rawText
-                    ? 'Review and edit the extracted information below.'
-                    : 'Fill in the details from the label, or skip to save with just the photo.'}
-                </Text>
+                {/* AI result banner */}
+                {aiSuccess ? (
+                  <View style={styles.aiSuccessBanner}>
+                    <Text style={styles.aiSuccessText}>✨ AI identified this wine — review and confirm below</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.reviewHint}>
+                    AI couldn't confidently read this label. Fill in what you can.
+                  </Text>
+                )}
 
                 <TextInput
                   label="Wine Name"
@@ -276,6 +267,21 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
                   onChangeText={setAppellation}
                   placeholder="e.g., Margaux"
                 />
+
+                {/* Grapes identified by AI */}
+                {grapes.length > 0 && (
+                  <View style={styles.grapesWrap}>
+                    <Text style={styles.grapesLabel}>Grape Varieties Detected</Text>
+                    <View style={styles.grapeChips}>
+                      {grapes.map((g) => (
+                        <View key={g} style={styles.grapeChip}>
+                          <Text style={styles.grapeChipText}>{g}</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <Text style={styles.grapesHint}>These will be added to the grape blends section</Text>
+                  </View>
+                )}
 
                 {/* Actions */}
                 <View style={styles.reviewActions}>
@@ -480,6 +486,75 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 14,
     color: Colors.inkMuted,
+  },
+
+  // AI badge (pick phase)
+  aiBadge: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 6,
+  },
+  aiBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+
+  // AI success banner (review phase)
+  aiSuccessBanner: {
+    backgroundColor: '#F0F9F0',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: '#A8D5A2',
+    marginBottom: Spacing.sm,
+  },
+  aiSuccessText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: '#2D7A27',
+    textAlign: 'center',
+  },
+
+  // Grapes section
+  grapesWrap: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  grapesLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  grapeChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  grapeChip: {
+    backgroundColor: Colors.ink,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+  },
+  grapeChipText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+  grapesHint: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    fontStyle: 'italic',
   },
 
   // Error phase
