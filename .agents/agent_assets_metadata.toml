@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "I9PpjAcqP3PVFq4ObRXs6"
+uri = "file://Pour_Across_America_Dev_Report.md"
+type = "text"
+title = "Pour Across America — Development Report"
