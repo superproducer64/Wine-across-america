@@ -6,3 +6,9 @@ id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
 type = "text"
 title = "Pour Across America — Development Report"
+
+[[outputs]]
+id = "qOhLXkKnrZWcUOsRZbP9w"
+uri = "file://How_To_Get_Build_Reports.md"
+type = "text"
+title = "How To Get Build Reports — Quick Reference Guide"
