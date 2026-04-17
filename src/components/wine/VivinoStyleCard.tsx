@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry, AROMA_CATEGORIES } from '@/types';
 import { getFoodPairings } from '@/utils/foodPairings';
@@ -244,24 +244,54 @@ export function VivinoStyleCard({ entry }: Props) {
   const originParts = [entry.country, entry.region].filter(Boolean);
   const origin = originParts.join(' · ');
 
+  // Price — use most recent entry
+  const latestPrice = entry.price?.[entry.price.length - 1] ?? null;
+  const priceDisplay = latestPrice && latestPrice.amount > 0
+    ? `${latestPrice.currency === 'USD' ? '$' : latestPrice.currency + ' '}${latestPrice.amount.toFixed(2)}`
+    : null;
+
+  // Grape blends — prefer detailed blend data, fall back to plain grapes array
+  const hasBlends = entry.grape_blends && entry.grape_blends.length > 0;
+  const blendTotal = hasBlends
+    ? entry.grape_blends!.reduce((sum, g) => sum + (g.percentage ?? 0), 0)
+    : 0;
+
   return (
     <View style={styles.card}>
-      {/* ── Decorative Header ── */}
-      <View style={styles.header}>
-        {/* Top grape/terroir color band */}
+      {/* ── Label Photo ── */}
+      {entry.label_photo_url ? (
+        <View style={styles.labelPhotoWrap}>
+          <Image
+            source={{ uri: entry.label_photo_url }}
+            style={styles.labelPhoto}
+            resizeMode="cover"
+          />
+          <View style={styles.labelPhotoOverlay} />
+        </View>
+      ) : (
         <View style={styles.colorBand} />
+      )}
 
+      {/* ── Header ── */}
+      <View style={styles.header}>
         <View style={styles.headerContent}>
           {/* Origin + vintage row */}
           <View style={styles.originRow}>
             {origin ? (
               <Text style={styles.originText}>{origin.toUpperCase()}</Text>
             ) : null}
-            {entry.vintage ? (
-              <View style={styles.vintagePill}>
-                <Text style={styles.vintageText}>{entry.vintage}</Text>
-              </View>
-            ) : null}
+            <View style={styles.originRight}>
+              {entry.vintage ? (
+                <View style={styles.vintagePill}>
+                  <Text style={styles.vintageText}>{entry.vintage}</Text>
+                </View>
+              ) : null}
+              {priceDisplay ? (
+                <View style={styles.pricePill}>
+                  <Text style={styles.priceText}>{priceDisplay}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
 
           {/* Wine name */}
@@ -354,19 +384,44 @@ export function VivinoStyleCard({ entry }: Props) {
           </>
         )}
 
-        {/* Grapes */}
-        {entry.grapes.length > 0 && (
+        {/* Grapes — with blend percentages if available */}
+        {(hasBlends || entry.grapes.length > 0) && (
           <>
             <Divider />
             <View style={styles.section}>
               <SectionHeader label="Grape Varieties" />
-              <View style={styles.pillsRow}>
-                {entry.grapes.map((g) => (
-                  <View key={g} style={styles.pill}>
-                    <Text style={styles.pillText}>{g}</Text>
-                  </View>
-                ))}
-              </View>
+              {hasBlends ? (
+                <View style={styles.blendList}>
+                  {entry.grape_blends!.map((g) => (
+                    <View key={g.name} style={styles.blendRow}>
+                      <View style={styles.blendBarWrap}>
+                        <Text style={styles.blendName}>{g.name}</Text>
+                        {blendTotal > 0 && g.percentage != null && (
+                          <View style={styles.blendTrack}>
+                            <View
+                              style={[
+                                styles.blendFill,
+                                { width: `${(g.percentage / blendTotal) * 100}%` as any },
+                              ]}
+                            />
+                          </View>
+                        )}
+                      </View>
+                      {g.percentage != null && (
+                        <Text style={styles.blendPct}>{g.percentage}%</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.pillsRow}>
+                  {entry.grapes.map((g) => (
+                    <View key={g} style={styles.pill}>
+                      <Text style={styles.pillText}>{g}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </>
         )}
@@ -422,6 +477,26 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
 
+  // Label photo
+  labelPhotoWrap: {
+    width: '100%',
+    height: 180,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  labelPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  labelPhotoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+
   // Header
   header: {
     backgroundColor: Colors.white,
@@ -440,6 +515,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  originRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   originText: {
     fontFamily: Fonts.dmSansMedium,
@@ -461,6 +541,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.gold,
     letterSpacing: 0.5,
+  },
+  pricePill: {
+    backgroundColor: Colors.ink,
+    borderRadius: Radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  priceText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
+    letterSpacing: 0.3,
   },
   wineName: {
     fontFamily: Fonts.playfair,
@@ -555,6 +647,43 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 12,
     color: Colors.inkMuted,
+  },
+
+  // Grape blend list
+  blendList: {
+    gap: 10,
+  },
+  blendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  blendBarWrap: {
+    flex: 1,
+    gap: 4,
+  },
+  blendName: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  blendTrack: {
+    height: 5,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+  },
+  blendFill: {
+    height: '100%',
+    backgroundColor: Colors.gold,
+    borderRadius: Radius.full,
+  },
+  blendPct: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
+    width: 38,
+    textAlign: 'right',
   },
 
   // Footer
