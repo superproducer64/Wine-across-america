@@ -25,8 +25,8 @@ type Props = Record<string, never>;
 
 const STEPS = [
   { component: Step1Basics, label: 'Basics' },
-  { component: Step2StructureWheel, label: 'Structure' },
   { component: Step3Aromas, label: 'Aromas' },
+  { component: Step2StructureWheel, label: 'Structure' },
   { component: Step4TechnicalScore, label: 'Score' },
   { component: Step5NotesAndTerroir, label: 'Finish' },
 ];
