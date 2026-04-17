@@ -5,7 +5,9 @@ A professional wine tasting journal and intelligence app built with React Native
 ## Key Features
 
 - Multi-step wine entry flow (basics, structure, aromas, notes)
-- **Wine label scanning**: Camera/gallery photo + Tesseract.js OCR (web) to auto-fill entry form; label photo stored in Supabase Storage and displayed on the detail screen
+- **AI label scanning**: GPT-4o Vision auto-fills wine details from a label photo
+- **ProWineCard**: Pentagon radar chart (Acidity/Body/Alcohol/Tannin/Intensity), aroma profile bars, score circle, "Best Value" badge — matching the reference design
+- **Wine Comparison Mode**: Pick 2 wines from your history to compare side-by-side with VS. layout and score comparison bar
 - Vivino-style wine card with ratings, flavor bars, food pairings, grape pills
 - Share wine cards via native share sheet or in-app user sharing
 - "Shared with Me" inbox with unread badge on HomeScreen

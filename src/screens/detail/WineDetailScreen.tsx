@@ -14,6 +14,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
+import { ProWineCard } from '@/components/wine/ProWineCard';
 import { Button } from '@/components/ui/Button';
 import { getWineEntry } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
@@ -225,7 +226,10 @@ export function WineDetailScreen({ route, navigation }: Props) {
           </View>
         ) : null}
 
-        {/* Vivino-style Wine Card */}
+        {/* Intelligence Card — radar chart layout */}
+        <ProWineCard entry={entry} />
+
+        {/* Original Wine Card */}
         <VivinoStyleCard entry={entry} />
 
         {/* Price info */}

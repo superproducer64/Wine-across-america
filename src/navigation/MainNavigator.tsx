@@ -10,6 +10,7 @@ import { WineEntryScreen } from '@/screens/entry/WineEntryScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { WineDetailScreen } from '@/screens/detail/WineDetailScreen';
 import { SharedWineDetailScreen } from '@/screens/detail/SharedWineDetailScreen';
+import { ComparisonScreen } from '@/screens/comparison/ComparisonScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -90,6 +91,11 @@ export function MainNavigator() {
         name="SharedWineDetail"
         component={SharedWineDetailScreen}
         options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="Comparison"
+        component={ComparisonScreen}
+        options={{ animation: 'slide_from_bottom' }}
       />
     </Stack.Navigator>
   );

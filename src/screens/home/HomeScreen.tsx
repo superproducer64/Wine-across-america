@@ -203,9 +203,19 @@ export function HomeScreen() {
         {/* Recent Wines */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Wines</Text>
-          <Pressable onPress={() => navigation.navigate('Search' as never)}>
-            <Text style={styles.viewAll}>View all →</Text>
-          </Pressable>
+          <View style={styles.sectionActions}>
+            {entries.length >= 2 && (
+              <Pressable
+                onPress={() => navigation.navigate('Comparison' as never)}
+                style={styles.compareBtn}
+              >
+                <Text style={styles.compareBtnText}>Compare ⚖️</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={() => navigation.navigate('Search' as never)}>
+              <Text style={styles.viewAll}>View all →</Text>
+            </Pressable>
+          </View>
         </View>
 
         {loading ? (
@@ -371,6 +381,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: Fonts.playfair,
     fontSize: 18,
+    color: Colors.ink,
+  },
+  sectionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  compareBtn: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+  },
+  compareBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
     color: Colors.ink,
   },
   viewAll: {
