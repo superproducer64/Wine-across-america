@@ -86,6 +86,7 @@ export function Step5NotesAndTerroir() {
   const { draft, setBasics, setNotesAndTerroir } = useEntryDraftStore();
   const [locLoading, setLocLoading] = useState(false);
   const [locError, setLocError] = useState('');
+  const [tagText, setTagText] = useState(draft.tags.join(', '));
 
   const handleDetectLocation = async () => {
     setLocLoading(true);
@@ -101,6 +102,7 @@ export function Step5NotesAndTerroir() {
   };
 
   const handleTagInput = (text: string) => {
+    setTagText(text);
     const tags = text
       .split(',')
       .map((t) => t.trim())
@@ -264,7 +266,7 @@ export function Step5NotesAndTerroir() {
       <View style={styles.section}>
         <TextInput
           label="Tags (comma-separated)"
-          value={draft.tags.join(', ')}
+          value={tagText}
           onChangeText={handleTagInput}
           placeholder="mineral, volcanic, value, cellar"
           hint="Tags help you find wines with compound search"
