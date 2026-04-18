@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -44,13 +44,17 @@ export function HomeScreen() {
   const [sharedWines, setSharedWines] = useState<SharedWineItem[]>([]);
 
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+    // Only fetch entries when the store is empty — avoids re-fetching
+    // on every back-navigation from a detail screen.
+    if (entries.length === 0) {
       loadEntries(user.id, isSubscribed);
-      getSharedWithMe(user.id).then(({ data }) => {
-        if (data) setSharedWines(data as SharedWineItem[]);
-      });
     }
-  }, [user, isSubscribed]);
+    // Shared wines are lightweight; always refresh so new shares appear.
+    getSharedWithMe(user.id).then(({ data }) => {
+      if (data) setSharedWines(data as SharedWineItem[]);
+    });
+  }, [user]);
 
   const handleSharedWinePress = async (item: SharedWineItem) => {
     if (!item.seen) {
@@ -66,30 +70,27 @@ export function HomeScreen() {
   };
 
   const firstName = profile?.display_name?.split(' ')[0] ?? 'there';
-  const avgScore =
-    entries.length > 0
-      ? Math.round(entries.reduce((s, e) => s + e.technical_score, 0) / entries.length)
-      : 0;
 
-  const topCountry = (() => {
+  const avgScore = useMemo(() => {
+    if (!entries.length) return 0;
+    return Math.round(entries.reduce((s, e) => s + e.technical_score, 0) / entries.length);
+  }, [entries]);
+
+  const topCountry = useMemo(() => {
     if (!entries.length) return null;
     const counts: Record<string, number> = {};
-    entries.forEach((e) => {
-      counts[e.country] = (counts[e.country] ?? 0) + 1;
-    });
+    entries.forEach((e) => { counts[e.country] = (counts[e.country] ?? 0) + 1; });
     return Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
-  })();
+  }, [entries]);
 
-  const topGrape = (() => {
+  const topGrape = useMemo(() => {
     if (!entries.length) return null;
     const counts: Record<string, number> = {};
-    entries.forEach((e) => e.grapes.forEach((g) => {
-      counts[g] = (counts[g] ?? 0) + 1;
-    }));
+    entries.forEach((e) => e.grapes.forEach((g) => { counts[g] = (counts[g] ?? 0) + 1; }));
     return Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
-  })();
+  }, [entries]);
 
-  const recentEntries = entries.slice(0, 10);
+  const recentEntries = useMemo(() => entries.slice(0, 10), [entries]);
 
   const handleWinePress = (entry: WineEntry) => {
     navigation.navigate('WineDetail', { entryId: entry.id } as never);

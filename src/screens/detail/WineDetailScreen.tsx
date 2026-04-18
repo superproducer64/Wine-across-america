@@ -82,16 +82,21 @@ function buildShareText(entry: WineEntry): string {
 
 export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
-  const [entry, setEntry] = useState<WineEntry | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { entries, removeEntry } = useWineStore();
+  const { user, profile } = useAuthStore();
+
+  // Use cached store entry immediately — avoids a network round-trip on every open.
+  // Only fall back to fetching if the entry isn't in the store (e.g. deep link).
+  const cached = entries.find((e) => e.id === entryId) ?? null;
+  const [entry, setEntry] = useState<WineEntry | null>(cached);
+  const [loading, setLoading] = useState(cached === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [shareToast, setShareToast] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
-  const { removeEntry } = useWineStore();
-  const { user, profile } = useAuthStore();
 
   useEffect(() => {
+    if (cached !== null) return; // already have it, skip the fetch
     (async () => {
       const { data, error } = await getWineEntry(entryId);
       if (!error && data) {
