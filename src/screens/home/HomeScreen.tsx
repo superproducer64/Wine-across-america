@@ -422,13 +422,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.gold,
   },
-  loadingText: {
-    fontFamily: Fonts.playfairItalic,
-    fontSize: 14,
-    color: Colors.inkMuted,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
-  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: Spacing.huge,
