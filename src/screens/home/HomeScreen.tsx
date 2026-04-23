@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
-  FlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useWineStore } from '@/stores/wineStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { WineListItem } from '@/components/wine/WineListItem';
+import { SkeletonWineListItem } from '@/components/wine/SkeletonWineListItem';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { MainStackParamList, TabParamList } from '@/navigation/types';
@@ -92,9 +92,9 @@ export function HomeScreen() {
 
   const recentEntries = useMemo(() => entries.slice(0, 10), [entries]);
 
-  const handleWinePress = (entry: WineEntry) => {
+  const handleWinePress = useCallback((entry: WineEntry) => {
     navigation.navigate('WineDetail', { entryId: entry.id } as never);
-  };
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -220,7 +220,11 @@ export function HomeScreen() {
         </View>
 
         {loading ? (
-          <Text style={styles.loadingText}>Loading your wines…</Text>
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonWineListItem key={i} />
+            ))}
+          </>
         ) : recentEntries.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>🍾</Text>

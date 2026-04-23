@@ -22,7 +22,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
   Austria: '🇦🇹',
 };
 
-export function WineListItem({ entry, onPress }: WineListItemProps) {
+export const WineListItem = React.memo(function WineListItem({ entry, onPress }: WineListItemProps) {
   const flag = COUNTRY_FLAGS[entry.country] ?? '🍷';
   const scoreLabel = entry.technical_score >= 85 ? 'Outstanding' : entry.technical_score >= 70 ? 'Very Good' : 'Good';
 
@@ -55,7 +55,7 @@ export function WineListItem({ entry, onPress }: WineListItemProps) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

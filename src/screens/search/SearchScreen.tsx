@@ -80,9 +80,9 @@ export function SearchScreen() {
 
   const countries = Object.keys(COUNTRIES_AND_REGIONS).sort();
 
-  const handleWinePress = (entry: WineEntry) => {
+  const handleWinePress = useCallback((entry: WineEntry) => {
     navigation.navigate('WineDetail', { entryId: entry.id });
-  };
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -186,6 +186,10 @@ export function SearchScreen() {
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews
+          initialNumToRender={8}
+          maxToRenderPerBatch={5}
+          windowSize={5}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
