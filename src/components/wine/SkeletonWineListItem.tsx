@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet } from 'react-native';
+import { View, Animated, StyleSheet, DimensionValue } from 'react-native';
 import { Colors, Radius, Spacing } from '@/theme';
 
 function SkeletonBlock({
@@ -8,7 +8,7 @@ function SkeletonBlock({
   opacity,
   style,
 }: {
-  width: number | string;
+  width: DimensionValue;
   height: number;
   opacity: Animated.Value;
   style?: object;
@@ -17,7 +17,7 @@ function SkeletonBlock({
     <Animated.View
       style={[
         {
-          width: width as any,
+          width,
           height,
           borderRadius: Radius.sm,
           backgroundColor: Colors.surfaceAlt,

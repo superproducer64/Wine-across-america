@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   StyleSheet,
   SafeAreaView,
   Pressable,
@@ -225,18 +226,28 @@ export function HomeScreen() {
               <SkeletonWineListItem key={i} />
             ))}
           </>
-        ) : recentEntries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🍾</Text>
-            <Text style={styles.emptyTitle}>Your journal is empty</Text>
-            <Text style={styles.emptyBody}>
-              Tap the + button to log your first wine
-            </Text>
-          </View>
         ) : (
-          recentEntries.map((entry) => (
-            <WineListItem key={entry.id} entry={entry} onPress={handleWinePress} />
-          ))
+          <FlatList
+            data={recentEntries}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <WineListItem entry={item} onPress={handleWinePress} />
+            )}
+            scrollEnabled={false}
+            removeClippedSubviews
+            initialNumToRender={8}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyEmoji}>🍾</Text>
+                <Text style={styles.emptyTitle}>Your journal is empty</Text>
+                <Text style={styles.emptyBody}>
+                  Tap the + button to log your first wine
+                </Text>
+              </View>
+            }
+          />
         )}
       </ScrollView>
     </SafeAreaView>
