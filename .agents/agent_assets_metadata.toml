@@ -12,3 +12,9 @@ id = "qOhLXkKnrZWcUOsRZbP9w"
 uri = "file://How_To_Get_Build_Reports.md"
 type = "text"
 title = "How To Get Build Reports — Quick Reference Guide"
+
+[[outputs]]
+id = "it0Ft7tN0xWJC5TP134Vg"
+uri = "file://PourAcrossAmerica_BuildSummary.md"
+type = "text"
+title = "Pour Across America — Build Summary"
