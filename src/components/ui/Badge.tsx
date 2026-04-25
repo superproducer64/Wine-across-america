@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Colors, Fonts, Radius } from '@/theme';
+import { useResponsive } from '@/hooks/useResponsive';
 
 type BadgeVariant = 'gold' | 'muted' | 'terroir' | 'pro' | 'score';
 
@@ -19,16 +20,18 @@ const variantMap: Record<BadgeVariant, { bg: string; text: string; border: strin
 };
 
 export function Badge({ label, variant = 'gold', style }: BadgeProps) {
+  const { isWide } = useResponsive();
   const v = variantMap[variant];
   return (
     <View
       style={[
         styles.base,
+        isWide && styles.baseWide,
         { backgroundColor: v.bg, borderColor: v.border },
         style,
       ]}
     >
-      <Text style={[styles.text, { color: v.text }]}>{label}</Text>
+      <Text style={[styles.text, isWide && styles.textWide, { color: v.text }]}>{label}</Text>
     </View>
   );
 }
@@ -41,9 +44,16 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     borderWidth: 0.5,
   },
+  baseWide: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
   text: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
     letterSpacing: 0.3,
+  },
+  textWide: {
+    fontSize: 12,
   },
 });

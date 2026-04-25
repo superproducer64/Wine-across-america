@@ -238,10 +238,13 @@ export function HomeScreen() {
           </>
         ) : (
           <FlatList
+            key={isWide ? 'grid' : 'list'}
             data={recentEntries}
             keyExtractor={(item) => item.id}
+            numColumns={isWide ? 2 : 1}
+            columnWrapperStyle={isWide ? { gap: Spacing.md } : undefined}
             renderItem={({ item }) => (
-              <WineListItem entry={item} onPress={handleWinePress} />
+              <WineListItem entry={item} onPress={handleWinePress} style={isWide ? styles.gridItem : undefined} />
             )}
             scrollEnabled={false}
             removeClippedSubviews
@@ -432,6 +435,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 13,
     color: Colors.gold,
+  },
+  gridItem: {
+    flex: 1,
   },
   emptyState: {
     alignItems: 'center',

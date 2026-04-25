@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
+import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer';
 import { Button } from '@/components/ui/Button';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { Step1Basics } from './steps/Step1Basics';
@@ -87,7 +88,7 @@ export function WineEntryScreen(_props: Props) {
   // Success state
   if (savedEntryId) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
         <View style={styles.successContainer}>
           <Text style={styles.successEmoji}>🍷</Text>
           <Text style={styles.successTitle}>Wine Logged!</Text>
@@ -113,7 +114,7 @@ export function WineEntryScreen(_props: Props) {
   // Discard confirmation state
   if (confirmDiscard) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
         <View style={styles.confirmContainer}>
           <Text style={styles.confirmTitle}>Discard entry?</Text>
           <Text style={styles.confirmSub}>Your progress will be lost.</Text>
@@ -137,51 +138,53 @@ export function WineEntryScreen(_props: Props) {
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backBtn}>
-          <Text style={styles.backText}>{step === 0 ? '✕' : '‹'}</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerStep}>
-            Step {step + 1} of {STEPS.length}
-          </Text>
-          <Text style={styles.headerLabel}>{STEPS[step].label}</Text>
+      <ResponsiveContainer style={{ flex: 1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={handleBack} style={styles.backBtn}>
+            <Text style={styles.backText}>{step === 0 ? '✕' : '‹'}</Text>
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerStep}>
+              Step {step + 1} of {STEPS.length}
+            </Text>
+            <Text style={styles.headerLabel}>{STEPS[step].label}</Text>
+          </View>
+          <View style={styles.backBtn} />
         </View>
-        <View style={styles.backBtn} />
-      </View>
 
-      {/* Progress */}
-      <ProgressDots total={STEPS.length} current={step} />
+        {/* Progress */}
+        <ProgressDots total={STEPS.length} current={step} />
 
-      {error ? (
-        <Text style={styles.errorBanner}>{error}</Text>
-      ) : null}
+        {error ? (
+          <Text style={styles.errorBanner}>{error}</Text>
+        ) : null}
 
-      {/* Step content */}
-      <View style={styles.stepContainer}>
-        <StepComponent />
-      </View>
+        {/* Step content */}
+        <View style={styles.stepContainer}>
+          <StepComponent />
+        </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        {isLast ? (
-          <Button
-            label="Save Wine Entry"
-            onPress={handleSubmit}
-            loading={submitting}
-            size="lg"
-            style={styles.fullBtn}
-          />
-        ) : (
-          <Button
-            label="Continue →"
-            onPress={handleNext}
-            size="lg"
-            style={styles.fullBtn}
-          />
-        )}
-      </View>
+        {/* Footer */}
+        <View style={styles.footer}>
+          {isLast ? (
+            <Button
+              label="Save Wine Entry"
+              onPress={handleSubmit}
+              loading={submitting}
+              size="lg"
+              style={styles.fullBtn}
+            />
+          ) : (
+            <Button
+              label="Continue →"
+              onPress={handleNext}
+              size="lg"
+              style={styles.fullBtn}
+            />
+          )}
+        </View>
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 }

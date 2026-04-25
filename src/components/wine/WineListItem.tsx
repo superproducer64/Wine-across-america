@@ -1,11 +1,12 @@
 import React from 'react';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
 
 interface WineListItemProps {
   entry: WineEntry;
   onPress: (entry: WineEntry) => void;
+  style?: ViewStyle;
 }
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -22,13 +23,13 @@ const COUNTRY_FLAGS: Record<string, string> = {
   Austria: '🇦🇹',
 };
 
-export const WineListItem = React.memo(function WineListItem({ entry, onPress }: WineListItemProps) {
+export const WineListItem = React.memo(function WineListItem({ entry, onPress, style }: WineListItemProps) {
   const flag = COUNTRY_FLAGS[entry.country] ?? '🍷';
   const scoreLabel = entry.technical_score >= 85 ? 'Outstanding' : entry.technical_score >= 70 ? 'Very Good' : 'Good';
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.container, pressed && styles.pressed, style]}
       onPress={() => onPress(entry)}
     >
       <View style={styles.flagCol}>

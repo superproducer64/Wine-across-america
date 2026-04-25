@@ -182,10 +182,13 @@ export function SearchScreen() {
         </View>
       ) : (
         <FlatList
+          key={isWide ? 'grid' : 'list'}
           data={displayEntries}
           keyExtractor={(item) => item.id}
+          numColumns={isWide ? 2 : 1}
+          columnWrapperStyle={isWide ? { gap: Spacing.md } : undefined}
           renderItem={({ item }) => (
-            <WineListItem entry={item} onPress={handleWinePress} />
+            <WineListItem entry={item} onPress={handleWinePress} style={isWide ? { flex: 1 } : undefined} />
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
