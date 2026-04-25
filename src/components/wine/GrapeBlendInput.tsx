@@ -36,7 +36,7 @@ export function GrapeBlendInput({ value, onChange }: Props) {
 
   const handleAdd = (name: string) => {
     if (selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: null }]);
+    onChange([...value, { name, percentage: 100 }]);
     setQuery('');
     Keyboard.dismiss();
   };
@@ -44,7 +44,7 @@ export function GrapeBlendInput({ value, onChange }: Props) {
   const handleAddCustom = () => {
     const name = query.trim();
     if (!name || selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: null }]);
+    onChange([...value, { name, percentage: 100 }]);
     setQuery('');
     Keyboard.dismiss();
   };
@@ -102,15 +102,6 @@ export function GrapeBlendInput({ value, onChange }: Props) {
               </View>
             </View>
           ))}
-
-          {/* Hint when no percentages entered yet */}
-          {!hasAnyPct && (
-            <View style={styles.pctHintRow}>
-              <Text style={styles.pctHintText}>
-                Tap the % field on each grape to enter blend percentages (optional)
-              </Text>
-            </View>
-          )}
 
           {/* Blend total */}
           {hasAnyPct && (
@@ -257,16 +248,6 @@ const styles = StyleSheet.create({
   },
   pctSignFilled: {
     color: Colors.ink,
-  },
-  pctHintRow: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  pctHintText: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 11,
-    color: Colors.inkMuted,
-    fontStyle: 'italic',
   },
   totalRow: {
     flexDirection: 'row',
