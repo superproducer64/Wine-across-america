@@ -76,7 +76,7 @@ export function Step1Basics() {
         return;
       }
       const parsed = parseFloat(value);
-      if (isNaN(parsed) || parsed <= 0) {
+      if (isNaN(parsed)) {
         setBasics({ price: withoutType });
         return;
       }
