@@ -48,7 +48,7 @@ export function Step1Basics() {
     if (Object.keys(updates).length > 0) setBasics(updates);
     if (data.photoUrl) setLabelPhoto(data.photoUrl);
     if (data.grapes && data.grapes.length > 0) {
-      setGrapeBlends(data.grapes.map((g) => ({ grape: g, percentage: null })));
+      setGrapeBlends(data.grapes.map((g) => ({ name: g, percentage: 100 })));
     }
   };
 
@@ -209,7 +209,9 @@ export function Step1Basics() {
       {/* Grape Varieties */}
       <Text style={styles.label}>Grape Varieties</Text>
       <GrapeBlendInput
-        value={draft.grape_blends ?? draft.grapes.map((n) => ({ name: n, percentage: null }))}
+        value={(draft.grape_blends ?? draft.grapes.map((n) => ({ name: n, percentage: null }))).map(
+          (e) => ({ ...e, percentage: e.percentage ?? 100 })
+        )}
         onChange={setGrapeBlends}
       />
 
