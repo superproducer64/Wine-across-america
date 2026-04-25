@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
+import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer';
 import { TextInput } from '@/components/ui/TextInput';
 import { WineListItem } from '@/components/wine/WineListItem';
 import { useAuthStore } from '@/stores/authStore';
@@ -89,6 +90,7 @@ export function SearchScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
+      <ResponsiveContainer style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.title}>My Wines</Text>
         <Text style={styles.count}>{entries.length} entries</Text>
@@ -207,6 +209,7 @@ export function SearchScreen() {
           }
         />
       )}
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 }
