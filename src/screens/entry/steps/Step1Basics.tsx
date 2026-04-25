@@ -52,19 +52,46 @@ export function Step1Basics() {
     }
   };
 
-  const getPriceEntry = (type: 'glass' | 'bottle'): PriceEntry | undefined =>
-    draft.price.find((p) => p.type === type);
+  const getPriceEntry = (type: 'glass' | 'bottle'): PriceEntry | undefined => {
+    const typed = draft.price.find((p) => p.type === type);
+    if (typed) return typed;
+    // Legacy fallback: treat the first untyped entry (old single-price format) as bottle
+    if (type === 'bottle') return draft.price.find((p) => !p.type);
+    return undefined;
+  };
 
   const handlePriceChange = (type: 'glass' | 'bottle', field: 'amount' | 'currency', value: string) => {
-    const existing = getPriceEntry(type) ?? { amount: 0, currency: 'USD', date: '', location: '', type };
-    const updated: PriceEntry = {
-      ...existing,
-      [field]: field === 'amount' ? parseFloat(value) || 0 : value,
-    };
-    const withoutType = draft.price.filter((p) => p.type !== type);
-    if (field === 'amount' && !value.trim()) {
-      setBasics({ price: withoutType });
+    // Remove both the typed entry and any legacy untyped entry when updating bottle,
+    // so we don't end up with duplicate entries.
+    const withoutType = draft.price.filter((p) => {
+      if (p.type === type) return false;
+      if (type === 'bottle' && !p.type) return false;
+      return true;
+    });
+    const existing = getPriceEntry(type);
+
+    if (field === 'amount') {
+      if (!value.trim()) {
+        setBasics({ price: withoutType });
+        return;
+      }
+      const parsed = parseFloat(value);
+      if (isNaN(parsed) || parsed <= 0) {
+        setBasics({ price: withoutType });
+        return;
+      }
+      const updated: PriceEntry = {
+        amount: parsed,
+        currency: existing?.currency ?? 'USD',
+        date: existing?.date ?? '',
+        location: existing?.location ?? '',
+        type,
+      };
+      setBasics({ price: [...withoutType, updated] });
     } else {
+      // currency change — only persist if an amount-bearing entry already exists
+      if (!existing) return;
+      const updated: PriceEntry = { ...existing, currency: value, type };
       setBasics({ price: [...withoutType, updated] });
     }
   };
