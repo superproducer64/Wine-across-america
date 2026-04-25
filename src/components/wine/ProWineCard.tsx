@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry, AROMA_CATEGORIES } from '@/types';
 import { WineRadarChart } from './WineRadarChart';
@@ -139,6 +141,16 @@ export function ProWineCard({ entry, compact = false }: Props) {
     <View style={[styles.card, compact && styles.cardCompact]}>
       {/* ── Header ── */}
       <View style={styles.header}>
+        {entry.label_photo_url ? (
+          <Image
+            source={{ uri: entry.label_photo_url }}
+            style={[styles.headerThumbnail, compact && styles.headerThumbnailCompact]}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
+            transition={200}
+          />
+        ) : null}
         <Text style={[styles.producer, compact && styles.producerCompact]} numberOfLines={2}>
           {entry.producer || entry.name || 'Unknown Producer'}
         </Text>
@@ -248,6 +260,17 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
     gap: 4,
+  },
+  headerThumbnail: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surfaceAlt,
+    marginBottom: 4,
+  },
+  headerThumbnailCompact: {
+    width: 40,
+    height: 40,
   },
   producer: {
     fontFamily: Fonts.playfairSemiBold,

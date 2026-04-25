@@ -9,8 +9,9 @@ import {
   ActivityIndicator,
   Share,
   Platform,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
@@ -267,6 +268,10 @@ export function WineDetailScreen({ route, navigation }: Props) {
             <Image
               source={{ uri: entry.label_photo_url }}
               style={styles.labelPhoto}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
+              transition={200}
             />
           </View>
         ) : null}
@@ -432,7 +437,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 220,
     borderRadius: Radius.lg,
-    resizeMode: 'cover',
+    backgroundColor: Colors.surfaceAlt,
   },
   shareButtons: {
     gap: Spacing.sm,

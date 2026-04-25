@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry, AROMA_CATEGORIES } from '@/types';
 import { getFoodPairings } from '@/utils/foodPairings';
@@ -264,7 +266,10 @@ export function VivinoStyleCard({ entry }: Props) {
           <Image
             source={{ uri: entry.label_photo_url }}
             style={styles.labelPhoto}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
+            transition={200}
           />
           <View style={styles.labelPhotoOverlay} />
         </View>
@@ -487,6 +492,7 @@ const styles = StyleSheet.create({
   labelPhoto: {
     width: '100%',
     height: '100%',
+    backgroundColor: Colors.surfaceAlt,
   },
   labelPhotoOverlay: {
     position: 'absolute',

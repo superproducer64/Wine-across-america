@@ -1,6 +1,8 @@
 import React from 'react';
 import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
+import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { WineEntry } from '@/types';
 
 interface WineListItemProps {
@@ -33,7 +35,18 @@ export const WineListItem = React.memo(function WineListItem({ entry, onPress, s
       onPress={() => onPress(entry)}
     >
       <View style={styles.flagCol}>
-        <Text style={styles.flag}>{flag}</Text>
+        {entry.label_photo_url ? (
+          <Image
+            source={{ uri: entry.label_photo_url }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
+            transition={200}
+          />
+        ) : (
+          <Text style={styles.flag}>{flag}</Text>
+        )}
       </View>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
@@ -81,6 +94,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnail: {
+    width: 36,
+    height: 36,
+    backgroundColor: Colors.surfaceAlt,
   },
   flag: {
     fontSize: 20,
