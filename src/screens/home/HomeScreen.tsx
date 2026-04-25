@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '@/theme';
+import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { useAuthStore } from '@/stores/authStore';
 import { useWineStore } from '@/stores/wineStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -97,9 +98,18 @@ export function HomeScreen() {
     navigation.navigate('WineDetail', { entryId: entry.id } as never);
   }, [navigation]);
 
+  const { isWide } = useResponsive();
+
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          isWide && { paddingLeft: SIDEBAR_WIDTH + Spacing.xl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+      <View style={isWide ? { maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', width: '100%' } : undefined}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -249,6 +259,7 @@ export function HomeScreen() {
             }
           />
         )}
+      </View>
       </ScrollView>
     </SafeAreaView>
   );

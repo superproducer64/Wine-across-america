@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 import { TextInput } from '@/components/ui/TextInput';
 import { WineListItem } from '@/components/wine/WineListItem';
 import { useAuthStore } from '@/stores/authStore';
@@ -84,8 +85,10 @@ export function SearchScreen() {
     navigation.navigate('WineDetail', { entryId: entry.id });
   }, [navigation]);
 
+  const { isWide } = useResponsive();
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
       <View style={styles.header}>
         <Text style={styles.title}>My Wines</Text>
         <Text style={styles.count}>{entries.length} entries</Text>

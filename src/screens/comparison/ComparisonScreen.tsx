@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius, Shadows } from '@/theme';
+import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { MainStackParamList } from '@/navigation/types';
 import { useWineStore } from '@/stores/wineStore';
 import { WineEntry } from '@/types';
@@ -21,6 +22,7 @@ export function ComparisonScreen({ navigation }: Props) {
   const { entries } = useWineStore();
   const [selected, setSelected] = useState<WineEntry[]>([]);
   const [comparing, setComparing] = useState(false);
+  const { isWide } = useResponsive();
 
   const toggleSelect = (entry: WineEntry) => {
     if (selected.find((e) => e.id === entry.id)) {
@@ -88,7 +90,7 @@ export function ComparisonScreen({ navigation }: Props) {
       <FlatList
         data={entries}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, isWide && { maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', width: '100%' }]}
         renderItem={({ item }) => {
           const idx = selectionIndex(item);
           const sel = idx !== -1;

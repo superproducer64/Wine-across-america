@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ViewStyle, StyleSheet } from 'react-native';
 import { Colors, Radius, Shadows, Spacing } from '@/theme';
+import { useResponsive } from '@/hooks/useResponsive';
 
 interface CardProps {
   children: React.ReactNode;
@@ -10,10 +11,13 @@ interface CardProps {
 }
 
 export function Card({ children, style, elevated = false, dark = false }: CardProps) {
+  const { isWide } = useResponsive();
+
   return (
     <View
       style={[
         styles.base,
+        isWide && styles.baseWide,
         dark ? styles.dark : styles.light,
         elevated && Shadows.md,
         style,
@@ -29,6 +33,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 0.5,
+  },
+  baseWide: {
+    padding: Spacing.xl,
   },
   light: {
     backgroundColor: Colors.surface,

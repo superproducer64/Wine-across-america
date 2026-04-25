@@ -19,9 +19,10 @@ A professional wine tasting journal and intelligence app built with React Native
 - **Language**: TypeScript
 - **Backend/Database**: Supabase (PostgreSQL + Auth + Storage)
 - **State Management**: Zustand
-- **Navigation**: React Navigation (Native Stack + Bottom Tabs)
+- **Navigation**: React Navigation (Native Stack + Bottom Tabs, adaptive sidebar on tablet/desktop)
 - **Charts**: react-native-svg (custom RadarChart)
 - **Styling**: React Native StyleSheet with centralized theme
+- **Responsive**: `useResponsive` hook in `src/hooks/useResponsive.ts`; breakpoints: phone < 600, tablet 600–1023, desktop ≥ 1024
 
 ## Project Structure
 
@@ -29,11 +30,12 @@ A professional wine tasting journal and intelligence app built with React Native
 src/
   components/   # Reusable UI components
     charts/     # RadarChart, AromaProfileBars
-    ui/         # Button, TextInput, Badge
-    wine/       # WineIdentityCard, StyleSummaryBar
+    ui/         # Button, TextInput, Badge, ResponsiveContainer
+    wine/       # WineIdentityCard, StyleSummaryBar, SkeletonWineListItem
+  hooks/        # useResponsive (breakpoints, isPhone/isTablet/isDesktop/isWide)
   lib/          # supabase.ts client setup
-  navigation/   # RootNavigator, AuthNavigator, MainNavigator
-  screens/      # Auth, Home, Search, Detail, Entry, Settings
+  navigation/   # RootNavigator, AuthNavigator, MainNavigator (adaptive sidebar)
+  screens/      # Auth, Home, Search, Detail, Entry, Settings, Comparison
   stores/       # Zustand stores: auth, wine, subscription, entryDrafts
   theme/        # Colors, Typography, Spacing
   types/        # TypeScript interfaces

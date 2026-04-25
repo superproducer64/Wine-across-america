@@ -9,6 +9,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { Step1Basics } from './steps/Step1Basics';
@@ -44,6 +45,7 @@ export function WineEntryScreen(_props: Props) {
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
+  const { isWide } = useResponsive();
 
   const handleNext = () => {
     setError('');
@@ -134,7 +136,7 @@ export function WineEntryScreen(_props: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={handleBack} style={styles.backBtn}>

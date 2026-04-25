@@ -1,8 +1,8 @@
 import React from 'react';
 import { Text, View, Pressable, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Colors, Fonts, Radius } from '@/theme';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { TabParamList, MainStackParamList } from './types';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { SearchScreen } from '@/screens/search/SearchScreen';
@@ -11,9 +11,17 @@ import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { WineDetailScreen } from '@/screens/detail/WineDetailScreen';
 import { SharedWineDetailScreen } from '@/screens/detail/SharedWineDetailScreen';
 import { ComparisonScreen } from '@/screens/comparison/ComparisonScreen';
+import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
+
+const TAB_ITEMS = [
+  { name: 'Home' as const, emoji: '🏠', label: 'Home' },
+  { name: 'Search' as const, emoji: '🔍', label: 'Search' },
+  { name: 'AddEntry' as const, emoji: '+', label: 'Add Wine' },
+  { name: 'Settings' as const, emoji: '👤', label: 'Account' },
+];
 
 function TabBarIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
@@ -24,56 +32,98 @@ function TabBarIcon({ emoji, label, focused }: { emoji: string; label: string; f
   );
 }
 
-function TabNavigator() {
+function CustomTabBar({ state, navigation, insets }: BottomTabBarProps) {
+  const { isWide } = useResponsive();
+
+  if (isWide) {
+    return (
+      <View style={sidebarStyles.container}>
+        <View style={sidebarStyles.logoSection}>
+          <Text style={sidebarStyles.logoLine1}>Pour Across</Text>
+          <Text style={sidebarStyles.logoLine2}>America</Text>
+        </View>
+
+        <View style={sidebarStyles.divider} />
+
+        <View style={sidebarStyles.navItems}>
+          {state.routes
+            .filter((r) => r.name !== 'AddEntry')
+            .map((route) => {
+              const idx = state.routes.indexOf(route);
+              const focused = state.index === idx;
+              const item = TAB_ITEMS.find((t) => t.name === route.name);
+              return (
+                <Pressable
+                  key={route.key}
+                  style={[sidebarStyles.navItem, focused && sidebarStyles.navItemActive]}
+                  onPress={() => navigation.navigate(route.name as keyof TabParamList)}
+                >
+                  <Text style={sidebarStyles.navEmoji}>{item?.emoji}</Text>
+                  <Text style={[sidebarStyles.navLabel, focused && sidebarStyles.navLabelActive]}>
+                    {item?.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+        </View>
+
+        <Pressable
+          style={sidebarStyles.addWineBtn}
+          onPress={() => navigation.navigate('AddEntry')}
+        >
+          <Text style={sidebarStyles.addWineBtnText}>+ Add Wine</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false,
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon emoji="🏠" label="Home" focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Search"
-        component={SearchScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon emoji="🔍" label="Search" focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="AddEntry"
-        component={WineEntryScreen}
-        options={({ navigation }) => ({
-          tabBarButton: () => (
+    <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+      {state.routes.map((route) => {
+        const index = state.routes.indexOf(route);
+        const focused = state.index === index;
+
+        if (route.name === 'AddEntry') {
+          return (
             <Pressable
-              onPress={() => navigation.navigate('AddEntry')}
+              key={route.key}
               style={styles.addButton}
+              onPress={() => navigation.navigate('AddEntry')}
             >
               <Text style={styles.addButtonText}>+</Text>
             </Pressable>
-          ),
-        })}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon emoji="👤" label="Account" focused={focused} />
-          ),
-        }}
-      />
+          );
+        }
+
+        const item = TAB_ITEMS.find((t) => t.name === route.name);
+        return (
+          <Pressable
+            key={route.key}
+            style={styles.tabButton}
+            onPress={() => navigation.navigate(route.name as keyof TabParamList)}
+          >
+            <TabBarIcon
+              emoji={item?.emoji ?? ''}
+              label={item?.label ?? ''}
+              focused={focused}
+            />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <CustomTabBar {...props} />}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen name="AddEntry" component={WineEntryScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
@@ -101,18 +151,102 @@ export function MainNavigator() {
   );
 }
 
+const sidebarStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: SIDEBAR_WIDTH,
+    backgroundColor: Colors.ink,
+    borderRightWidth: 0.5,
+    borderRightColor: 'rgba(196,132,122,0.2)',
+    paddingTop: 48,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+    zIndex: 100,
+  },
+  logoSection: {
+    marginBottom: Spacing.lg,
+    paddingHorizontal: 4,
+  },
+  logoLine1: {
+    fontFamily: Fonts.playfairItalic,
+    fontSize: 13,
+    color: Colors.gold,
+    letterSpacing: 0.3,
+  },
+  logoLine2: {
+    fontFamily: Fonts.playfair,
+    fontSize: 18,
+    color: Colors.white,
+    lineHeight: 22,
+  },
+  divider: {
+    height: 0.5,
+    backgroundColor: 'rgba(196,132,122,0.2)',
+    marginBottom: Spacing.lg,
+  },
+  navItems: {
+    flex: 1,
+    gap: 4,
+  },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
+  },
+  navItemActive: {
+    backgroundColor: 'rgba(196,132,122,0.12)',
+  },
+  navEmoji: {
+    fontSize: 18,
+  },
+  navLabel: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  navLabelActive: {
+    color: Colors.gold,
+  },
+  addWineBtn: {
+    backgroundColor: Colors.gold,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  addWineBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 14,
+    color: Colors.ink,
+    letterSpacing: 0.2,
+  },
+});
+
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#EFE4E1',
     borderTopColor: 'rgba(196,132,122,0.3)',
     borderTopWidth: 0.5,
     height: 70,
-    paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingTop: 6,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabIcon: {
     alignItems: 'center',
     gap: 2,
-    paddingTop: 6,
   },
   tabEmoji: {
     fontSize: 20,

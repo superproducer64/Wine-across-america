@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -17,10 +18,12 @@ export function SettingsScreen() {
   const { isSubscribed } = useSubscriptionStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
+  const { isWide } = useResponsive();
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={isWide ? { maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', width: '100%' } : undefined}>
         <Text style={styles.title}>Account</Text>
 
         {/* Profile */}
@@ -148,6 +151,7 @@ export function SettingsScreen() {
             style={styles.signOutBtn}
           />
         )}
+      </View>
       </ScrollView>
     </SafeAreaView>
   );

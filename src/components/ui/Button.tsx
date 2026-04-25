@@ -8,6 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
+import { useResponsive } from '@/hooks/useResponsive';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 type Size = 'sm' | 'md' | 'lg';
@@ -77,6 +78,12 @@ const sizeStyles: Record<Size, { container: ViewStyle; text: TextStyle }> = {
   },
 };
 
+const wideSizeExtra: Record<Size, ViewStyle> = {
+  sm: { paddingVertical: 10, paddingHorizontal: 18 },
+  md: { paddingVertical: 14, paddingHorizontal: 24 },
+  lg: { paddingVertical: 18, paddingHorizontal: 32 },
+};
+
 export function Button({
   label,
   onPress,
@@ -86,6 +93,7 @@ export function Button({
   disabled = false,
   style,
 }: ButtonProps) {
+  const { isWide } = useResponsive();
   const vs = variantStyles[variant];
   const ss = sizeStyles[size];
   const isDisabled = disabled || loading;
@@ -98,6 +106,7 @@ export function Button({
         styles.base,
         vs.container,
         ss.container,
+        isWide && wideSizeExtra[size],
         pressed && styles.pressed,
         isDisabled && styles.disabled,
         style,

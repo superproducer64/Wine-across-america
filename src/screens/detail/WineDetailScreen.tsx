@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { ProWineCard } from '@/components/wine/ProWineCard';
 import { Button } from '@/components/ui/Button';
@@ -83,6 +84,7 @@ function buildShareText(entry: WineEntry): string {
 export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const { entries, removeEntry } = useWineStore();
+  const { isWide } = useResponsive();
   const { user, profile } = useAuthStore();
 
   // Use cached store entry immediately — avoids a network round-trip on every open.
@@ -206,7 +208,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
       )}
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, isWide && { maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', width: '100%' }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Date & location meta */}
