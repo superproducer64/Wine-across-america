@@ -106,18 +106,15 @@ export async function listWineEntries(userId: string, options?: {
   ascending?: boolean;
   filters?: Record<string, unknown>;
 }) {
-  let query = supabase
-    .from('wine_entries')
-    .select('*')
-    .eq('user_id', userId)
-    .order(options?.orderBy ?? 'created_at', { ascending: options?.ascending ?? false });
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
 
-  if (options?.limit) {
-    query = query.limit(options.limit);
-  }
-  if (options?.offset) {
-    query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
-  }
+  const query = supabase
+    .from('wine_entries')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .order(options?.orderBy ?? 'created_at', { ascending: options?.ascending ?? false })
+    .range(offset, offset + limit - 1);
 
   return query;
 }

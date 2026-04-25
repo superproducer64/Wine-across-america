@@ -9,15 +9,20 @@ import {
 } from '@/lib/supabase';
 
 const FREE_TIER_LIMIT = 30;
+const PAGE_SIZE = 20;
 
 interface WineStore {
   entries: WineEntry[];
   totalCount: number;
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
+  currentPage: number;
   searchResults: WineEntry[];
   searching: boolean;
 
   loadEntries: (userId: string, isPro: boolean) => Promise<void>;
+  loadMore: (userId: string, isPro: boolean) => Promise<void>;
   addEntry: (userId: string, draft: WineEntryDraft) => Promise<WineEntry | null>;
   updateEntry: (id: string, updates: Partial<WineEntryDraft>) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
@@ -29,17 +34,51 @@ export const useWineStore = create<WineStore>((set, get) => ({
   entries: [],
   totalCount: 0,
   loading: false,
+  loadingMore: false,
+  hasMore: false,
+  currentPage: 0,
   searchResults: [],
   searching: false,
 
-  loadEntries: async (userId, isPro) => {
-    set({ loading: true });
-    const limit = isPro ? undefined : FREE_TIER_LIMIT;
-    const { data, error } = await listWineEntries(userId, { limit });
+  loadEntries: async (userId, _isPro) => {
+    set({ loading: true, currentPage: 0 });
+    const { data, error, count } = await listWineEntries(userId, { limit: PAGE_SIZE, offset: 0 });
     if (!error && data) {
-      set({ entries: data as WineEntry[], totalCount: data.length, loading: false });
+      const total = count ?? data.length;
+      set({
+        entries: data as WineEntry[],
+        totalCount: total,
+        hasMore: data.length < total,
+        currentPage: 0,
+        loading: false,
+      });
     } else {
       set({ loading: false });
+    }
+  },
+
+  loadMore: async (userId, isPro) => {
+    const { loadingMore, hasMore, currentPage, entries } = get();
+    if (loadingMore || !hasMore) return;
+    set({ loadingMore: true });
+    const nextPage = currentPage + 1;
+    const offset = nextPage * PAGE_SIZE;
+    const { data, error, count } = await listWineEntries(userId, {
+      limit: PAGE_SIZE,
+      offset,
+    });
+    if (!error && data) {
+      const total = count ?? get().totalCount;
+      const allEntries = [...entries, ...(data as WineEntry[])];
+      set({
+        entries: allEntries,
+        totalCount: total,
+        hasMore: allEntries.length < total,
+        currentPage: nextPage,
+        loadingMore: false,
+      });
+    } else {
+      set({ loadingMore: false });
     }
   },
 
@@ -53,7 +92,10 @@ export const useWineStore = create<WineStore>((set, get) => ({
     if (error || !data) return null;
 
     const entry = data as WineEntry;
-    set((state) => ({ entries: [entry, ...state.entries] }));
+    set((state) => ({
+      entries: [entry, ...state.entries],
+      totalCount: state.totalCount + 1,
+    }));
     return entry;
   },
 
@@ -78,7 +120,10 @@ export const useWineStore = create<WineStore>((set, get) => ({
 
   removeEntry: async (id) => {
     await deleteWineEntry(id);
-    set((state) => ({ entries: state.entries.filter((e) => e.id !== id) }));
+    set((state) => ({
+      entries: state.entries.filter((e) => e.id !== id),
+      totalCount: Math.max(0, state.totalCount - 1),
+    }));
   },
 
   search: async (userId, query, filters) => {

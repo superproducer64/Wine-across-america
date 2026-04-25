@@ -38,7 +38,7 @@ function sortEntries(entries: WineEntry[], sort: SortOption): WineEntry[] {
 export function SearchScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { user } = useAuthStore();
-  const { entries, searchResults, searching, search, clearSearch, loadEntries } = useWineStore();
+  const { entries, totalCount, searchResults, searching, hasMore, loadingMore, search, clearSearch, loadEntries, loadMore } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
 
   const [query, setQuery] = useState('');
@@ -93,7 +93,7 @@ export function SearchScreen() {
       <ResponsiveContainer style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.title}>My Wines</Text>
-        <Text style={styles.count}>{entries.length} entries</Text>
+        <Text style={styles.count}>{totalCount} entries</Text>
       </View>
 
       {/* Search Bar */}
@@ -198,6 +198,13 @@ export function SearchScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={5}
           windowSize={5}
+          onEndReachedThreshold={0.3}
+          onEndReached={() => {
+            const isSearching = !!(query || filterCountry || filterMinScore);
+            if (!isSearching && hasMore && user) {
+              loadMore(user.id, isSubscribed);
+            }
+          }}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
@@ -206,6 +213,13 @@ export function SearchScreen() {
                   : 'No wines logged yet'}
               </Text>
             </View>
+          }
+          ListFooterComponent={
+            loadingMore && !(query || filterCountry || filterMinScore) ? (
+              <View style={styles.loadMoreFooter}>
+                <ActivityIndicator size="small" color={Colors.gold} />
+              </View>
+            ) : null
           }
         />
       )}
@@ -359,5 +373,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.playfairItalic,
     fontSize: 15,
     color: Colors.inkMuted,
+  },
+  loadMoreFooter: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
   },
 });

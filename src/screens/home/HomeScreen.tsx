@@ -7,6 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -41,7 +42,7 @@ interface SharedWineItem {
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavProp>();
   const { user, profile } = useAuthStore();
-  const { entries, loading, loadEntries } = useWineStore();
+  const { entries, totalCount, loading, loadingMore, hasMore, loadEntries, loadMore } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
   const [sharedWines, setSharedWines] = useState<SharedWineItem[]>([]);
 
@@ -92,7 +93,7 @@ export function HomeScreen() {
     return Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
   }, [entries]);
 
-  const recentEntries = useMemo(() => entries.slice(0, 10), [entries]);
+  const recentEntries = useMemo(() => entries, [entries]);
 
   const handleWinePress = useCallback((entry: WineEntry) => {
     navigation.navigate('WineDetail', { entryId: entry.id } as never);
@@ -128,9 +129,9 @@ export function HomeScreen() {
         {/* Analytics Summary */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{entries.length}</Text>
+            <Text style={styles.statValue}>{totalCount}</Text>
             <Text style={styles.statLabel}>Wines Logged</Text>
-            {!isSubscribed && entries.length >= 30 && (
+            {!isSubscribed && totalCount >= 30 && (
               <Text style={styles.freeLimitHint}>Free limit reached</Text>
             )}
           </View>
@@ -259,6 +260,21 @@ export function HomeScreen() {
                   Tap the + button to log your first wine
                 </Text>
               </View>
+            }
+            ListFooterComponent={
+              hasMore ? (
+                <Pressable
+                  style={styles.loadMoreBtn}
+                  onPress={() => user && loadMore(user.id, isSubscribed)}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={Colors.gold} />
+                  ) : (
+                    <Text style={styles.loadMoreText}>Load more</Text>
+                  )}
+                </Pressable>
+              ) : null
             }
           />
         )}
@@ -455,6 +471,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.inkMuted,
     textAlign: 'center',
+  },
+
+  loadMoreBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  loadMoreText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.gold,
   },
 
   // Shared with Me
