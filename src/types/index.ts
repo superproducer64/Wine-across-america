@@ -129,6 +129,7 @@ export interface PriceEntry {
   currency: string;
   date: string;
   location: string;
+  type?: 'glass' | 'bottle';
 }
 
 // ─── Wine Entry ───────────────────────────────────────────────────────────────

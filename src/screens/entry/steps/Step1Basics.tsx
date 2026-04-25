@@ -52,13 +52,21 @@ export function Step1Basics() {
     }
   };
 
-  const handlePriceChange = (field: keyof PriceEntry, value: string) => {
-    const existing = draft.price[0] ?? { amount: 0, currency: 'USD', date: '', location: '' };
+  const getPriceEntry = (type: 'glass' | 'bottle'): PriceEntry | undefined =>
+    draft.price.find((p) => p.type === type);
+
+  const handlePriceChange = (type: 'glass' | 'bottle', field: 'amount' | 'currency', value: string) => {
+    const existing = getPriceEntry(type) ?? { amount: 0, currency: 'USD', date: '', location: '', type };
     const updated: PriceEntry = {
       ...existing,
       [field]: field === 'amount' ? parseFloat(value) || 0 : value,
     };
-    setBasics({ price: [updated] });
+    const withoutType = draft.price.filter((p) => p.type !== type);
+    if (field === 'amount' && !value.trim()) {
+      setBasics({ price: withoutType });
+    } else {
+      setBasics({ price: [...withoutType, updated] });
+    }
   };
 
   return (
@@ -180,19 +188,38 @@ export function Step1Basics() {
 
       {/* Price */}
       <Text style={styles.label}>Price (optional)</Text>
+      <Text style={styles.priceSubLabel}>Per glass</Text>
       <View style={styles.priceRow}>
         <TextInput
           label="Amount"
-          value={draft.price[0] ? String(draft.price[0].amount || '') : ''}
-          onChangeText={(v) => handlePriceChange('amount', v)}
+          value={getPriceEntry('glass') ? String(getPriceEntry('glass')!.amount || '') : ''}
+          onChangeText={(v) => handlePriceChange('glass', 'amount', v)}
           keyboardType="decimal-pad"
           placeholder="0.00"
           containerStyle={{ flex: 1 }}
         />
         <TextInput
           label="Currency"
-          value={draft.price[0]?.currency ?? 'USD'}
-          onChangeText={(v) => handlePriceChange('currency', v)}
+          value={getPriceEntry('glass')?.currency ?? 'USD'}
+          onChangeText={(v) => handlePriceChange('glass', 'currency', v)}
+          placeholder="USD"
+          containerStyle={{ width: 70 }}
+        />
+      </View>
+      <Text style={[styles.priceSubLabel, styles.priceSubLabelGap]}>Per bottle</Text>
+      <View style={styles.priceRow}>
+        <TextInput
+          label="Amount"
+          value={getPriceEntry('bottle') ? String(getPriceEntry('bottle')!.amount || '') : ''}
+          onChangeText={(v) => handlePriceChange('bottle', 'amount', v)}
+          keyboardType="decimal-pad"
+          placeholder="0.00"
+          containerStyle={{ flex: 1 }}
+        />
+        <TextInput
+          label="Currency"
+          value={getPriceEntry('bottle')?.currency ?? 'USD'}
+          onChangeText={(v) => handlePriceChange('bottle', 'currency', v)}
           placeholder="USD"
           containerStyle={{ width: 70 }}
         />
@@ -335,5 +362,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.md,
     alignItems: 'flex-end',
+  },
+  priceSubLabel: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    marginBottom: 2,
+    marginTop: Spacing.sm,
+  },
+  priceSubLabelGap: {
+    marginTop: Spacing.md,
   },
 });
