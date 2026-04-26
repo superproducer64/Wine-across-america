@@ -18,3 +18,9 @@ id = "it0Ft7tN0xWJC5TP134Vg"
 uri = "file://PourAcrossAmerica_BuildSummary.md"
 type = "text"
 title = "Pour Across America — Build Summary"
+
+[[outputs]]
+id = "XBu_YH97As-_ZCfWCLzMf"
+uri = "file://pour-across-america-dev-report-apr14-apr26.md"
+type = "text"
+title = "Pour Across America — Dev Report Apr 14–26"
