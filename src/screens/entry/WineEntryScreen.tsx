@@ -25,7 +25,7 @@ import { MainStackParamList } from '@/navigation/types';
 
 type Props = Record<string, never>;
 
-const STEPS = [
+const BASE_STEPS = [
   { component: Step1Basics, label: 'Basics' },
   { component: Step3Aromas, label: 'Aromas' },
   { component: Step2StructureWheel, label: 'Structure' },
@@ -41,8 +41,11 @@ export function WineEntryScreen(_props: Props) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
   const { draft, reset } = useEntryDraftStore();
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const { addEntry } = useWineStore();
+
+  const isSommelier = profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+  const STEPS = BASE_STEPS;
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
@@ -162,7 +165,9 @@ export function WineEntryScreen(_props: Props) {
 
         {/* Step content */}
         <View style={styles.stepContainer}>
-          <StepComponent />
+          {step === STEPS.length - 1
+            ? <Step5NotesAndTerroir isSommelier={isSommelier} />
+            : <StepComponent />}
         </View>
 
         {/* Footer */}

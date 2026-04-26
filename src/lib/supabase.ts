@@ -65,12 +65,17 @@ export async function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export async function signUpWithEmail(email: string, password: string, displayName: string) {
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  displayName: string,
+  userRole: 'enthusiast' | 'sommelier' = 'enthusiast'
+) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { display_name: displayName },
+      data: { display_name: displayName, user_role: userRole },
     },
   });
   if (error) throw error;
@@ -165,6 +170,46 @@ export async function getUserProfile(userId: string) {
 
 export async function updateUserProfile(userId: string, updates: Record<string, unknown>) {
   return supabase.from('user_profiles').update(updates).eq('id', userId).select().single();
+}
+
+// ─── Sommelier Certification Upload ──────────────────────────────────────────
+
+export async function uploadSommelierCert(
+  userId: string,
+  imageDataUrl: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    const path = `${userId}/${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('sommelier-certs')
+      .upload(path, blob, { contentType: blob.type, upsert: true });
+
+    if (error) return { url: null, error: error.message };
+
+    const { data } = supabase.storage.from('sommelier-certs').getPublicUrl(path);
+    return { url: data.publicUrl, error: null };
+  } catch (e: unknown) {
+    return { url: null, error: String(e) };
+  }
+}
+
+export async function submitSommelierApplication(
+  userId: string,
+  certUrl: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({
+      user_role: 'sommelier',
+      sommelier_cert_url: certUrl,
+      sommelier_status: 'pending',
+    })
+    .eq('id', userId);
+  return { error: error ? error.message : null };
 }
 
 // ─── Label Photo Upload ───────────────────────────────────────────────────────

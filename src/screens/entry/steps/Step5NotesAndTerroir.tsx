@@ -82,7 +82,11 @@ async function detectLocation(): Promise<{ name: string; lat: number; lng: numbe
   }
 }
 
-export function Step5NotesAndTerroir() {
+interface Props {
+  isSommelier?: boolean;
+}
+
+export function Step5NotesAndTerroir({ isSommelier }: Props) {
   const { draft, setBasics, setNotesAndTerroir } = useEntryDraftStore();
   const [locLoading, setLocLoading] = useState(false);
   const [locError, setLocError] = useState('');
@@ -195,7 +199,8 @@ export function Step5NotesAndTerroir() {
         </View>
       </View>
 
-      {/* Terroir Toggle */}
+      {/* Terroir Toggle — Sommelier only */}
+      {isSommelier ? (
       <View style={styles.section}>
         <View style={styles.terriorHeaderRow}>
           <View>
@@ -261,6 +266,7 @@ export function Step5NotesAndTerroir() {
           </View>
         )}
       </View>
+      ) : null}
 
       {/* Tags */}
       <View style={styles.section}>

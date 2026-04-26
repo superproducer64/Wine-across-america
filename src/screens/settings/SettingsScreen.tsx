@@ -12,13 +12,57 @@ import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResp
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
+import { uploadSommelierCert, submitSommelierApplication } from '@/lib/supabase';
 
 export function SettingsScreen() {
-  const { user, profile, signOut } = useAuthStore();
+  const { user, profile, signOut, loadProfile } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
+  const [showSommelierApply, setShowSommelierApply] = useState(false);
+  const [certDataUrl, setCertDataUrl] = useState<string | null>(null);
+  const [certUploading, setCertUploading] = useState(false);
+  const [certError, setCertError] = useState('');
+  const [certSuccess, setCertSuccess] = useState(false);
   const { isWide } = useResponsive();
+
+  const isSommelierApproved =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+  const isSommelierPending =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'pending';
+  const isSommelierRejected =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'rejected';
+  const isEnthusiast = !isSommelierApproved && !isSommelierPending;
+
+  const handleSommelierApply = async () => {
+    if (!certDataUrl || !user) {
+      setCertError('Please upload your certification before submitting.');
+      return;
+    }
+    setCertUploading(true);
+    setCertError('');
+    const { url, error: uploadError } = await uploadSommelierCert(user.id, certDataUrl);
+    if (uploadError || !url) {
+      setCertError(uploadError ?? 'Upload failed. Please try again.');
+      setCertUploading(false);
+      return;
+    }
+    const { error: applyError } = await submitSommelierApplication(user.id, url);
+    if (applyError) {
+      setCertError(applyError);
+      setCertUploading(false);
+      return;
+    }
+    await loadProfile(user.id);
+    setCertUploading(false);
+    setCertSuccess(true);
+    setShowSommelierApply(false);
+  };
+
+  const roleBadge = isSommelierApproved
+    ? { label: 'Sommelier', icon: '🎓', color: Colors.gold }
+    : { label: 'Wine Enthusiast', icon: '🍷', color: Colors.inkMuted };
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
@@ -38,8 +82,114 @@ export function SettingsScreen() {
               <Text style={styles.displayName}>{profile.display_name}</Text>
             ) : null}
             <Text style={styles.email}>{user?.email ?? '—'}</Text>
+            <View style={styles.roleBadgeRow}>
+              <Text style={styles.roleBadgeIcon}>{roleBadge.icon}</Text>
+              <Text style={[styles.roleBadgeLabel, { color: roleBadge.color }]}>
+                {roleBadge.label}
+              </Text>
+              {isSommelierApproved && (
+                <View style={styles.verifiedPill}>
+                  <Text style={styles.verifiedPillText}>Verified</Text>
+                </View>
+              )}
+              {isSommelierPending && (
+                <View style={[styles.verifiedPill, styles.pendingPill]}>
+                  <Text style={[styles.verifiedPillText, styles.pendingPillText]}>Pending Review</Text>
+                </View>
+              )}
+              {isSommelierRejected && (
+                <View style={[styles.verifiedPill, styles.rejectedPill]}>
+                  <Text style={[styles.verifiedPillText, styles.rejectedPillText]}>Not Approved</Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
+
+        {/* Sommelier upgrade (for enthusiasts and rejected) */}
+        {(isEnthusiast || isSommelierRejected) && (
+          <View style={styles.sommelierCard}>
+            <View style={styles.sommelierHeader}>
+              <Text style={styles.sommelierTitle}>
+                {isSommelierRejected ? '🎓 Reapply as Sommelier' : '🎓 Apply as Sommelier'}
+              </Text>
+              <Text style={styles.sommelierDesc}>
+                {isSommelierRejected
+                  ? 'Your previous application was not approved. You may reapply with a valid Level 3 certification.'
+                  : 'Unlock professional terroir analysis fields. Requires a Level 3 certification from any recognized sommelier program (CMS, WSET, ISG, etc.).'}
+              </Text>
+            </View>
+
+            {certSuccess && (
+              <View style={styles.certSuccessBanner}>
+                <Text style={styles.certSuccessText}>
+                  Application submitted! Your certification is under review. You'll have access to professional features once approved.
+                </Text>
+              </View>
+            )}
+
+            {!certSuccess && (
+              <>
+                {!showSommelierApply ? (
+                  <Button
+                    label="Apply for Sommelier Status"
+                    onPress={() => setShowSommelierApply(true)}
+                    variant="secondary"
+                  />
+                ) : (
+                  <View style={styles.applyForm}>
+                    <SommelierCertUpload
+                      onCertSelected={setCertDataUrl}
+                      certDataUrl={certDataUrl}
+                      uploading={certUploading}
+                      error={certError}
+                    />
+                    <View style={styles.applyActions}>
+                      <Button
+                        label="Cancel"
+                        onPress={() => { setShowSommelierApply(false); setCertDataUrl(null); setCertError(''); }}
+                        variant="secondary"
+                        style={styles.applyBtn}
+                      />
+                      <Button
+                        label="Submit Application"
+                        onPress={handleSommelierApply}
+                        loading={certUploading}
+                        style={styles.applyBtn}
+                      />
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Pending notice */}
+        {isSommelierPending && (
+          <View style={styles.pendingCard}>
+            <Text style={styles.pendingTitle}>Application Under Review</Text>
+            <Text style={styles.pendingDesc}>
+              Your Level 3 certification has been submitted and is being reviewed. You'll gain access to professional scoring fields once approved. This typically takes 2–3 business days.
+            </Text>
+          </View>
+        )}
+
+        {/* Approved sommelier features notice */}
+        {isSommelierApproved && (
+          <View style={styles.approvedCard}>
+            <Text style={styles.approvedTitle}>Professional Features Unlocked</Text>
+            {[
+              'Terroir analysis (soil type & climate)',
+              'Sommelier badge on your profile',
+            ].map((item) => (
+              <View key={item} style={styles.approvedItem}>
+                <Text style={styles.approvedDot}>·</Text>
+                <Text style={styles.approvedItemText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Subscription */}
         <View style={styles.subsCard}>
@@ -203,6 +353,127 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 13,
     color: Colors.inkMuted,
+  },
+  roleBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
+  roleBadgeIcon: { fontSize: 13 },
+  roleBadgeLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+  },
+  verifiedPill: {
+    backgroundColor: 'rgba(196,132,122,0.15)',
+    borderRadius: Radius.full,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+  },
+  verifiedPillText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: Colors.gold,
+    letterSpacing: 0.3,
+  },
+  pendingPill: {
+    backgroundColor: 'rgba(255,193,7,0.12)',
+    borderColor: '#FFC107',
+  },
+  pendingPillText: { color: '#996800' },
+  rejectedPill: {
+    backgroundColor: 'rgba(220,53,69,0.1)',
+    borderColor: Colors.red,
+  },
+  rejectedPillText: { color: Colors.red },
+  sommelierCard: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  sommelierHeader: { gap: 4 },
+  sommelierTitle: {
+    fontFamily: Fonts.playfair,
+    fontSize: 17,
+    color: Colors.ink,
+  },
+  sommelierDesc: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+    lineHeight: 18,
+  },
+  certSuccessBanner: {
+    backgroundColor: 'rgba(40,167,69,0.1)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+  },
+  certSuccessText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: '#1a7a36',
+    lineHeight: 18,
+  },
+  applyForm: { gap: Spacing.md },
+  applyActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  applyBtn: { flex: 1 },
+  pendingCard: {
+    backgroundColor: 'rgba(255,193,7,0.08)',
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: '#FFC107',
+    gap: 6,
+  },
+  pendingTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: '#7a5200',
+  },
+  pendingDesc: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: '#7a5200',
+    lineHeight: 18,
+  },
+  approvedCard: {
+    backgroundColor: 'rgba(196,132,122,0.08)',
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    gap: 6,
+  },
+  approvedTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  approvedItem: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  approvedDot: {
+    color: Colors.gold,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  approvedItemText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMid,
+    flex: 1,
+    lineHeight: 20,
   },
   subsCard: {
     backgroundColor: Colors.ink,

@@ -12,8 +12,10 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { signUpWithEmail } from '@/lib/supabase';
+import { signUpWithEmail, uploadSommelierCert } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
+import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
+import { UserRole } from '@/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
@@ -22,6 +24,8 @@ export function SignupScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [role, setRole] = useState<UserRole>('enthusiast');
+  const [certDataUrl, setCertDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -41,15 +45,39 @@ export function SignupScreen({ navigation }: Props) {
       setError('Password must be at least 8 characters.');
       return;
     }
+    if (role === 'sommelier' && !certDataUrl) {
+      setError('Please upload your Level 3 certification to apply as a Sommelier.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await signUpWithEmail(email.trim(), password, name.trim());
+      const data = await signUpWithEmail(email.trim(), password, name.trim(), role);
+
+      if (role === 'sommelier' && certDataUrl && data.user) {
+        await uploadSommelierCert(data.user.id, certDataUrl);
+        await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}`, {
+          method: 'PATCH',
+          headers: {
+            apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+            Authorization: `Bearer ${data.session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_role: 'sommelier',
+            sommelier_status: 'pending',
+          }),
+        });
+      }
+
       if (data.session) {
-        // Email confirmation is disabled — user is already signed in.
-        // The auth listener in RootNavigator will navigate to the main app automatically.
+        // Auth listener navigates automatically
       } else {
-        // Email confirmation is required — prompt the user to check their inbox.
-        setSuccess('Account created! Check your email for a confirmation link, then sign in.');
+        setSuccess(
+          role === 'sommelier'
+            ? 'Account created! Your certification is under review. Check your email for a confirmation link, then sign in.'
+            : 'Account created! Check your email for a confirmation link, then sign in.'
+        );
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign up failed.';
@@ -118,8 +146,51 @@ export function SignupScreen({ navigation }: Props) {
             placeholder="Re-enter password"
           />
 
+          {/* Role selector */}
+          <View style={styles.roleSection}>
+            <Text style={styles.roleTitle}>I am a</Text>
+            <View style={styles.roleRow}>
+              <Pressable
+                style={[styles.rolePill, role === 'enthusiast' && styles.rolePillActive]}
+                onPress={() => setRole('enthusiast')}
+              >
+                <Text style={styles.rolePillIcon}>🍷</Text>
+                <Text style={[styles.rolePillLabel, role === 'enthusiast' && styles.rolePillLabelActive]}>
+                  Wine Enthusiast
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.rolePill, role === 'sommelier' && styles.rolePillActive]}
+                onPress={() => setRole('sommelier')}
+              >
+                <Text style={styles.rolePillIcon}>🎓</Text>
+                <Text style={[styles.rolePillLabel, role === 'sommelier' && styles.rolePillLabelActive]}>
+                  Sommelier
+                </Text>
+              </Pressable>
+            </View>
+            {role === 'enthusiast' && (
+              <Text style={styles.roleDesc}>
+                Log wines, track tastings, and build your personal cellar journal.
+              </Text>
+            )}
+            {role === 'sommelier' && (
+              <Text style={styles.roleDesc}>
+                Unlock professional scoring fields including terroir analysis. Requires Level 3 certification from any recognized program.
+              </Text>
+            )}
+          </View>
+
+          {role === 'sommelier' && (
+            <SommelierCertUpload
+              onCertSelected={setCertDataUrl}
+              certDataUrl={certDataUrl}
+              uploading={loading}
+            />
+          )}
+
           <Button
-            label="Create Account"
+            label={role === 'sommelier' ? 'Create Account & Apply' : 'Create Account'}
             onPress={handleSignup}
             loading={loading}
             style={styles.submitBtn}
@@ -203,6 +274,54 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansMedium,
     fontSize: 13,
     color: Colors.gold,
+  },
+  roleSection: {
+    marginTop: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  roleTitle: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.inkMid,
+  },
+  roleRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  rolePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  rolePillActive: {
+    borderColor: Colors.gold,
+    backgroundColor: 'rgba(196,132,122,0.12)',
+  },
+  rolePillIcon: {
+    fontSize: 16,
+  },
+  rolePillLabel: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    flex: 1,
+  },
+  rolePillLabelActive: {
+    fontFamily: Fonts.dmSansMedium,
+    color: Colors.gold,
+  },
+  roleDesc: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    lineHeight: 17,
   },
   submitBtn: {
     marginTop: Spacing.sm,

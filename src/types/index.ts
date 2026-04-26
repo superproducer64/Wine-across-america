@@ -200,6 +200,9 @@ export type WineEntryDraft = Omit<WineEntry, 'id' | 'user_id' | 'technical_score
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
 
+export type UserRole = 'enthusiast' | 'sommelier';
+export type SommelierStatus = 'pending' | 'approved' | 'rejected';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -207,6 +210,9 @@ export interface UserProfile {
   avatar_url: string | null;
   is_creator: boolean;
   subscription_tier: 'free' | 'pro';
+  user_role: UserRole;
+  sommelier_cert_url: string | null;
+  sommelier_status: SommelierStatus | null;
   created_at: string;
 }
 
