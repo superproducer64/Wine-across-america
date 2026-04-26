@@ -84,10 +84,10 @@ export async function signUpWithEmail(
   // Create the profile from the client using the authenticated session.
   // The server-side trigger is a no-op; this is the sole profile creation path.
   if (data.session && data.user) {
-    // On React Native, call getSession() to ensure the Supabase client has
-    // fully committed the session to its in-memory state before we hit the DB.
-    const { data: { session: confirmedSession } } = await supabase.auth.getSession();
-    console.log('[signup] confirmed session uid:', confirmedSession?.user?.id, '| expected:', data.user.id);
+    // Call getSession() first to ensure the Supabase client has fully committed
+    // the new session to its in-memory state before making authenticated DB calls.
+    // This guards against a React Native timing issue with async SecureStore.
+    await supabase.auth.getSession();
 
     const { error: profileError } = await supabase.from('user_profiles').upsert(
       {
@@ -99,16 +99,8 @@ export async function signUpWithEmail(
     );
     if (profileError) {
       console.error('[signup] profile upsert error:', JSON.stringify(profileError));
-      throw new Error(
-        `[upsert user_profiles] ${profileError.message} | code:${profileError.code} | hint:${profileError.hint ?? 'none'} | details:${profileError.details ?? 'none'}`
-      );
+      throw new Error(profileError.message);
     }
-    console.log('[signup] profile upsert succeeded');
-  } else {
-    console.warn('[signup] no session after signUp — skipping profile upsert', {
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-    });
   }
 
   return data;
@@ -243,9 +235,7 @@ export async function submitSommelierApplication(
     .eq('id', userId);
   if (error) {
     console.error('[submitSommelierApplication] error:', JSON.stringify(error));
-    return {
-      error: `[update user_profiles] ${error.message} | code:${error.code} | hint:${error.hint ?? 'none'} | details:${error.details ?? 'none'}`,
-    };
+    return { error: error.message };
   }
   return { error: null };
 }

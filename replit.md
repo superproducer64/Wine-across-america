@@ -68,6 +68,24 @@ Copy `.env.example` to `.env` and fill in:
 - Pro tier subscription support (30 entry free limit)
 - Offline-ready auth with secure token persistence
 
+## Two-Tier User System
+
+- **Enthusiast** (default): standard wine logging, scoring, sharing
+- **Sommelier** (applied, admin-approved): unlocks terroir fields in Step 5, verified badge
+- `user_role`, `sommelier_status`, `sommelier_cert_url` columns on `user_profiles` (via `002_user_roles.sql`)
+- Cert images stored in private `sommelier-certs` Supabase Storage bucket
+- Admin approves by setting `sommelier_status = 'approved'` in Supabase dashboard
+
+## Supabase Auth / RLS Notes
+
+- Email confirmation is **disabled** — `data.session` is always non-null after `signUp()`
+- **Trigger**: `on_auth_user_created` on `auth.users` calls `public.handle_new_user()` — currently a **no-op** (`RETURN NEW` only). Profile is created client-side after signup.
+- **Profile creation**: `signUpWithEmail()` in `src/lib/supabase.ts` upserts `user_profiles` immediately after `auth.signUp()`. Calls `getSession()` first to ensure the session is committed to memory before the DB call (guards a React Native async-storage race).
+- **Profile load retry**: `authStore.loadProfile()` retries up to 3× with 1 s gaps — guards the race where `SIGNED_IN` event fires before the upsert completes.
+- **Key RLS policies on `user_profiles`**: `user_profiles_insert WITH CHECK (true)` (public role) allows the client-side upsert; `user_profiles_self_update USING (auth.uid() = id)` allows own-profile edits.
+- **Sommelier cert storage policies**: `users can upload sommelier certs` and `users can view sommelier certs` on `storage.objects` scoped to `sommelier-certs` bucket.
+- **`postgres` role in Supabase cloud is NOT a true superuser** — SECURITY DEFINER functions owned by `postgres` do NOT bypass RLS. Use permissive INSERT policies instead of relying on trigger ownership.
+
 ## Notes
 
 - The app uses React Navigation (not Expo Router) with `src/` directory structure
