@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
@@ -63,6 +64,63 @@ export const supabase = createSupabaseClient();
 
 export async function signInWithEmail(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
+}
+
+// ─── Apple Sign In ────────────────────────────────────────────────────────────
+
+function generateRandomString(length: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+export async function generateAppleNonce(): Promise<{ rawNonce: string; hashedNonce: string }> {
+  const rawNonce = generateRandomString(32);
+  const hashedNonce = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    rawNonce
+  );
+  return { rawNonce, hashedNonce };
+}
+
+export async function signInWithApple(
+  identityToken: string,
+  rawNonce: string,
+  displayName?: string | null
+): Promise<{ error: string | null }> {
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: 'apple',
+    token: identityToken,
+    nonce: rawNonce,
+  });
+
+  if (error) return { error: error.message };
+
+  if (data.session && data.user) {
+    await supabase.auth.getSession();
+
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', data.user.id)
+      .single();
+
+    if (!existingProfile) {
+      await supabase.from('user_profiles').upsert({
+        id: data.user.id,
+        email: data.user.email ?? '',
+        display_name: displayName ?? null,
+        user_role: 'enthusiast',
+        subscription_tier: 'free',
+        is_creator: false,
+      });
+    }
+  }
+
+  return { error: null };
 }
 
 export async function signUpWithEmail(

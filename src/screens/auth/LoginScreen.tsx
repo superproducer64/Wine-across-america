@@ -9,10 +9,11 @@ import {
   Pressable,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { signInWithEmail } from '@/lib/supabase';
+import { signInWithEmail, signInWithApple, generateAppleNonce } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -21,6 +22,7 @@ export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
@@ -35,8 +37,52 @@ export function LoginScreen({ navigation }: Props) {
     if (authError) {
       setError(authError.message);
     }
-    // On success, auth listener in RootNavigator will redirect automatically
   };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setAppleLoading(true);
+    try {
+      const { rawNonce, hashedNonce } = await generateAppleNonce();
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce: hashedNonce,
+      });
+
+      if (!credential.identityToken) {
+        setError('Apple Sign In failed. Please try again.');
+        setAppleLoading(false);
+        return;
+      }
+
+      const displayName = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName]
+            .filter(Boolean)
+            .join(' ') || null
+        : null;
+
+      const { error: signInError } = await signInWithApple(
+        credential.identityToken,
+        rawNonce,
+        displayName
+      );
+
+      if (signInError) {
+        setError(signInError);
+      }
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      if (err?.code !== 'ERR_REQUEST_CANCELED') {
+        setError('Apple Sign In failed. Please try again.');
+      }
+    }
+    setAppleLoading(false);
+  };
+
+  const isIOS = Platform.OS === 'ios';
 
   return (
     <KeyboardAvoidingView
@@ -85,17 +131,23 @@ export function LoginScreen({ navigation }: Props) {
             style={styles.submitBtn}
           />
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
+          {isIOS && (
+            <>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
-          <View style={styles.socialHint}>
-            <Text style={styles.socialText}>
-              Apple & Google sign-in available on device
-            </Text>
-          </View>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={Radius.md}
+                style={styles.appleBtn}
+                onPress={handleAppleSignIn}
+              />
+            </>
+          )}
         </View>
 
         {/* Footer */}
@@ -185,17 +237,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.inkFaint,
   },
-  socialHint: {
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-  },
-  socialText: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkMuted,
-    textAlign: 'center',
+  appleBtn: {
+    width: '100%',
+    height: 48,
+    marginBottom: Spacing.sm,
   },
   footerText: {
     fontFamily: Fonts.dmSans,
