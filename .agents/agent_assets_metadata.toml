@@ -30,3 +30,9 @@ id = "rMUwpzbgrMiDxoBqfzhqz"
 uri = "file://pour-across-america-dev-report-apr01-apr13.md"
 type = "text"
 title = "Pour Across America — Dev Report Apr 1–13"
+
+[[outputs]]
+id = "r6FnaN_esknEdyJkBMu30"
+uri = "file://pour-across-america-dev-report-apr25-26.md"
+type = "text"
+title = "Development Report — April 25–26, 2026"
