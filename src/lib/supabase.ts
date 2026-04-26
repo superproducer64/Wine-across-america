@@ -84,7 +84,11 @@ export async function signUpWithEmail(
   // Create the profile from the client using the authenticated session.
   // The server-side trigger is a no-op; this is the sole profile creation path.
   if (data.session && data.user) {
-    console.log('[signup] session present, upserting profile for', data.user.id);
+    // On React Native, call getSession() to ensure the Supabase client has
+    // fully committed the session to its in-memory state before we hit the DB.
+    const { data: { session: confirmedSession } } = await supabase.auth.getSession();
+    console.log('[signup] confirmed session uid:', confirmedSession?.user?.id, '| expected:', data.user.id);
+
     const { error: profileError } = await supabase.from('user_profiles').upsert(
       {
         id: data.user.id,
