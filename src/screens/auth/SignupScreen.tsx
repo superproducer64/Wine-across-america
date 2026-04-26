@@ -12,7 +12,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { signUpWithEmail, uploadSommelierCert } from '@/lib/supabase';
+import { signUpWithEmail, uploadSommelierCert, submitSommelierApplication } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
 import { UserRole } from '@/types';
@@ -55,19 +55,10 @@ export function SignupScreen({ navigation }: Props) {
       const data = await signUpWithEmail(email.trim(), password, name.trim(), role);
 
       if (role === 'sommelier' && certDataUrl && data.user) {
-        await uploadSommelierCert(data.user.id, certDataUrl);
-        await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1/user_profiles?id=eq.${data.user.id}`, {
-          method: 'PATCH',
-          headers: {
-            apikey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
-            Authorization: `Bearer ${data.session?.access_token ?? ''}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_role: 'sommelier',
-            sommelier_status: 'pending',
-          }),
-        });
+        const { url } = await uploadSommelierCert(data.user.id, certDataUrl);
+        if (url) {
+          await submitSommelierApplication(data.user.id, url);
+        }
       }
 
       if (data.session) {

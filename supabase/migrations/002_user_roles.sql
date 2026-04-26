@@ -4,6 +4,8 @@
 -- ============================================================
 
 -- Add role and sommelier certification columns to user_profiles
+-- user_role defaults to 'enthusiast' for all existing and new users.
+-- The handle_new_user trigger is NOT modified — it uses the column default.
 ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS user_role TEXT NOT NULL DEFAULT 'enthusiast'
     CHECK (user_role IN ('enthusiast', 'sommelier')),
@@ -11,23 +13,13 @@ ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS sommelier_status TEXT
     CHECK (sommelier_status IN ('pending', 'approved', 'rejected') OR sommelier_status IS NULL);
 
--- Update the handle_new_user trigger to also set user_role from metadata
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
-BEGIN
-  INSERT INTO user_profiles (id, email, display_name, user_role)
-  VALUES (
-    new.id,
-    new.email,
-    new.raw_user_meta_data->>'display_name',
-    COALESCE(new.raw_user_meta_data->>'user_role', 'enthusiast')
-  );
-  RETURN new;
-END;
-$$;
-
--- Storage bucket for sommelier certifications
--- Run this in the Supabase dashboard Storage section, or via API:
--- Create a bucket called 'sommelier-certs' (private, not public)
--- RLS: authenticated users can upload their own certs
--- Path convention: {user_id}/{timestamp}.{ext}
+-- ── Storage bucket setup (Supabase dashboard) ────────────────────────────────
+-- 1. Go to Storage → New bucket → name: sommelier-certs → private (not public)
+-- 2. Add INSERT policy:
+--      USING: auth.uid()::text = (storage.foldername(name))[1]
+-- 3. Add SELECT policy for authenticated users
+--
+-- ── Approving a sommelier application ────────────────────────────────────────
+-- In the user_profiles table, set:
+--   sommelier_status = 'approved'
+-- for the row belonging to the applicant.
