@@ -240,6 +240,52 @@ export async function submitSommelierApplication(
   return { error: null };
 }
 
+// ─── Admin: Sommelier Applications ───────────────────────────────────────────
+
+export async function fetchPendingSommelierApplications() {
+  return supabase
+    .from('user_profiles')
+    .select('id, email, display_name, sommelier_cert_url, sommelier_status, created_at')
+    .eq('sommelier_status', 'pending')
+    .order('created_at', { ascending: true });
+}
+
+export async function updateSommelierStatus(
+  userId: string,
+  decision: 'approved' | 'rejected'
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({
+      sommelier_status: decision,
+      user_role: decision === 'approved' ? 'sommelier' : 'enthusiast',
+    })
+    .eq('id', userId);
+  if (error) {
+    console.error('[updateSommelierStatus] error:', JSON.stringify(error));
+    return { error: error.message };
+  }
+  return { error: null };
+}
+
+export async function getSommelierCertSignedUrl(
+  certUrl: string
+): Promise<string | null> {
+  try {
+    const marker = '/sommelier-certs/';
+    const idx = certUrl.indexOf(marker);
+    if (idx === -1) return certUrl;
+    const path = certUrl.slice(idx + marker.length);
+    const { data, error } = await supabase.storage
+      .from('sommelier-certs')
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) return null;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Label Photo Upload ───────────────────────────────────────────────────────
 
 export async function uploadLabelPhoto(

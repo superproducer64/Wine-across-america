@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Pressable,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
@@ -14,8 +16,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
 import { uploadSommelierCert, submitSommelierApplication } from '@/lib/supabase';
+import { MainStackParamList } from '@/navigation/types';
 
 export function SettingsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { user, profile, signOut, loadProfile } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -262,6 +266,22 @@ export function SettingsScreen() {
               </View>
             ))}
           </View>
+        )}
+
+        {/* Admin Panel — visible to is_creator users only */}
+        {profile?.is_creator && (
+          <Pressable
+            style={styles.adminCard}
+            onPress={() => navigation.navigate('Admin')}
+          >
+            <View style={styles.adminCardInner}>
+              <View>
+                <Text style={styles.adminCardTitle}>Admin Panel</Text>
+                <Text style={styles.adminCardSub}>Review Sommelier applications</Text>
+              </View>
+              <Text style={styles.adminCardArrow}>›</Text>
+            </View>
+          </Pressable>
         )}
 
         {/* App info */}
@@ -621,6 +641,35 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 14,
     color: Colors.inkMuted,
+  },
+  adminCard: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  adminCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  adminCardTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: Colors.ink,
+    marginBottom: 2,
+  },
+  adminCardSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  adminCardArrow: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 22,
+    color: Colors.gold,
+    lineHeight: 26,
   },
   signOutBtn: {
     marginTop: Spacing.md,
