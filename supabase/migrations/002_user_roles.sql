@@ -13,6 +13,15 @@ ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS sommelier_status TEXT
     CHECK (sommelier_status IN ('pending', 'approved', 'rejected') OR sommelier_status IS NULL);
 
+-- Allow the handle_new_user trigger (running as 'postgres' role after
+-- CREATE OR REPLACE FUNCTION changes ownership) to insert profile rows.
+-- Normal app traffic uses anon/authenticated roles and is unaffected.
+CREATE POLICY "user_profiles_trigger_insert"
+  ON user_profiles
+  FOR INSERT
+  TO postgres
+  WITH CHECK (true);
+
 -- ── Storage bucket setup (Supabase dashboard) ────────────────────────────────
 -- 1. Go to Storage → New bucket → name: sommelier-certs → private (not public)
 -- 2. Add INSERT policy:
