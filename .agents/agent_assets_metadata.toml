@@ -36,3 +36,9 @@ id = "r6FnaN_esknEdyJkBMu30"
 uri = "file://pour-across-america-dev-report-apr25-26.md"
 type = "text"
 title = "Development Report — April 25–26, 2026"
+
+[[outputs]]
+id = "xEtWAHs2gZ1b-2Ax5L5Ut"
+uri = "file://pour-across-america-build-report-apr26.md"
+type = "text"
+title = "Build Report — April 26, 2026"
