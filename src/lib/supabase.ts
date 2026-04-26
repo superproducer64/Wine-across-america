@@ -84,6 +84,7 @@ export async function signUpWithEmail(
   // Create the profile from the client using the authenticated session.
   // The server-side trigger is a no-op; this is the sole profile creation path.
   if (data.session && data.user) {
+    console.log('[signup] session present, upserting profile for', data.user.id);
     const { error: profileError } = await supabase.from('user_profiles').upsert(
       {
         id: data.user.id,
@@ -92,7 +93,16 @@ export async function signUpWithEmail(
       },
       { onConflict: 'id', ignoreDuplicates: true }
     );
-    if (profileError) throw new Error(profileError.message);
+    if (profileError) {
+      console.error('[signup] profile upsert error:', JSON.stringify(profileError));
+      throw new Error(profileError.message);
+    }
+    console.log('[signup] profile upsert succeeded');
+  } else {
+    console.warn('[signup] no session after signUp — skipping profile upsert', {
+      hasSession: !!data.session,
+      hasUser: !!data.user,
+    });
   }
 
   return data;

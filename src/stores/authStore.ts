@@ -30,13 +30,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setProfile: (profile) => set({ profile }),
 
   loadProfile: async (userId: string) => {
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (data) {
-      set({ profile: data as UserProfile });
+    // Retry up to 3 times with 1s gaps — guards against the race where the
+    // auth SIGNED_IN event fires before the client-side profile upsert finishes.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1000));
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      if (data) {
+        set({ profile: data as UserProfile });
+        return;
+      }
     }
   },
 
