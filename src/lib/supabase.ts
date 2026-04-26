@@ -79,6 +79,21 @@ export async function signUpWithEmail(
     },
   });
   if (error) throw error;
+
+  // When email confirmation is disabled the session is available immediately.
+  // Create the profile from the client using the authenticated session so we
+  // are never dependent on the server-side trigger or its RLS ownership quirks.
+  if (data.session && data.user) {
+    await supabase.from('user_profiles').upsert(
+      {
+        id: data.user.id,
+        email: data.user.email ?? email,
+        display_name: displayName,
+      },
+      { onConflict: 'id', ignoreDuplicates: true }
+    );
+  }
+
   return data;
 }
 
