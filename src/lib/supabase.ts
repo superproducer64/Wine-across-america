@@ -241,7 +241,13 @@ export async function submitSommelierApplication(
       sommelier_status: 'pending',
     })
     .eq('id', userId);
-  return { error: error ? error.message : null };
+  if (error) {
+    console.error('[submitSommelierApplication] error:', JSON.stringify(error));
+    return {
+      error: `[update user_profiles] ${error.message} | code:${error.code} | hint:${error.hint ?? 'none'} | details:${error.details ?? 'none'}`,
+    };
+  }
+  return { error: null };
 }
 
 // ─── Label Photo Upload ───────────────────────────────────────────────────────
