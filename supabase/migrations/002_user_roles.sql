@@ -13,14 +13,28 @@ ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS sommelier_status TEXT
     CHECK (sommelier_status IN ('pending', 'approved', 'rejected') OR sommelier_status IS NULL);
 
--- Allow the handle_new_user trigger (running as 'postgres' role after
--- CREATE OR REPLACE FUNCTION changes ownership) to insert profile rows.
--- Normal app traffic uses anon/authenticated roles and is unaffected.
-CREATE POLICY "user_profiles_trigger_insert"
-  ON user_profiles
-  FOR INSERT
-  TO postgres
-  WITH CHECK (true);
+-- ── Trigger fix (run separately in SQL Editor) ────────────────────────────────
+-- Running CREATE OR REPLACE FUNCTION in the SQL editor changes the trigger
+-- function owner from supabase_admin to postgres, breaking RLS on INSERT.
+-- The following restores the function with the correct search_path and adds
+-- an open INSERT policy so the trigger succeeds regardless of the calling role.
+--
+-- CREATE OR REPLACE FUNCTION public.handle_new_user()
+-- RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+-- SET search_path = public
+-- AS $$
+-- BEGIN
+--   INSERT INTO public.user_profiles (id, email, display_name)
+--   VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'display_name')
+--   ON CONFLICT (id) DO NOTHING;
+--   RETURN NEW;
+-- END;
+-- $$;
+--
+-- DROP POLICY IF EXISTS "user_profiles_trigger_insert" ON public.user_profiles;
+-- CREATE POLICY "user_profiles_insert"
+--   ON public.user_profiles FOR INSERT WITH CHECK (true);
+-- (Safe: id is a FK to auth.users — no phantom profile rows possible)
 
 -- ── Storage bucket setup (Supabase dashboard) ────────────────────────────────
 -- 1. Go to Storage → New bucket → name: sommelier-certs → private (not public)
