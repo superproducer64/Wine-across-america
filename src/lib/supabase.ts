@@ -99,7 +99,9 @@ export async function signUpWithEmail(
     );
     if (profileError) {
       console.error('[signup] profile upsert error:', JSON.stringify(profileError));
-      throw new Error(profileError.message);
+      throw new Error(
+        `[upsert user_profiles] ${profileError.message} | code:${profileError.code} | hint:${profileError.hint ?? 'none'} | details:${profileError.details ?? 'none'}`
+      );
     }
     console.log('[signup] profile upsert succeeded');
   } else {
