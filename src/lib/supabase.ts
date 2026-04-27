@@ -300,6 +300,14 @@ export async function submitSommelierApplication(
 
 // ─── Admin: Sommelier Applications ───────────────────────────────────────────
 
+export async function getPendingSommelierCount(): Promise<number> {
+  const { count } = await supabase
+    .from('user_profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('sommelier_status', 'pending');
+  return count ?? 0;
+}
+
 export async function fetchPendingSommelierApplications() {
   return supabase
     .from('user_profiles')

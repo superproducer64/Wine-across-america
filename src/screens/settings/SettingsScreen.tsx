@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   Pressable,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
-import { uploadSommelierCert, submitSommelierApplication } from '@/lib/supabase';
+import { uploadSommelierCert, submitSommelierApplication, getPendingSommelierCount } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
 export function SettingsScreen() {
@@ -29,7 +29,16 @@ export function SettingsScreen() {
   const [certUploading, setCertUploading] = useState(false);
   const [certError, setCertError] = useState('');
   const [certSuccess, setCertSuccess] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const { isWide } = useResponsive();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (profile?.is_creator) {
+        getPendingSommelierCount().then(setPendingCount);
+      }
+    }, [profile?.is_creator])
+  );
 
   const isSommelierApproved =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -275,11 +284,18 @@ export function SettingsScreen() {
             onPress={() => navigation.navigate('Admin')}
           >
             <View style={styles.adminCardInner}>
-              <View>
+              <View style={styles.adminCardLeft}>
                 <Text style={styles.adminCardTitle}>Admin Panel</Text>
                 <Text style={styles.adminCardSub}>Review Sommelier applications</Text>
               </View>
-              <Text style={styles.adminCardArrow}>›</Text>
+              <View style={styles.adminCardRight}>
+                {pendingCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{pendingCount}</Text>
+                  </View>
+                )}
+                <Text style={styles.adminCardArrow}>›</Text>
+              </View>
             </View>
           </Pressable>
         )}
@@ -653,6 +669,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  adminCardLeft: {
+    flex: 1,
+  },
+  adminCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  badge: {
+    backgroundColor: Colors.red,
+    borderRadius: Radius.full,
+    minWidth: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.white,
+    lineHeight: 14,
   },
   adminCardTitle: {
     fontFamily: Fonts.playfairSemiBold,
