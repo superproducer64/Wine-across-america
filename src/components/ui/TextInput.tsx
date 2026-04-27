@@ -3,6 +3,7 @@ import {
   TextInput as RNTextInput,
   View,
   Text,
+  Pressable,
   StyleSheet,
   TextInputProps,
   ViewStyle,
@@ -18,29 +19,45 @@ interface Props extends TextInputProps {
 
 export function TextInput({ label, error, hint, containerStyle, style, ...props }: Props) {
   const [focused, setFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPassword = props.secureTextEntry === true;
 
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <RNTextInput
-        {...props}
-        style={[
-          styles.input,
-          focused && styles.inputFocused,
-          error && styles.inputError,
-          props.multiline && styles.multiline,
-          style,
-        ]}
-        placeholderTextColor={Colors.inkFaint}
-        onFocus={(e) => {
-          setFocused(true);
-          props.onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          props.onBlur?.(e);
-        }}
-      />
+      <View style={styles.inputWrapper}>
+        <RNTextInput
+          {...props}
+          secureTextEntry={isPassword && !showPassword}
+          style={[
+            styles.input,
+            focused && styles.inputFocused,
+            error && styles.inputError,
+            props.multiline && styles.multiline,
+            isPassword && styles.inputWithToggle,
+            style,
+          ]}
+          placeholderTextColor={Colors.inkFaint}
+          onFocus={(e) => {
+            setFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            props.onBlur?.(e);
+          }}
+        />
+        {isPassword && (
+          <Pressable
+            style={styles.eyeBtn}
+            onPress={() => setShowPassword((v) => !v)}
+            hitSlop={8}
+          >
+            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+          </Pressable>
+        )}
+      </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {!error && hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
@@ -58,6 +75,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.inkMuted,
     marginBottom: 6,
+  },
+  inputWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
   },
   input: {
     fontFamily: Fonts.dmSansRegular,
@@ -77,10 +98,21 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: Colors.red,
   },
+  inputWithToggle: {
+    paddingRight: 44,
+  },
   multiline: {
     height: 96,
     textAlignVertical: 'top',
     paddingTop: 11,
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: Spacing.md,
+    padding: 2,
+  },
+  eyeIcon: {
+    fontSize: 16,
   },
   error: {
     fontFamily: Fonts.dmSans,
