@@ -9,11 +9,13 @@ import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from './types';
 import { ActivityIndicator, View } from 'react-native';
 import { Colors } from '@/theme';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   const { session, loading, setSession } = useAuthStore();
+  usePushNotifications();
   const { checkSubscription } = useSubscriptionStore();
 
   useEffect(() => {

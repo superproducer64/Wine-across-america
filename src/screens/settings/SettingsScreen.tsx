@@ -61,7 +61,7 @@ export function SettingsScreen() {
       setCertUploading(false);
       return;
     }
-    const { error: applyError } = await submitSommelierApplication(user.id, url);
+    const { error: applyError } = await submitSommelierApplication(user.id, url, profile?.display_name);
     if (applyError) {
       setCertError(applyError);
       setCertUploading(false);

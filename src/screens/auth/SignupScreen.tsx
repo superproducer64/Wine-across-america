@@ -57,7 +57,7 @@ export function SignupScreen({ navigation }: Props) {
       if (role === 'sommelier' && certDataUrl && data.user) {
         const { url } = await uploadSommelierCert(data.user.id, certDataUrl);
         if (url) {
-          await submitSommelierApplication(data.user.id, url);
+          await submitSommelierApplication(data.user.id, url, name.trim());
         }
       }
 

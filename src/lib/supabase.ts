@@ -281,7 +281,8 @@ export async function uploadSommelierCert(
 
 export async function submitSommelierApplication(
   userId: string,
-  certUrl: string
+  certUrl: string,
+  applicantName?: string | null
 ): Promise<{ error: string | null }> {
   const { error } = await supabase
     .from('user_profiles')
@@ -295,7 +296,53 @@ export async function submitSommelierApplication(
     console.error('[submitSommelierApplication] error:', JSON.stringify(error));
     return { error: error.message };
   }
+  notifyAdminsOfNewApplication(applicantName ?? null);
   return { error: null };
+}
+
+// ─── Push Notifications ───────────────────────────────────────────────────────
+
+export async function savePushToken(userId: string, token: string): Promise<void> {
+  await supabase
+    .from('user_profiles')
+    .update({ push_token: token })
+    .eq('id', userId);
+}
+
+export async function notifyAdminsOfNewApplication(
+  applicantName: string | null
+): Promise<void> {
+  try {
+    const { data: admins } = await supabase
+      .from('user_profiles')
+      .select('push_token')
+      .eq('is_creator', true)
+      .not('push_token', 'is', null);
+
+    if (!admins || admins.length === 0) return;
+
+    const messages = admins
+      .filter((a) => a.push_token)
+      .map((a) => ({
+        to: a.push_token,
+        title: '🎓 New Sommelier Application',
+        body: applicantName
+          ? `${applicantName} has submitted their certification for review.`
+          : 'A new certification is waiting for your review.',
+        data: { screen: 'Admin' },
+        sound: 'default',
+      }));
+
+    if (messages.length === 0) return;
+
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messages),
+    });
+  } catch (e) {
+    console.error('[notifyAdminsOfNewApplication]', e);
+  }
 }
 
 // ─── Admin: Sommelier Applications ───────────────────────────────────────────
