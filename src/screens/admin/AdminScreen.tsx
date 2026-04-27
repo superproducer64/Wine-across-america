@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -30,13 +31,15 @@ type Application = {
 
 type ApplicationRowProps = {
   app: Application;
-  onDecision: (id: string, decision: 'approved' | 'rejected') => void;
+  onDecision: (id: string, decision: 'approved' | 'rejected', reason?: string) => void;
   busy: boolean;
 };
 
 function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     if (app.sommelier_cert_url) {
@@ -50,6 +53,19 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
     day: 'numeric',
     year: 'numeric',
   });
+
+  const handleRejectPress = () => {
+    setShowRejectForm(true);
+  };
+
+  const handleCancelReject = () => {
+    setShowRejectForm(false);
+    setRejectionReason('');
+  };
+
+  const handleConfirmReject = () => {
+    onDecision(app.id, 'rejected', rejectionReason.trim() || undefined);
+  };
 
   return (
     <View style={styles.appCard}>
@@ -94,21 +110,57 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
         </View>
       )}
 
-      <View style={styles.appActions}>
-        <Button
-          label="Reject"
-          onPress={() => onDecision(app.id, 'rejected')}
-          variant="destructive"
-          style={styles.actionBtn}
-          loading={busy}
-        />
-        <Button
-          label="Approve"
-          onPress={() => onDecision(app.id, 'approved')}
-          style={styles.actionBtn}
-          loading={busy}
-        />
-      </View>
+      {showRejectForm ? (
+        <View style={styles.rejectForm}>
+          <Text style={styles.rejectFormLabel}>Reason for rejection</Text>
+          <TextInput
+            style={styles.rejectInput}
+            value={rejectionReason}
+            onChangeText={setRejectionReason}
+            placeholder="e.g. Certificate image unclear, wrong certification level…"
+            placeholderTextColor={Colors.inkFaint}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            autoFocus
+          />
+          <Text style={styles.rejectFormHint}>
+            This message will be visible to the applicant.
+          </Text>
+          <View style={styles.appActions}>
+            <Button
+              label="Cancel"
+              onPress={handleCancelReject}
+              variant="ghost"
+              style={styles.actionBtn}
+              disabled={busy}
+            />
+            <Button
+              label="Confirm Rejection"
+              onPress={handleConfirmReject}
+              variant="destructive"
+              style={styles.actionBtn}
+              loading={busy}
+            />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.appActions}>
+          <Button
+            label="Reject"
+            onPress={handleRejectPress}
+            variant="destructive"
+            style={styles.actionBtn}
+            disabled={busy}
+          />
+          <Button
+            label="Approve"
+            onPress={() => onDecision(app.id, 'approved')}
+            style={styles.actionBtn}
+            loading={busy}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -138,10 +190,14 @@ export function AdminScreen() {
     loadApplications();
   }, [loadApplications]);
 
-  const handleDecision = async (userId: string, decision: 'approved' | 'rejected') => {
+  const handleDecision = async (
+    userId: string,
+    decision: 'approved' | 'rejected',
+    reason?: string
+  ) => {
     setBusyId(userId);
     setSuccessMessage('');
-    const { error: updateError } = await updateSommelierStatus(userId, decision);
+    const { error: updateError } = await updateSommelierStatus(userId, decision, reason);
     if (updateError) {
       setError(updateError);
     } else {
@@ -367,6 +423,34 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 13,
     color: Colors.inkMuted,
+  },
+  rejectForm: {
+    gap: Spacing.sm,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.md,
+  },
+  rejectFormLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  rejectInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.red,
+    padding: Spacing.md,
+    fontFamily: Fonts.dmSans,
+    fontSize: 14,
+    color: Colors.ink,
+    minHeight: 90,
+  },
+  rejectFormHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
   },
   appActions: {
     flexDirection: 'row',

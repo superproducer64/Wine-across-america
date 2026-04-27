@@ -365,14 +365,22 @@ export async function fetchPendingSommelierApplications() {
 
 export async function updateSommelierStatus(
   userId: string,
-  decision: 'approved' | 'rejected'
+  decision: 'approved' | 'rejected',
+  rejectionReason?: string
 ): Promise<{ error: string | null }> {
+  const updates: Record<string, unknown> = {
+    sommelier_status: decision,
+    user_role: decision === 'approved' ? 'sommelier' : 'enthusiast',
+  };
+  if (decision === 'rejected' && rejectionReason?.trim()) {
+    updates.sommelier_rejection_reason = rejectionReason.trim();
+  }
+  if (decision === 'approved') {
+    updates.sommelier_rejection_reason = null;
+  }
   const { error } = await supabase
     .from('user_profiles')
-    .update({
-      sommelier_status: decision,
-      user_role: decision === 'approved' ? 'sommelier' : 'enthusiast',
-    })
+    .update(updates)
     .eq('id', userId);
   if (error) {
     console.error('[updateSommelierStatus] error:', JSON.stringify(error));

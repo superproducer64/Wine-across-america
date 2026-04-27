@@ -119,6 +119,14 @@ export function SettingsScreen() {
           </View>
         </View>
 
+        {/* Rejection reason banner */}
+        {isSommelierRejected && profile?.sommelier_rejection_reason ? (
+          <View style={styles.rejectionReasonCard}>
+            <Text style={styles.rejectionReasonLabel}>Reason for rejection</Text>
+            <Text style={styles.rejectionReasonText}>{profile.sommelier_rejection_reason}</Text>
+          </View>
+        ) : null}
+
         {/* Sommelier upgrade (for enthusiasts and rejected) */}
         {(isEnthusiast || isSommelierRejected) && (
           <View style={styles.sommelierCard}>
@@ -425,6 +433,28 @@ const styles = StyleSheet.create({
     borderColor: Colors.red,
   },
   rejectedPillText: { color: Colors.red },
+  rejectionReasonCard: {
+    backgroundColor: 'rgba(220,53,69,0.06)',
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.red,
+    padding: Spacing.md,
+    gap: 4,
+  },
+  rejectionReasonLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.red,
+    opacity: 0.8,
+  },
+  rejectionReasonText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 14,
+    color: Colors.ink,
+    lineHeight: 20,
+  },
   sommelierCard: {
     backgroundColor: Colors.surfaceAlt,
     borderRadius: Radius.md,

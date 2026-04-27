@@ -213,6 +213,7 @@ export interface UserProfile {
   user_role: UserRole;
   sommelier_cert_url: string | null;
   sommelier_status: SommelierStatus | null;
+  sommelier_rejection_reason: string | null;
   created_at: string;
 }
 
