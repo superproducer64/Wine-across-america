@@ -48,3 +48,9 @@ id = "o3vrnX43oizHZ5zUea3ej"
 uri = "file://pour-across-america-build-report-apr26-evening.md"
 type = "text"
 title = "Build Report — April 26, 2026 (Evening Session)"
+
+[[outputs]]
+id = "QJ4u8Tx6fUJPwBZaQZ0gK"
+uri = "file://pour-across-america-build-report-apr27.md"
+type = "text"
+title = "Build Report — April 27, 2026"
