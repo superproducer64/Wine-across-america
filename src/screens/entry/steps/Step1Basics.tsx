@@ -17,6 +17,7 @@ import { LabelScannerModal } from '@/components/wine/LabelScannerModal';
 import { USStateSearchPicker } from '@/components/wine/USStateSearchPicker';
 import { CountrySearchPicker } from '@/components/wine/CountrySearchPicker';
 import { GrapeBlendInput } from '@/components/wine/GrapeBlendInput';
+import { DatePickerInput } from '@/components/ui/DatePickerInput';
 import { WineLabelData } from '@/utils/wineOcr';
 
 export function Step1Basics() {
@@ -283,12 +284,10 @@ export function Step1Basics() {
       </View>
 
       {/* Tasting Date */}
-      <TextInput
+      <DatePickerInput
         label="Tasting Date"
         value={draft.tasting_date}
-        onChangeText={(v) => setBasics({ tasting_date: v })}
-        placeholder="YYYY-MM-DD"
-        keyboardType="numbers-and-punctuation"
+        onChange={(v) => setBasics({ tasting_date: v })}
       />
 
       {/* Location */}
