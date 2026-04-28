@@ -54,3 +54,9 @@ id = "QJ4u8Tx6fUJPwBZaQZ0gK"
 uri = "file://pour-across-america-build-report-apr27.md"
 type = "text"
 title = "Build Report — April 27, 2026"
+
+[[outputs]]
+id = "Kf4rqkvNisfbpbMb5vlAr"
+uri = "file://POUR_ACROSS_AMERICA_CONTEXT.md"
+type = "text"
+title = "Pour Across America — LLM Context Document"
