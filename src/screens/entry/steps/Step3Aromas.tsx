@@ -5,13 +5,14 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
+  TextInput as RNTextInput,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { AROMA_CATEGORIES, AROMA_SHORTCUTS } from '@/types';
 
 export function Step3Aromas() {
-  const { draft, setAromas } = useEntryDraftStore();
+  const { draft, setAromas, setAromasOtherNote } = useEntryDraftStore();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const toggleL1 = (id: string) => {
@@ -94,26 +95,43 @@ export function Step3Aromas() {
 
               {/* Layer 2 drill-down */}
               {selected && isExpanded && (
-                <View style={styles.l2Grid}>
-                  {cat.subcategories.map((aroma) => (
-                    <Pressable
-                      key={aroma}
-                      style={[
-                        styles.l2Chip,
-                        draft.aromas_l2.includes(aroma) && styles.l2ChipSelected,
-                      ]}
-                      onPress={() => toggleL2(aroma)}
-                    >
-                      <Text
+                <View>
+                  <View style={styles.l2Grid}>
+                    {cat.subcategories.map((aroma) => (
+                      <Pressable
+                        key={aroma}
                         style={[
-                          styles.l2Text,
-                          draft.aromas_l2.includes(aroma) && styles.l2TextSelected,
+                          styles.l2Chip,
+                          draft.aromas_l2.includes(aroma) && styles.l2ChipSelected,
                         ]}
+                        onPress={() => toggleL2(aroma)}
                       >
-                        {aroma}
-                      </Text>
-                    </Pressable>
-                  ))}
+                        <Text
+                          style={[
+                            styles.l2Text,
+                            draft.aromas_l2.includes(aroma) && styles.l2TextSelected,
+                          ]}
+                        >
+                          {aroma}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  {cat.id === 'other' && (
+                    <View style={styles.otherNoteWrapper}>
+                      <Text style={styles.otherNoteLabel}>Describe other aromas</Text>
+                      <RNTextInput
+                        style={styles.otherNoteInput}
+                        value={draft.aromas_other_note ?? ''}
+                        onChangeText={setAromasOtherNote}
+                        placeholder="e.g. wet slate, incense, beeswax…"
+                        placeholderTextColor={Colors.inkFaint}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                      />
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -144,6 +162,11 @@ export function Step3Aromas() {
               {draft.aromas_l2.join(' · ')}
             </Text>
           )}
+          {draft.aromas_other_note ? (
+            <Text style={styles.summaryL2}>
+              ✨ {draft.aromas_other_note}
+            </Text>
+          ) : null}
         </View>
       )}
     </ScrollView>
@@ -265,6 +288,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.gold,
     paddingLeft: Spacing.xl,
+  },
+  otherNoteWrapper: {
+    paddingLeft: Spacing.xl,
+    paddingTop: Spacing.sm,
+    gap: 6,
+  },
+  otherNoteLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+  },
+  otherNoteInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+    minHeight: 80,
   },
   summary: {
     marginTop: Spacing.xl,

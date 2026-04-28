@@ -34,6 +34,7 @@ function makeDefaultDraft(): WineEntryDraft {
     free_notes: '',
     aromas_l1: [],
     aromas_l2: [],
+    aromas_other_note: null,
     tags: [],
     want_another_glass: false,
     want_to_buy: false,
@@ -71,6 +72,7 @@ interface EntryDraftStore {
     'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>>) => void;
 
   setAromas: (aromas_l1: string[], aromas_l2: string[]) => void;
+  setAromasOtherNote: (note: string) => void;
 
   setTechnicalScore: (data: Partial<Pick<WineEntryDraft,
     'score_balance' | 'score_intensity' | 'score_complexity' | 'score_finish' | 'score_typicity'>>) => void;
@@ -98,6 +100,9 @@ export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
 
   setAromas: (aromas_l1, aromas_l2) =>
     set((state) => ({ draft: { ...state.draft, aromas_l1, aromas_l2 } })),
+
+  setAromasOtherNote: (note) =>
+    set((state) => ({ draft: { ...state.draft, aromas_other_note: note || null } })),
 
   setTechnicalScore: (data) =>
     set((state) => ({ draft: { ...state.draft, ...data } })),

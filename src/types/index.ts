@@ -172,6 +172,7 @@ export interface WineEntry {
   free_notes: string;
   aromas_l1: string[];
   aromas_l2: string[];
+  aromas_other_note: string | null;
   tags: string[];
   want_another_glass: boolean;
   want_to_buy: boolean;
