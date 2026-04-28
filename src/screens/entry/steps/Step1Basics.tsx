@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  Animated,
   View,
   Text,
   ScrollView,
@@ -22,6 +23,19 @@ export function Step1Basics() {
   const { draft, setBasics, setLabelPhoto, setGrapeBlends } = useEntryDraftStore();
   const { user } = useAuthStore();
   const [scannerVisible, setScannerVisible] = useState(false);
+  const [priceMode, setPriceMode] = useState<'glass' | 'bottle'>('glass');
+  const [toggleWidth, setToggleWidth] = useState(0);
+  const priceAnim = useRef(new Animated.Value(0)).current;
+
+  const handlePriceMode = (mode: 'glass' | 'bottle') => {
+    setPriceMode(mode);
+    Animated.spring(priceAnim, {
+      toValue: mode === 'glass' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 280,
+      friction: 28,
+    }).start();
+  };
 
   const regions = draft.country ? Object.keys(COUNTRIES_AND_REGIONS[draft.country] ?? {}) : [];
   const appellations =
@@ -217,38 +231,52 @@ export function Step1Basics() {
 
       {/* Price */}
       <Text style={styles.label}>Price (optional)</Text>
-      <Text style={styles.priceSubLabel}>Per glass</Text>
-      <View style={styles.priceRow}>
-        <TextInput
-          label="Amount"
-          value={getPriceEntry('glass') ? String(getPriceEntry('glass')!.amount || '') : ''}
-          onChangeText={(v) => handlePriceChange('glass', 'amount', v)}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
-          containerStyle={{ flex: 1 }}
-        />
-        <TextInput
-          label="Currency"
-          value={getPriceEntry('glass')?.currency ?? 'USD'}
-          onChangeText={(v) => handlePriceChange('glass', 'currency', v)}
-          placeholder="USD"
-          containerStyle={{ width: 70 }}
-        />
+      <View style={styles.priceToggleWrapper}>
+        <View
+          style={styles.priceTogglePill}
+          onLayout={(e) => setToggleWidth(e.nativeEvent.layout.width)}
+        >
+          {toggleWidth > 0 && (
+            <Animated.View
+              style={[
+                styles.priceToggleIndicator,
+                {
+                  width: (toggleWidth - 4) / 2,
+                  transform: [{
+                    translateX: priceAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [2, (toggleWidth - 4) / 2 + 2],
+                    }),
+                  }],
+                },
+              ]}
+            />
+          )}
+          <Pressable style={styles.priceToggleOption} onPress={() => handlePriceMode('glass')}>
+            <Text style={[styles.priceToggleText, priceMode === 'glass' && styles.priceToggleTextActive]}>
+              Glass
+            </Text>
+          </Pressable>
+          <Pressable style={styles.priceToggleOption} onPress={() => handlePriceMode('bottle')}>
+            <Text style={[styles.priceToggleText, priceMode === 'bottle' && styles.priceToggleTextActive]}>
+              Bottle
+            </Text>
+          </Pressable>
+        </View>
       </View>
-      <Text style={[styles.priceSubLabel, styles.priceSubLabelGap]}>Per bottle</Text>
       <View style={styles.priceRow}>
         <TextInput
           label="Amount"
-          value={getPriceEntry('bottle') ? String(getPriceEntry('bottle')!.amount || '') : ''}
-          onChangeText={(v) => handlePriceChange('bottle', 'amount', v)}
+          value={getPriceEntry(priceMode) ? String(getPriceEntry(priceMode)!.amount || '') : ''}
+          onChangeText={(v) => handlePriceChange(priceMode, 'amount', v)}
           keyboardType="decimal-pad"
           placeholder="0.00"
           containerStyle={{ flex: 1 }}
         />
         <TextInput
           label="Currency"
-          value={getPriceEntry('bottle')?.currency ?? 'USD'}
-          onChangeText={(v) => handlePriceChange('bottle', 'currency', v)}
+          value={getPriceEntry(priceMode)?.currency ?? 'USD'}
+          onChangeText={(v) => handlePriceChange(priceMode, 'currency', v)}
           placeholder="USD"
           containerStyle={{ width: 70 }}
         />
@@ -392,14 +420,42 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     alignItems: 'flex-end',
   },
-  priceSubLabel: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 12,
-    color: Colors.inkMuted,
-    marginBottom: 2,
+  priceToggleWrapper: {
     marginTop: Spacing.sm,
+    marginBottom: 2,
   },
-  priceSubLabelGap: {
-    marginTop: Spacing.md,
+  priceTogglePill: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 2,
+    position: 'relative',
+    alignSelf: 'flex-start',
+    minWidth: 160,
+  },
+  priceToggleIndicator: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.gold,
+  },
+  priceToggleOption: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  priceToggleText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.inkMuted,
+  },
+  priceToggleTextActive: {
+    fontFamily: Fonts.dmSansMedium,
+    color: Colors.ink,
   },
 });
