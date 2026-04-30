@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { signInWithEmail, signInWithApple, generateAppleNonce } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
+import { useResponsive } from '@/hooks/useResponsive';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -83,6 +84,7 @@ export function LoginScreen({ navigation }: Props) {
   };
 
   const isIOS = Platform.OS === 'ios';
+  const { isWide } = useResponsive();
 
   return (
     <KeyboardAvoidingView
@@ -93,6 +95,7 @@ export function LoginScreen({ navigation }: Props) {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={isWide ? styles.wideInner : undefined}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.trophy}>🏆</Text>
@@ -157,6 +160,7 @@ export function LoginScreen({ navigation }: Props) {
             <Text style={styles.footerLink}>Create an account</Text>
           </Text>
         </Pressable>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -170,6 +174,12 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.huge,
     paddingBottom: Spacing.xxxl,
     justifyContent: 'center',
+    gap: Spacing.xl,
+  },
+  wideInner: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     gap: Spacing.xl,
   },
   header: {

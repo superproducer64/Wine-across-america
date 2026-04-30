@@ -16,6 +16,7 @@ import { signUpWithEmail, uploadSommelierCert, submitSommelierApplication } from
 import { AuthStackParamList } from '@/navigation/types';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
 import { UserRole } from '@/types';
+import { useResponsive } from '@/hooks/useResponsive';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
@@ -78,6 +79,8 @@ export function SignupScreen({ navigation }: Props) {
     }
   };
 
+  const { isWide } = useResponsive();
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -87,6 +90,7 @@ export function SignupScreen({ navigation }: Props) {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={isWide ? styles.wideInner : undefined}>
         <View style={styles.header}>
           <Text style={styles.trophy}>🏆</Text>
           <Text style={styles.title}>Create Account</Text>
@@ -194,6 +198,7 @@ export function SignupScreen({ navigation }: Props) {
             <Text style={styles.footerLink}>Sign in</Text>
           </Text>
         </Pressable>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -207,6 +212,12 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.huge,
     paddingBottom: Spacing.xxxl,
     justifyContent: 'center',
+    gap: Spacing.xl,
+  },
+  wideInner: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     gap: Spacing.xl,
   },
   header: {
