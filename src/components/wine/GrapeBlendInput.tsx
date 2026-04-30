@@ -36,7 +36,7 @@ export function GrapeBlendInput({ value, onChange }: Props) {
 
   const handleAdd = (name: string) => {
     if (selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: 100 }]);
+    onChange([...value, { name, percentage: value.length === 0 ? 100 : 0 }]);
     setQuery('');
     Keyboard.dismiss();
   };
@@ -44,7 +44,7 @@ export function GrapeBlendInput({ value, onChange }: Props) {
   const handleAddCustom = () => {
     const name = query.trim();
     if (!name || selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: 100 }]);
+    onChange([...value, { name, percentage: value.length === 0 ? 100 : 0 }]);
     setQuery('');
     Keyboard.dismiss();
   };
@@ -94,6 +94,7 @@ export function GrapeBlendInput({ value, onChange }: Props) {
                   maxLength={3}
                   placeholder="0"
                   placeholderTextColor={Colors.inkMuted}
+                  selectTextOnFocus
                 />
                 <Text style={[
                   styles.pctSign,
