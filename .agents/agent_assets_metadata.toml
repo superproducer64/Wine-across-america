@@ -60,3 +60,9 @@ id = "Kf4rqkvNisfbpbMb5vlAr"
 uri = "file://POUR_ACROSS_AMERICA_CONTEXT.md"
 type = "text"
 title = "Pour Across America — LLM Context Document"
+
+[[outputs]]
+id = "H_nLagXvnxbUTHPcGgtEs"
+uri = "file://build-reports/PAA-Build-Report-2026-04-30.md"
+type = "text"
+title = "PAA Build Report — Apr 27–30, 2026"
