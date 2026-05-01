@@ -18,6 +18,18 @@ uri = "file://assets/adaptive-icon.png"
 type = "image"
 title = "adaptive icon foreground"
 
+[[generated]]
+id = "Q-gHYCMCLDJ5a1FzTBIwN"
+uri = "file://assets/feature-graphic.png"
+type = "image"
+title = "google play feature graphic"
+
+[[generated]]
+id = "8wS5WAz12ixA-2VJ6HCzq"
+uri = "file://assets/notification-icon.png"
+type = "image"
+title = "android notification icon white"
+
 [[outputs]]
 id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
@@ -95,3 +107,15 @@ id = "OIn0KINBzivxhlnlNcEpU"
 uri = "file://assets/splash.png"
 type = "image"
 title = "Splash Screen"
+
+[[outputs]]
+id = "YzZIDzT6X2yp2iFjM_dLE"
+uri = "file://assets/feature-graphic.png"
+type = "image"
+title = "Google Play Feature Graphic — 1024×500"
+
+[[outputs]]
+id = "donE5EDQDbQu7oeYGoojE"
+uri = "file://assets/notification-icon.png"
+type = "image"
+title = "Android Notification Icon"
