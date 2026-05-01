@@ -1,5 +1,22 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "oCeNZ4a-UM-bBNJXA_8Io"
+uri = "file://assets/icon.png"
+type = "image"
+title = "pour across america app icon"
+
+[[generated]]
+id = "23qW9CtgwtIHxePWBzrWa"
+uri = "file://assets/splash.png"
+type = "image"
+title = "pour across america splash screen"
+
+[[generated]]
+id = "8OHMZqgC0LJ-0lgqj2i2O"
+uri = "file://assets/adaptive-icon.png"
+type = "image"
+title = "adaptive icon foreground"
 
 [[outputs]]
 id = "I9PpjAcqP3PVFq4ObRXs6"
@@ -66,3 +83,15 @@ id = "H_nLagXvnxbUTHPcGgtEs"
 uri = "file://build-reports/PAA-Build-Report-2026-04-30.md"
 type = "text"
 title = "PAA Build Report — Apr 27–30, 2026 (with hours)"
+
+[[outputs]]
+id = "7YLVVJUce1_gNIF6dL7mw"
+uri = "file://assets/icon.png"
+type = "image"
+title = "App Icon — 1024×1024"
+
+[[outputs]]
+id = "OIn0KINBzivxhlnlNcEpU"
+uri = "file://assets/splash.png"
+type = "image"
+title = "Splash Screen"

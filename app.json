@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1A1710"
+      "backgroundColor": "#1F1518"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -17,14 +17,21 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pouracrossamerica.app",
-      "usesAppleSignIn": true
+      "buildNumber": "1",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Pour Across America uses your camera to photograph wine labels.",
+        "NSPhotoLibraryUsageDescription": "Pour Across America needs access to your photos to attach wine label photos.",
+        "NSLocationWhenInUseUsageDescription": "Pour Across America uses your location to log where you tasted each wine."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1A1710"
+        "backgroundColor": "#1F1518"
       },
-      "package": "com.pouracrossamerica.app"
+      "package": "com.pouracrossamerica.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png",

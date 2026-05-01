@@ -105,7 +105,7 @@ export function DatePickerInput({ label, value, onChange, placeholder = 'Select 
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
 
-        <View style={styles.sheetWrapper} pointerEvents="box-none">
+        <View style={[styles.sheetWrapper, { pointerEvents: 'box-none' }]}>
           <View style={styles.sheet}>
             {/* Month navigation */}
             <View style={styles.nav}>
