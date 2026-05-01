@@ -1,8 +1,8 @@
 # Pour Across America — Build Report
-**Period:** April 27, 2026 23:59 CST → May 1, 2026 20:46 CST  
+**Period:** April 27, 2026 23:59 CST → May 1, 2026 (ongoing)  
 **Project:** Pour Across America — Wine Intelligence App  
 **Platform:** React Native / Expo SDK 51 · Supabase Backend · GPT-4o Vision  
-**Status:** iOS submitted to TestFlight · Android config complete · Web live
+**Status:** iOS submitted to TestFlight · Android config complete · Web live · Security scan reviewed
 
 ---
 
@@ -21,9 +21,10 @@
 | 9 | TestFlight polish — assets, config, packages | 2.0 h |
 | 10 | iOS App Store submission via Expo Launch | 0.25 h |
 | 11 | Android production readiness | 1.5 h |
-| | **Total** | **13.5 h** |
+| 12 | Security dependency scan — reviewed and assessed | 0.25 h |
+| | **Total** | **13.75 h** |
 
-Eleven work items across the full reporting window. Work progressed from foundational bug fixes through two major Wine Detail enhancements, an AI wine recognition system, dual platform submissions, and full Android store readiness.
+Twelve work items across the full reporting window. Work progressed from foundational bug fixes through two major Wine Detail enhancements, an AI wine recognition system, dual platform submissions, full Android store readiness, and a security dependency audit.
 
 ---
 
@@ -223,10 +224,13 @@ Full Android configuration pass — all assets and metadata required for a Googl
 |---|---|---|
 | #4 | Label photo soft preview | ✅ Merged |
 | #11 | Grape blend percentage warning | ✅ Merged |
-| #14 | Unique preview image per wine based on label | ✅ Implemented |
-| #15 | Block saving a wine with an incomplete blend | 📋 Proposed |
-| #16 | Apply preview images to wines saved before this update | 📋 Proposed |
-| #17 | Regenerate preview image when label photo is replaced | 📋 Proposed |
+| #14 | Unique preview image per wine based on label | ✅ Merged |
+| #15 | Prevent saving a wine with an incomplete blend | ✅ Implemented |
+| #16 | Apply preview images to wines saved before this update | ⏳ Pending (concurrency queue) |
+| #17 | Regenerate preview image when label photo is replaced | ⏳ Pending (concurrency queue) |
+| #18 | Flag incomplete blends on the Wine Detail page | 📋 Proposed |
+| #19 | Warn user about incomplete blend before leaving Step 1 | 📋 Proposed |
+| #20 | Security scan | ⏳ Pending (concurrency queue) |
 
 ---
 
@@ -238,3 +242,43 @@ Full Android configuration pass — all assets and metadata required for a Googl
 - **Android notification icons** must be monochrome; full-colour icons render as a solid blob on Android 5+
 - **RLS note:** self-referencing policies on `user_profiles` must use `USING (true)` to prevent infinite recursion
 - **Pending schema additions** (not yet applied): `push_token TEXT`, `sommelier_rejection_reason TEXT` on `user_profiles`; `aromas_other_note TEXT` on `wine_entries`
+
+---
+
+## Security Dependency Audit — May 1, 2026
+
+**Scan date:** May 1, 2026  
+**Tool:** `npm audit`  
+**Vulnerabilities found:** 9 advisories (4 High, 5 Medium)  
+**Action taken:** Reviewed and assessed — no changes made  
+**Risk to production app:** None
+
+### Findings
+
+| Package | Severity | Root dependency | Ships in app binary? |
+|---|---|---|:---:|
+| `@xmldom/xmldom` v0.8.12 | High (×4) | `@expo/plist` | No |
+| `fast-xml-parser` v4.5.6 | Medium | `@react-native-community/cli-platform-android` | No |
+| `postcss` v8.4.49 | Medium | `@expo/metro-config` | No |
+| `send` v0.18.0 | Medium | `@expo/cli` (dev server) | No |
+| `uuid` v7.0.3 / v8.3.2 | Medium | `@expo/rudder-sdk-node` · `xcode` parser | No |
+
+### Assessment
+
+Every flagged package is a transitive dependency of Expo SDK 51 or React Native build tooling. None are included in the compiled app binary delivered to iOS or Android users:
+
+- **`@xmldom/xmldom`** — used by `@expo/plist` solely to parse `.plist` files during native builds. Not present in the running app.
+- **`fast-xml-parser`** — used by the React Native CLI to process Android project XML during builds. A CLI-only tool.
+- **`postcss`** — CSS transformer used by Metro bundler at build time. Not shipped.
+- **`send`** — the HTTP library underpinning Expo's local development server (`npx expo start`). Never deployed.
+- **`uuid`** — present in Expo's internal analytics telemetry (rudder-sdk-node) and the `xcode` project parser. Neither runs in the production app.
+
+### Why no fix was applied
+
+`npm audit` suggests fixing these by updating `expo` to v49.0.23 and `react-native` to v0.85.2 — both of which are incorrect directions (v49 is older than the current SDK 51; v0.85 would require a full SDK upgrade). These are known limitations of npm audit's dependency resolver when major-version boundaries are involved. Applying `npm audit fix --force` would downgrade and break the working SDK 51 setup.
+
+The appropriate resolution is an Expo SDK patch release that updates these internal dependencies. No action is required from this project.
+
+### Supabase & runtime code
+
+No vulnerabilities were found in any package that directly handles user data, authentication, or network requests. Supabase client, GPT-4o integration, and all runtime libraries are unaffected.
