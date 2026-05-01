@@ -287,3 +287,9 @@ id = "R0epv3YXYCuUYncLetxOf"
 uri = "file://assets/appstore/2778x1284/screenshot-05-search.png"
 type = "image"
 title = "2778x1284 — 05 Search & Compare"
+
+[[outputs]]
+id = "Kw__6DouYU9BI4MMfim3X"
+uri = "file://assets/appstore/supported-regions.tar.gz"
+type = "unspecified"
+title = "supported-regions.geojson (download)"
