@@ -8,23 +8,32 @@
 
 ## Summary
 
-Seven commits merged across the reporting window, spanning 11 source files with **1,358 lines added** and work delivered across three areas: quality-of-life bug fixes, two major Wine Detail screen enhancements, and the first iteration of the AI-powered wine recognition system inside the label scanner.
+| # | Item | Est. Hours |
+|---|---|:---:|
+| 1 | Project architecture context document | 2.0 h |
+| 2 | Responsive auth screen layout fix | 0.5 h |
+| 3 | Grape blend percentage input fix | 0.25 h |
+| 4 | Wine Detail — Log Another Visit form | 2.5 h |
+| 5 | Wine Detail — Inline editable Tasting Notes | 1.0 h |
+| 6 | Label scan wine recognition system | 2.0 h |
+| 7 | Label photo soft preview (parallel task agent) | 0.75 h |
+| | **Total** | **9.0 h** |
 
-A parallel task agent worked concurrently on wine card image rendering and delivered a merged result before the period closed.
+Seven commits merged across the reporting window, spanning 11 source files with **1,358 lines added**. Work covered one documentation artifact, two bug fixes, two Wine Detail screen enhancements, the first iteration of the AI wine recognition system, and a parallel task agent delivery on image rendering.
 
 ---
 
 ## Work Delivered
 
 ### 1. Project Context Document
-**Commit:** `73059b4` · April 28
+**Commit:** `73059b4` · April 28, 17:57 CST · **~2.0 h**
 
-Created `POUR_ACROSS_AMERICA_CONTEXT.md` — a full architectural reference written for AI session continuity. Covers the complete Supabase schema, all edge functions, navigation tree, component inventory, data types, known gotchas (RLS infinite recursion, Alert.alert() prohibition, email confirmation disabled), and the two-tier user system. Ensures no context is lost between build sessions.
+Created `POUR_ACROSS_AMERICA_CONTEXT.md` — a full architectural reference written for AI session continuity. Covers the complete Supabase schema, all edge functions, navigation tree, component inventory, data types, known gotchas (RLS infinite recursion, `Alert.alert()` prohibition, email confirmation disabled), and the two-tier user system. Ensures no context is lost between build sessions.
 
 ---
 
 ### 2. Responsive Auth Screen Layout Fix
-**Commit:** `c79d11a` · April 30  
+**Commit:** `c79d11a` · April 30, 17:45 CST · **~0.5 h**  
 **Files:** `src/screens/auth/LoginScreen.tsx`, `src/screens/auth/SignupScreen.tsx`
 
 **Problem:** On tablet and desktop widths, the Sign In and Sign Up forms stretched full-width, breaking the visual design.
@@ -34,7 +43,7 @@ Created `POUR_ACROSS_AMERICA_CONTEXT.md` — a full architectural reference writ
 ---
 
 ### 3. Grape Blend Percentage Input Fix
-**Commit:** `abffe7a` · April 30  
+**Commit:** `abffe7a` · April 30, 17:51 CST · **~0.25 h**  
 **File:** `src/components/wine/GrapeBlendInput.tsx`
 
 **Problem:** Adding a second (or later) grape variety auto-filled its percentage to `100%`, causing the blend total to jump to 200%+ immediately.
@@ -43,11 +52,11 @@ Created `POUR_ACROSS_AMERICA_CONTEXT.md` — a full architectural reference writ
 
 ---
 
-### 4. Wine Detail — Log Another Visit
-**Commit:** `5111309` · April 30  
+### 4. Wine Detail — Log Another Visit Form
+**Commit:** `5111309` · April 30, 19:02 CST · **~2.5 h**  
 **File:** `src/screens/detail/WineDetailScreen.tsx` (+445 lines)
 
-Added a full "Log Another Visit" form inline on every Wine Detail screen.
+Added a full "Log Another Visit" form inline on every Wine Detail screen. Time includes the animated glass/bottle toggle, date picker integration, Supabase array-append write logic, and inline banner feedback system.
 
 **Fields:**
 - Date (calendar date picker)
@@ -64,8 +73,8 @@ Added a full "Log Another Visit" form inline on every Wine Detail screen.
 
 ---
 
-### 5. Wine Detail — Editable Tasting Notes
-**Commit:** `5111309` · April 30  
+### 5. Wine Detail — Inline Editable Tasting Notes
+**Commit:** `5111309` · April 30, 19:02 CST · **~1.0 h**  
 **File:** `src/screens/detail/WineDetailScreen.tsx`
 
 The Tasting Notes section on Wine Detail is now fully editable inline.
@@ -80,10 +89,10 @@ The Tasting Notes section on Wine Detail is now fully editable inline.
 ---
 
 ### 6. Wine Recognition from Label Scan
-**Commit:** `7126bd6` · April 30  
+**Commit:** `7126bd6` · April 30, 20:01 CST · **~2.0 h**  
 **File:** `src/components/wine/LabelScannerModal.tsx` (+282 lines)
 
-The flagship feature of this build window. After GPT-4o extracts data from a scanned label, the app now cross-references the user's full wine history before presenting the normal entry form.
+The flagship feature of this build window. Time includes algorithm design, match classification, new modal phase, match card UI, and navigation wiring. After GPT-4o extracts data from a scanned label, the app now cross-references the user's full wine history before presenting the normal entry form.
 
 **Recognition logic:**
 - Searches existing entries by producer name (case-insensitive, substring match in both directions)
@@ -104,18 +113,18 @@ Shown between the AI scan and the entry form whenever matches are found. Display
 | Last price | Glass 🥂 or bottle 🍾 with currency + amount |
 
 **User choices:**
-- **"Log a visit to this wine →"** (gold button) — closes the scanner and navigates directly to that wine's Detail screen, where the "Log Another Visit" form (Feature 4 above) is waiting
-- **"Add as a new entry"** (secondary button) — skips to the review screen with all AI-extracted fields pre-filled, creating a new independent wine log for this encounter
+- **"Log a visit to this wine →"** (gold button) — closes the scanner and navigates directly to that wine's Detail screen, where the Log Another Visit form is ready
+- **"Add as a new entry"** (secondary button) — skips to the review screen with all AI-extracted fields pre-filled, creating a new independent wine log
 
-**No match found:** Modal proceeds directly to the review screen as before — zero change to the existing flow.
+**No match found:** Modal proceeds directly to the review screen as before — zero change to existing flow.
 
 ---
 
 ### 7. Label Photo Soft Preview (Task Agent — Merged)
-**Task #4 · Merged commit:** `bc5918d` · April 30  
+**Task #4 · Merged commit:** `bc5918d` · April 30, 20:11 CST · **~0.75 h**  
 **Files:** `src/components/wine/ProWineCard.tsx`, `src/components/wine/VivinoStyleCard.tsx`, `src/components/wine/WineListItem.tsx`, `src/utils/imagePlaceholder.ts`
 
-Delivered by a parallel task agent. Wine cards across all list views now show a styled placeholder while label photos are loading, rather than a blank space. Prevents layout shift and provides visual continuity during image fetch.
+Delivered by a parallel task agent running concurrently. Wine cards across all list views now show a styled placeholder while label photos are loading, rather than a blank space. Prevents layout shift and provides visual continuity during image fetch.
 
 ---
 
