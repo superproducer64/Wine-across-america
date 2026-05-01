@@ -31,32 +31,26 @@ type = "image"
 title = "android notification icon white"
 
 [[generated]]
-id = "muYF7AXotiTkl-aLfoVPx"
-uri = "file://assets/appstore/screenshot-01-collection.png"
+id = "tvST1c_VPvKMba1WK26vm"
+uri = "file://assets/appstore/src-01-collection.png"
 type = "image"
 title = "generated_image"
 
 [[generated]]
-id = "R9em6Zd87UcX_W0C0qrSP"
-uri = "file://assets/appstore/screenshot-02-label-scan.png"
+id = "qqY8OD6fR22_9f28kF5W8"
+uri = "file://assets/appstore/src-02-label-scan.png"
 type = "image"
 title = "generated_image"
 
 [[generated]]
-id = "_i_-GTUT-caswyUQU0fY0"
-uri = "file://assets/appstore/screenshot-03-wine-detail.png"
+id = "54Hwkd1staNcRSWl7li4n"
+uri = "file://assets/appstore/src-03-wine-detail.png"
 type = "image"
 title = "generated_image"
 
 [[generated]]
-id = "30Up3jnTFZL4gwSRw94g9"
-uri = "file://assets/appstore/screenshot-04-tasting-notes.png"
-type = "image"
-title = "generated_image"
-
-[[generated]]
-id = "lxpJBSY-0s0KtETkRMOF4"
-uri = "file://assets/appstore/screenshot-05-search.png"
+id = "uZoypx8pzMKiFeKu2WseY"
+uri = "file://assets/appstore/src-04-tasting-notes.png"
 type = "image"
 title = "generated_image"
 
@@ -179,3 +173,123 @@ id = "nembCXFvzG-O03CLzpFfj"
 uri = "file://assets/appstore/screenshot-05-search.png"
 type = "image"
 title = "Screenshot 5 — Search & Compare"
+
+[[outputs]]
+id = "zZigb5NQy5Y8izHYkRPFb"
+uri = "file://assets/appstore/1242x2688/screenshot-01-collection.png"
+type = "image"
+title = "1242x2688 — 01 Wine Collection"
+
+[[outputs]]
+id = "FhpC8KLA1J3oEeiT759XG"
+uri = "file://assets/appstore/1284x2778/screenshot-02-label-scan.png"
+type = "image"
+title = "1284x2778 — 02 Label Scan"
+
+[[outputs]]
+id = "PmgAH7YK1zDcNMpNSawI7"
+uri = "file://assets/appstore/2688x1242/screenshot-03-wine-detail.png"
+type = "image"
+title = "2688x1242 — 03 Wine Detail"
+
+[[outputs]]
+id = "39VOhg6tQQl3ftXa4aNu3"
+uri = "file://assets/appstore/2778x1284/screenshot-04-tasting-notes.png"
+type = "image"
+title = "2778x1284 — 04 Tasting Notes"
+
+[[outputs]]
+id = "_wekA7W7Nrk_IQx2aRQs2"
+uri = "file://assets/appstore/1242x2688/screenshot-02-label-scan.png"
+type = "image"
+title = "1242x2688 — 02 Label Scan"
+
+[[outputs]]
+id = "Xj7YiIFDFEGpkjRG9pUn3"
+uri = "file://assets/appstore/1242x2688/screenshot-03-wine-detail.png"
+type = "image"
+title = "1242x2688 — 03 Wine Detail"
+
+[[outputs]]
+id = "TCDjNwKEw1AnqLt3XkoBC"
+uri = "file://assets/appstore/1242x2688/screenshot-04-tasting-notes.png"
+type = "image"
+title = "1242x2688 — 04 Tasting Notes"
+
+[[outputs]]
+id = "M1qoNOXp1F2vrUuDy-04o"
+uri = "file://assets/appstore/1242x2688/screenshot-05-search.png"
+type = "image"
+title = "1242x2688 — 05 Search & Compare"
+
+[[outputs]]
+id = "B6TYyiocK4HrvoOYf1sff"
+uri = "file://assets/appstore/1284x2778/screenshot-01-collection.png"
+type = "image"
+title = "1284x2778 — 01 Wine Collection"
+
+[[outputs]]
+id = "1-WEfkDXGIW8fqbJy7hHh"
+uri = "file://assets/appstore/1284x2778/screenshot-03-wine-detail.png"
+type = "image"
+title = "1284x2778 — 03 Wine Detail"
+
+[[outputs]]
+id = "v9kBL2frO0M65AOD851uq"
+uri = "file://assets/appstore/1284x2778/screenshot-04-tasting-notes.png"
+type = "image"
+title = "1284x2778 — 04 Tasting Notes"
+
+[[outputs]]
+id = "nCMmz2g9kTicXCGQa1H3j"
+uri = "file://assets/appstore/1284x2778/screenshot-05-search.png"
+type = "image"
+title = "1284x2778 — 05 Search & Compare"
+
+[[outputs]]
+id = "8BYXt-gjfPwCmNILTPkNr"
+uri = "file://assets/appstore/2688x1242/screenshot-01-collection.png"
+type = "image"
+title = "2688x1242 — 01 Wine Collection"
+
+[[outputs]]
+id = "Uxr454IWtxhKoIVdrnEzG"
+uri = "file://assets/appstore/2688x1242/screenshot-02-label-scan.png"
+type = "image"
+title = "2688x1242 — 02 Label Scan"
+
+[[outputs]]
+id = "FprpZPy4r3CQcr3BzU1kE"
+uri = "file://assets/appstore/2688x1242/screenshot-04-tasting-notes.png"
+type = "image"
+title = "2688x1242 — 04 Tasting Notes"
+
+[[outputs]]
+id = "iGQwF3wEmqGPhnscJseLo"
+uri = "file://assets/appstore/2688x1242/screenshot-05-search.png"
+type = "image"
+title = "2688x1242 — 05 Search & Compare"
+
+[[outputs]]
+id = "xTwjGA8I8hd3H3sknuI4e"
+uri = "file://assets/appstore/2778x1284/screenshot-01-collection.png"
+type = "image"
+title = "2778x1284 — 01 Wine Collection"
+
+[[outputs]]
+id = "BEBo4jtRGmCCIG83VH1d_"
+uri = "file://assets/appstore/2778x1284/screenshot-02-label-scan.png"
+type = "image"
+title = "2778x1284 — 02 Label Scan"
+
+[[outputs]]
+id = "Oaoa75spOmZGdRatOzdox"
+uri = "file://assets/appstore/2778x1284/screenshot-03-wine-detail.png"
+type = "image"
+title = "2778x1284 — 03 Wine Detail"
+
+[[outputs]]
+id = "R0epv3YXYCuUYncLetxOf"
+uri = "file://assets/appstore/2778x1284/screenshot-05-search.png"
+type = "image"
+title = "2778x1284 — 05 Search & Compare"
