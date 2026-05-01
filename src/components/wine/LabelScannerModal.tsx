@@ -18,6 +18,7 @@ import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { analyzeWineLabelWithAI, WineLabelData } from '@/utils/wineOcr';
 import { uploadLabelPhoto } from '@/lib/supabase';
+import { computeLabelPhotoPlaceholder } from '@/utils/imagePlaceholder';
 import { useWineStore } from '@/stores/wineStore';
 import { WineEntry } from '@/types';
 import type { MainStackParamList } from '@/navigation/types';
@@ -25,7 +26,7 @@ import type { MainStackParamList } from '@/navigation/types';
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onApply: (data: Partial<WineLabelData> & { photoUrl?: string }) => void;
+  onApply: (data: Partial<WineLabelData> & { photoUrl?: string; photoBlurHash?: string }) => void;
   userId: string;
 }
 
@@ -84,6 +85,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   const [appellation, setAppellation] = useState('');
   const [grapes, setGrapes] = useState<string[]>([]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoBlurHash, setPhotoBlurHash] = useState<string | null>(null);
   const [aiSuccess, setAiSuccess] = useState(false);
 
   const reset = () => {
@@ -98,6 +100,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
     setAppellation('');
     setGrapes([]);
     setPhotoUrl(null);
+    setPhotoBlurHash(null);
     setAiSuccess(false);
     setMatches([]);
   };
@@ -111,12 +114,14 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
     setImageUri(uri);
     setPhase('uploading');
 
-    const [uploadResult, extracted] = await Promise.all([
+    const [uploadResult, extracted, blurHash] = await Promise.all([
       uploadLabelPhoto(userId, uri),
       analyzeWineLabelWithAI(uri),
+      computeLabelPhotoPlaceholder(uri),
     ]);
 
     setPhotoUrl(uploadResult.url);
+    setPhotoBlurHash(blurHash);
 
     const hasData = !!(extracted.name || extracted.producer || extracted.country || extracted.vintage);
     setAiSuccess(hasData);
@@ -185,6 +190,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
       appellation: appellation.trim() || undefined,
       grapes: grapes.length > 0 ? grapes : undefined,
       photoUrl: photoUrl ?? undefined,
+      photoBlurHash: photoBlurHash ?? undefined,
     });
     reset();
     onClose();
