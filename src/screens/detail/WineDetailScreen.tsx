@@ -462,8 +462,9 @@ export function WineDetailScreen({ route, navigation }: Props) {
               style={styles.labelPhoto}
               contentFit="cover"
               cachePolicy="memory-disk"
-              placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
-              transition={200}
+              placeholder={LABEL_PHOTO_PLACEHOLDER}
+              placeholderContentFit="cover"
+              transition={300}
             />
           </View>
         ) : null}

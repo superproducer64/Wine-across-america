@@ -147,8 +147,9 @@ export function ProWineCard({ entry, compact = false }: Props) {
             style={[styles.headerThumbnail, compact && styles.headerThumbnailCompact]}
             contentFit="cover"
             cachePolicy="memory-disk"
-            placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
-            transition={200}
+            placeholder={LABEL_PHOTO_PLACEHOLDER}
+            placeholderContentFit="cover"
+            transition={300}
           />
         ) : null}
         <Text style={[styles.producer, compact && styles.producerCompact]} numberOfLines={2}>

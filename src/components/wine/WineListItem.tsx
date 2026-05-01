@@ -41,8 +41,9 @@ export const WineListItem = React.memo(function WineListItem({ entry, onPress, s
             style={styles.thumbnail}
             contentFit="cover"
             cachePolicy="memory-disk"
-            placeholder={{ uri: LABEL_PHOTO_PLACEHOLDER }}
-            transition={200}
+            placeholder={LABEL_PHOTO_PLACEHOLDER}
+            placeholderContentFit="cover"
+            transition={300}
           />
         ) : (
           <Text style={styles.flag}>{flag}</Text>
