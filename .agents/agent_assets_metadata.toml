@@ -293,3 +293,9 @@ id = "Kw__6DouYU9BI4MMfim3X"
 uri = "file://assets/appstore/supported-regions.tar.gz"
 type = "unspecified"
 title = "supported-regions.geojson (download)"
+
+[[outputs]]
+id = "xvXvRZvHnh6Oz55LEcwki"
+uri = "file://assets/appstore/supported-regions.json"
+type = "unspecified"
+title = "supported-regions.geojson — rename after download"
