@@ -31,12 +31,6 @@ type = "image"
 title = "android notification icon white"
 
 [[generated]]
-id = "tvST1c_VPvKMba1WK26vm"
-uri = "file://assets/appstore/src-01-collection.png"
-type = "image"
-title = "generated_image"
-
-[[generated]]
 id = "qqY8OD6fR22_9f28kF5W8"
 uri = "file://assets/appstore/src-02-label-scan.png"
 type = "image"
