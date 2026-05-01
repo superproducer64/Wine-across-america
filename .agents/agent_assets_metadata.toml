@@ -30,6 +30,36 @@ uri = "file://assets/notification-icon.png"
 type = "image"
 title = "android notification icon white"
 
+[[generated]]
+id = "muYF7AXotiTkl-aLfoVPx"
+uri = "file://assets/appstore/screenshot-01-collection.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "R9em6Zd87UcX_W0C0qrSP"
+uri = "file://assets/appstore/screenshot-02-label-scan.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "_i_-GTUT-caswyUQU0fY0"
+uri = "file://assets/appstore/screenshot-03-wine-detail.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "30Up3jnTFZL4gwSRw94g9"
+uri = "file://assets/appstore/screenshot-04-tasting-notes.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "lxpJBSY-0s0KtETkRMOF4"
+uri = "file://assets/appstore/screenshot-05-search.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
@@ -119,3 +149,33 @@ id = "donE5EDQDbQu7oeYGoojE"
 uri = "file://assets/notification-icon.png"
 type = "image"
 title = "Android Notification Icon"
+
+[[outputs]]
+id = "yOBCk_SrSfai5Lt8hHuLM"
+uri = "file://assets/appstore/screenshot-01-collection.png"
+type = "image"
+title = "Screenshot 1 — Wine Collection"
+
+[[outputs]]
+id = "ymPlfDfMA9r1WCBLFPSw0"
+uri = "file://assets/appstore/screenshot-02-label-scan.png"
+type = "image"
+title = "Screenshot 2 — Label Scan"
+
+[[outputs]]
+id = "fVIYPqxW5F2r1dCjJxlGp"
+uri = "file://assets/appstore/screenshot-03-wine-detail.png"
+type = "image"
+title = "Screenshot 3 — Wine Detail"
+
+[[outputs]]
+id = "-0-XFnH1xf6HBuboGnmgi"
+uri = "file://assets/appstore/screenshot-04-tasting-notes.png"
+type = "image"
+title = "Screenshot 4 — Tasting Notes"
+
+[[outputs]]
+id = "nembCXFvzG-O03CLzpFfj"
+uri = "file://assets/appstore/screenshot-05-search.png"
+type = "image"
+title = "Screenshot 5 — Search & Compare"
