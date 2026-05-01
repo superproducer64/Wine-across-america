@@ -113,6 +113,15 @@ export function GrapeBlendInput({ value, onChange }: Props) {
               </Text>
             </View>
           )}
+
+          {/* Blend warning */}
+          {hasAnyPct && totalPct !== 100 && (
+            <View style={styles.warningBanner}>
+              <Text style={styles.warningText}>
+                Blend adds up to {totalPct}% — tap a field to adjust
+              </Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -265,6 +274,19 @@ const styles = StyleSheet.create({
   totalValue: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 13,
+  },
+  warningBanner: {
+    paddingVertical: 8,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.goldPale,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.borderStrong,
+  },
+  warningText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.gold,
+    textAlign: 'center',
   },
 
   // Search
