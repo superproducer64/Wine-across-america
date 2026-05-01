@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Share,
   Platform,
+  TextInput,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
@@ -18,11 +19,12 @@ import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { ProWineCard } from '@/components/wine/ProWineCard';
 import { Button } from '@/components/ui/Button';
+import { DatePickerInput } from '@/components/ui/DatePickerInput';
 import { getWineEntry } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
-import { WineEntry } from '@/types';
+import { WineEntry, PriceEntry } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'WineDetail'>;
@@ -82,9 +84,11 @@ function buildShareText(entry: WineEntry): string {
   return lines.join('\n');
 }
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
-  const { entries, removeEntry } = useWineStore();
+  const { entries, removeEntry, updateEntry } = useWineStore();
   const { isWide } = useResponsive();
   const { user, profile } = useAuthStore();
 
@@ -97,6 +101,69 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [shareToast, setShareToast] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // ── Log another visit ──────────────────────────────────────────────────────
+  const [showVisitForm, setShowVisitForm] = useState(false);
+  const [visitDate, setVisitDate] = useState(TODAY);
+  const [visitLocation, setVisitLocation] = useState('');
+  const [visitAmount, setVisitAmount] = useState('');
+  const [visitCurrency, setVisitCurrency] = useState('USD');
+  const [visitType, setVisitType] = useState<'glass' | 'bottle'>('bottle');
+  const [savingVisit, setSavingVisit] = useState(false);
+  const [visitBanner, setVisitBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const handleSaveVisit = async () => {
+    if (!entry) return;
+    const amount = parseFloat(visitAmount);
+    if (!visitAmount || isNaN(amount) || amount <= 0) {
+      setVisitBanner({ type: 'error', msg: 'Please enter a valid price.' });
+      return;
+    }
+    setSavingVisit(true);
+    setVisitBanner(null);
+    const newPrice: PriceEntry = {
+      amount,
+      currency: visitCurrency.trim() || 'USD',
+      date: visitDate,
+      location: visitLocation.trim(),
+      type: visitType,
+    };
+    const updatedPrices = [...entry.price, newPrice];
+    await updateEntry(entryId, { price: updatedPrices });
+    const updated = { ...entry, price: updatedPrices };
+    setEntry(updated);
+    setVisitBanner({ type: 'success', msg: 'Visit saved!' });
+    setVisitAmount('');
+    setVisitLocation('');
+    setVisitDate(TODAY);
+    setVisitType('bottle');
+    setSavingVisit(false);
+    setTimeout(() => { setShowVisitForm(false); setVisitBanner(null); }, 1500);
+  };
+
+  // ── Editable notes ─────────────────────────────────────────────────────────
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText, setNotesText] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesBanner, setNotesBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const handleEditNotes = () => {
+    setNotesText(entry?.free_notes ?? '');
+    setNotesBanner(null);
+    setEditingNotes(true);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!entry) return;
+    setSavingNotes(true);
+    setNotesBanner(null);
+    await updateEntry(entryId, { free_notes: notesText.trim() });
+    const updated = { ...entry, free_notes: notesText.trim() };
+    setEntry(updated);
+    setNotesBanner({ type: 'success', msg: 'Notes saved!' });
+    setSavingNotes(false);
+    setTimeout(() => { setEditingNotes(false); setNotesBanner(null); }, 1200);
+  };
 
   useEffect(() => {
     if (cached !== null) return; // already have it, skip the fetch
@@ -227,12 +294,48 @@ export function WineDetailScreen({ route, navigation }: Props) {
         </View>
 
         {/* Free-form notes */}
-        {entry.free_notes ? (
-          <View style={styles.notesBlock}>
+        <View style={styles.notesBlock}>
+          <View style={styles.notesHeader}>
             <Text style={styles.notesLabel}>Tasting Notes</Text>
-            <Text style={styles.notesText}>{entry.free_notes}</Text>
+            {!editingNotes && (
+              <Pressable onPress={handleEditNotes} hitSlop={8}>
+                <Text style={styles.editLink}>{entry.free_notes ? 'Edit' : '+ Add notes'}</Text>
+              </Pressable>
+            )}
           </View>
-        ) : null}
+          {notesBanner && (
+            <Text style={notesBanner.type === 'success' ? styles.successBanner : styles.errorBanner}>
+              {notesBanner.msg}
+            </Text>
+          )}
+          {editingNotes ? (
+            <View style={styles.notesEditWrap}>
+              <TextInput
+                style={styles.notesInput}
+                value={notesText}
+                onChangeText={setNotesText}
+                multiline
+                numberOfLines={5}
+                textAlignVertical="top"
+                placeholder="Your tasting notes…"
+                placeholderTextColor={Colors.inkFaint}
+                autoFocus
+              />
+              <View style={styles.notesEditBtns}>
+                <Pressable onPress={() => { setEditingNotes(false); setNotesBanner(null); }} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={handleSaveNotes} disabled={savingNotes} style={styles.saveBtn}>
+                  <Text style={styles.saveBtnText}>{savingNotes ? 'Saving…' : 'Save Notes'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : entry.free_notes ? (
+            <Text style={styles.notesText}>{entry.free_notes}</Text>
+          ) : (
+            <Text style={styles.notesEmpty}>No tasting notes yet.</Text>
+          )}
+        </View>
 
         {/* Intelligence Card — radar chart layout */}
         <ProWineCard entry={entry} />
@@ -240,18 +343,107 @@ export function WineDetailScreen({ route, navigation }: Props) {
         {/* Original Wine Card */}
         <VivinoStyleCard entry={entry} />
 
-        {/* Price info */}
-        {entry.price.length > 0 && (
-          <View style={styles.priceBlock}>
-            <Text style={styles.priceLabel}>Price Paid</Text>
-            {entry.price.map((p, i) => (
-              <Text key={i} style={styles.priceValue}>
-                {p.currency} {p.amount.toFixed(2)}
-                {p.location ? ` · ${p.location}` : ''}
-              </Text>
-            ))}
+        {/* Price history + Log Another Visit */}
+        <View style={styles.priceBlock}>
+          <View style={styles.priceHeader}>
+            <Text style={styles.priceLabel}>Price History</Text>
+            <Pressable onPress={() => { setShowVisitForm((v) => !v); setVisitBanner(null); }} hitSlop={8}>
+              <Text style={styles.editLink}>{showVisitForm ? 'Cancel' : '+ Log a visit'}</Text>
+            </Pressable>
           </View>
-        )}
+
+          {entry.price.length > 0 ? entry.price.map((p, i) => (
+            <View key={i} style={styles.priceRow}>
+              <View style={styles.priceRowLeft}>
+                <Text style={styles.priceType}>{p.type === 'glass' ? '🥂 Glass' : '🍾 Bottle'}</Text>
+                {p.location ? <Text style={styles.priceLocation}>📍 {p.location}</Text> : null}
+                {p.date ? <Text style={styles.priceDate}>{new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text> : null}
+              </View>
+              <Text style={styles.priceValue}>{p.currency} {p.amount.toFixed(2)}</Text>
+            </View>
+          )) : (
+            <Text style={styles.notesEmpty}>No price logged yet.</Text>
+          )}
+
+          {showVisitForm && (
+            <View style={styles.visitForm}>
+              <Text style={styles.visitFormTitle}>Log Another Visit</Text>
+
+              {visitBanner && (
+                <Text style={visitBanner.type === 'success' ? styles.successBanner : styles.errorBanner}>
+                  {visitBanner.msg}
+                </Text>
+              )}
+
+              {/* Date */}
+              <DatePickerInput
+                label="Date"
+                value={visitDate}
+                onChange={setVisitDate}
+              />
+
+              {/* Location */}
+              <View style={styles.visitFieldWrap}>
+                <Text style={styles.visitFieldLabel}>Location</Text>
+                <TextInput
+                  style={styles.visitTextInput}
+                  value={visitLocation}
+                  onChangeText={setVisitLocation}
+                  placeholder="Restaurant, shop, etc."
+                  placeholderTextColor={Colors.inkFaint}
+                />
+              </View>
+
+              {/* Glass / Bottle toggle */}
+              <View style={styles.visitFieldWrap}>
+                <Text style={styles.visitFieldLabel}>Type</Text>
+                <View style={styles.typeToggle}>
+                  <Pressable
+                    style={[styles.typeBtn, visitType === 'glass' && styles.typeBtnActive]}
+                    onPress={() => setVisitType('glass')}
+                  >
+                    <Text style={[styles.typeBtnText, visitType === 'glass' && styles.typeBtnTextActive]}>🥂 Glass</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.typeBtn, visitType === 'bottle' && styles.typeBtnActive]}
+                    onPress={() => setVisitType('bottle')}
+                  >
+                    <Text style={[styles.typeBtnText, visitType === 'bottle' && styles.typeBtnTextActive]}>🍾 Bottle</Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Price + Currency */}
+              <View style={styles.visitFieldWrap}>
+                <Text style={styles.visitFieldLabel}>Price</Text>
+                <View style={styles.priceInputRow}>
+                  <TextInput
+                    style={styles.currencyInput}
+                    value={visitCurrency}
+                    onChangeText={setVisitCurrency}
+                    maxLength={4}
+                    autoCapitalize="characters"
+                    placeholder="USD"
+                    placeholderTextColor={Colors.inkFaint}
+                  />
+                  <TextInput
+                    style={styles.amountInput}
+                    value={visitAmount}
+                    onChangeText={setVisitAmount}
+                    keyboardType="decimal-pad"
+                    placeholder="0.00"
+                    placeholderTextColor={Colors.inkFaint}
+                    selectTextOnFocus
+                  />
+                </View>
+              </View>
+
+              <Pressable onPress={handleSaveVisit} disabled={savingVisit} style={styles.saveBtn}>
+                <Text style={styles.saveBtnText}>{savingVisit ? 'Saving…' : 'Save Visit'}</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
 
         {/* Grapes */}
         {entry.grapes.length > 0 && (
@@ -392,8 +584,95 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     lineHeight: 21,
   },
+  // Notes editing
+  notesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  editLink: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.gold,
+  },
+  notesEmpty: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
+  },
+  notesEditWrap: {
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  notesInput: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.borderStrong,
+    padding: Spacing.md,
+    minHeight: 110,
+    lineHeight: 21,
+  },
+  notesEditBtns: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    justifyContent: 'flex-end',
+  },
+  cancelBtn: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  cancelBtnText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  saveBtn: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.gold,
+  },
+  saveBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  successBanner: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.green,
+    backgroundColor: 'rgba(46,107,69,0.08)',
+    borderRadius: Radius.sm,
+    padding: Spacing.sm,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.red,
+    backgroundColor: 'rgba(139,46,46,0.08)',
+    borderRadius: Radius.sm,
+    padding: Spacing.sm,
+    textAlign: 'center',
+  },
+
+  // Price history + visit form
   priceBlock: {
-    gap: 4,
+    gap: Spacing.sm,
+  },
+  priceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   priceLabel: {
     fontFamily: Fonts.dmSansMedium,
@@ -402,10 +681,133 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.inkMuted,
   },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  priceRowLeft: {
+    gap: 2,
+    flex: 1,
+  },
+  priceType: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  priceLocation: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+  },
+  priceDate: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkFaint,
+  },
   priceValue: {
-    fontFamily: Fonts.dmSansRegular,
+    fontFamily: Fonts.dmSansMedium,
     fontSize: 15,
     color: Colors.ink,
+  },
+  visitForm: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  visitFormTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: Colors.ink,
+  },
+  visitFieldWrap: {
+    gap: 6,
+  },
+  visitFieldLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+  },
+  visitTextInput: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    height: 44,
+  },
+  typeToggle: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  typeBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+  },
+  typeBtnActive: {
+    borderColor: Colors.gold,
+    backgroundColor: 'rgba(196,132,122,0.12)',
+  },
+  typeBtnText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  typeBtnTextActive: {
+    fontFamily: Fonts.dmSansMedium,
+    color: Colors.gold,
+  },
+  priceInputRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  currencyInput: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 14,
+    color: Colors.ink,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    width: 72,
+    textAlign: 'center',
+    height: 44,
+  },
+  amountInput: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    flex: 1,
+    height: 44,
   },
   grapesBlock: {
     gap: 4,
