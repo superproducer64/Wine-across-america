@@ -5,16 +5,20 @@ import Constants from 'expo-constants';
 import { savePushToken } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
-
 export function usePushNotifications() {
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !user) return;

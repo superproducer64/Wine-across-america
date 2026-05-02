@@ -62,6 +62,13 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C4847A"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Pour Across America needs access to your photos to attach wine label photos.",
