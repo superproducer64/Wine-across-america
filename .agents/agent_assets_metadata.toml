@@ -30,24 +30,6 @@ uri = "file://assets/notification-icon.png"
 type = "image"
 title = "android notification icon white"
 
-[[generated]]
-id = "qqY8OD6fR22_9f28kF5W8"
-uri = "file://assets/appstore/src-02-label-scan.png"
-type = "image"
-title = "generated_image"
-
-[[generated]]
-id = "54Hwkd1staNcRSWl7li4n"
-uri = "file://assets/appstore/src-03-wine-detail.png"
-type = "image"
-title = "generated_image"
-
-[[generated]]
-id = "uZoypx8pzMKiFeKu2WseY"
-uri = "file://assets/appstore/src-04-tasting-notes.png"
-type = "image"
-title = "generated_image"
-
 [[outputs]]
 id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
