@@ -18,6 +18,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.replit.pouracrossamerica",
       "buildNumber": "1",
+      "appleTeamId": "4JZRW3MPP2",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Pour Across America uses your camera to photograph wine labels.",
@@ -62,8 +63,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#C4847A",
-          "sounds": []
+          "color": "#C4847A"
         }
       ],
       [
@@ -83,7 +83,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "16.0"
           },
           "android": {
             "compileSdkVersion": 34,
