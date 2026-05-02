@@ -299,3 +299,9 @@ id = "xvXvRZvHnh6Oz55LEcwki"
 uri = "file://assets/appstore/supported-regions.json"
 type = "unspecified"
 title = "supported-regions.geojson — rename after download"
+
+[[outputs]]
+id = "2a0-zpB4CVCX4irWBQQ_S"
+uri = "file://assets/appstore/privacy-policy.md"
+type = "text"
+title = "Pour Across America — Privacy Policy"
