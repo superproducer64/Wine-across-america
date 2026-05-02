@@ -1,0 +1,79 @@
+name: launch.expo.dev/expo/ios
+jobs:
+  app-store:
+    type: build
+    image: macos-sequoia-15.6-xcode-26.0
+    params:
+      platform: ios
+      profile: production
+    env:
+      LAUNCH_HOST: launch.expo.dev
+      LAUNCH_ID: 2ef38c2f-2b0a-48fa-b3be-77eb5c0486c2
+      LAUNCH_RUN_ID: 9da283df-5b8a-42ad-9a91-e3dd7f74d49b
+      EAS_NO_VCS: '1'
+      COREPACK_DEFAULT_TO_LATEST: '0'
+      COREPACK_ENABLE_AUTO_PIN: '0'
+      COREPACK_ENABLE_STRICT: '0'
+      COREPACK_INTEGRITY_KEYS: '0'
+    steps:
+      - name: 🏗️  Prepare project
+        uses: eas/checkout
+      - name: 🏗️  Prepare Launch
+        run: bun add --global eas-cli @expo/launching@0.0.0-20260501-2ef5eb19 pod-install
+      - name: ⚠️  Outdated Expo SDK
+        id: expo-outdated
+        run: |-
+          echo "⚠️  Using outdated Expo SDK version"
+          echo ""
+          echo "Due to changed submission requirements from Apple, we changed:"
+          echo " - EAS Build image to Xcode 26 using: macos-sequoia-15.6-xcode-26.0"
+          echo " - EAS Build image to macOS 15.6 Sequoia using: macos-sequoia-15.6-xcode-26.0"
+          echo ""
+          echo "This may break or cause issues when building your app."
+          echo "Upgrade to the latest Expo SDK to avoid unexpected issues."
+          echo ""
+          echo "Learn more:"
+          echo " - https://developer.apple.com/news/upcoming-requirements/?id=02032026a"
+          echo " - https://docs.expo.dev/build-reference/infrastructure/#macos-sequoia-156-xcode-260-sdk-54-macos-sequoia-155-xcode-260"
+      - name: 📦  Install dependencies
+        run: launching node:install
+      - name: ⚙️  Configure project
+        run: launching expo:manifest "{\"name\":\"Pour Across America\",\"slug\":\"pour-across-america\",\"owner\":\"replit-private-366fa4dd-ca5d-4a64-9e59-8dfad85ab420\",\"extra\":{\"eas\":{\"projectId\":\"75fff303-968f-4a52-92a2-9019eff1b385\"}},\"ios\":{\"appleTeamId\":\"4JZRW3MPP2\",\"bundleIdentifier\":\"app.replit.pouracrossamerica\",\"infoPlist\":{\"ITSAppUsesNonExemptEncryption\":false}}}"
+      - name: ⚙️  Prebuild Expo project
+        run: launching expo:prebuild --no-install --platform "ios" --apple-team-id "4JZRW3MPP2"
+      - name: ⚙️  Configure Xcode project
+        run: launching xcode:configure
+      - name: ⚙️  Synchronize Xcode native targets
+        run: launching xcode:targets
+      - name: ⚙️  Synchronize Xcode entitlements
+        run: launching xcode:entitlements --framework "expo"
+      - name: ⚙️  Resolve build config
+        uses: eas/resolve_build_config
+      - name: ⚙️  Configure build for updates
+        uses: eas/configure_eas_update
+        with:
+          throw_if_not_configured: false
+      - name: ⚙️  Export Expo app
+        run: launching expo:export-eager --platform "ios"
+      - name: ⚙️  Configure iOS credentials
+        uses: eas/configure_ios_credentials
+      - name: ⚙️  Configure iOS version
+        uses: eas/configure_ios_version
+      - name: ⚙️  Configure iOS build template
+        uses: eas/generate_gymfile_from_template
+        with:
+          credentials: ${ eas.job.secrets.buildCredentials }
+      - name: 📦  Install iOS dependencies
+        run: pod-install
+      - name: ⚙️  Create iOS build
+        uses: eas/run_fastlane
+      - name: 🚀  Store iOS build
+        uses: eas/find_and_upload_build_artifacts
+      - name: 🚀  Submit to App Store
+        run: launching eas:ios-submit --app-bundle-id "${ eas.metadata.appIdentifier }" --app-id "6765561268" --app-name "${ eas.metadata.appName }" --build-id "${ eas.env.EAS_BUILD_ID }" --build-number "${ eas.metadata.appBuildVersion }" --submit-profile "${ eas.env.EAS_BUILD_PROFILE }"
+      - name: 🚀  Store App Store submission
+        uses: eas/create_submission_entity
+        with:
+          build_id: ${ eas.env.EAS_BUILD_ID }
+          apple_id_username: nu2u@sbcglobal.net
+          asc_app_identifier: '6765561268'
