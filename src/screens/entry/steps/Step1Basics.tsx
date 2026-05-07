@@ -8,9 +8,8 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
-import * as Location from 'expo-location';
+import { detectLocation } from '@/utils/detectLocation';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
@@ -34,33 +33,15 @@ export function Step1Basics() {
   const [geoError, setGeoError] = useState<string | null>(null);
 
   const handleGeoTag = async () => {
-    if (Platform.OS === 'web') {
-      setGeoError('GPS not available on web');
-      setTimeout(() => setGeoError(null), 3000);
-      return;
-    }
     setGeoLoading(true);
     setGeoError(null);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setGeoError('Location permission denied');
-        setTimeout(() => setGeoError(null), 3000);
-        return;
-      }
-      const coords = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const [place] = await Location.reverseGeocodeAsync({
-        latitude: coords.coords.latitude,
-        longitude: coords.coords.longitude,
-      });
-      if (place) {
-        const parts = [place.name, place.city, place.region].filter(Boolean);
-        const locationStr = parts.join(', ');
-        setBasics({ location_name: locationStr });
-      }
-    } catch {
-      setGeoError('Could not get location');
-      setTimeout(() => setGeoError(null), 3000);
+      const { name } = await detectLocation();
+      setBasics({ location_name: name });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not get location';
+      setGeoError(msg);
+      setTimeout(() => setGeoError(null), 4000);
     } finally {
       setGeoLoading(false);
     }
