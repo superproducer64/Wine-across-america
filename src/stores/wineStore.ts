@@ -18,6 +18,7 @@ interface WineStore {
   loadingMore: boolean;
   hasMore: boolean;
   currentPage: number;
+  loadError: string | null;
   searchResults: WineEntry[];
   searching: boolean;
 
@@ -37,11 +38,12 @@ export const useWineStore = create<WineStore>((set, get) => ({
   loadingMore: false,
   hasMore: false,
   currentPage: 0,
+  loadError: null,
   searchResults: [],
   searching: false,
 
   loadEntries: async (userId, _isPro) => {
-    set({ loading: true, currentPage: 0 });
+    set({ loading: true, currentPage: 0, loadError: null });
     const { data, error, count } = await listWineEntries(userId, { limit: PAGE_SIZE, offset: 0 });
     if (!error && data) {
       const total = count ?? data.length;
@@ -51,9 +53,13 @@ export const useWineStore = create<WineStore>((set, get) => ({
         hasMore: data.length < total,
         currentPage: 0,
         loading: false,
+        loadError: null,
       });
     } else {
-      set({ loading: false });
+      set({
+        loading: false,
+        loadError: error?.message ?? 'Could not load your wine list. Please try again.',
+      });
     }
   },
 

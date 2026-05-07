@@ -42,18 +42,13 @@ interface SharedWineItem {
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavProp>();
   const { user, profile } = useAuthStore();
-  const { entries, totalCount, loading, loadingMore, hasMore, loadEntries, loadMore } = useWineStore();
+  const { entries, totalCount, loading, loadingMore, hasMore, loadError, loadEntries, loadMore } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
   const [sharedWines, setSharedWines] = useState<SharedWineItem[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    // Only fetch entries when the store is empty — avoids re-fetching
-    // on every back-navigation from a detail screen.
-    if (entries.length === 0) {
-      loadEntries(user.id, isSubscribed);
-    }
-    // Shared wines are lightweight; always refresh so new shares appear.
+    loadEntries(user.id, isSubscribed);
     getSharedWithMe(user.id).then(({ data }) => {
       if (data) setSharedWines(data as SharedWineItem[]);
     });
@@ -253,13 +248,27 @@ export function HomeScreen() {
             maxToRenderPerBatch={5}
             windowSize={5}
             ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyEmoji}>🍾</Text>
-                <Text style={styles.emptyTitle}>Your journal is empty</Text>
-                <Text style={styles.emptyBody}>
-                  Tap the + button to log your first wine
-                </Text>
-              </View>
+              loadError ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyEmoji}>⚠️</Text>
+                  <Text style={styles.emptyTitle}>Couldn't load your wines</Text>
+                  <Text style={styles.emptyBody}>{loadError}</Text>
+                  <Pressable
+                    style={styles.retryBtn}
+                    onPress={() => user && loadEntries(user.id, isSubscribed)}
+                  >
+                    <Text style={styles.retryBtnText}>Try again</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyEmoji}>🍾</Text>
+                  <Text style={styles.emptyTitle}>Your journal is empty</Text>
+                  <Text style={styles.emptyBody}>
+                    Tap the + button to log your first wine
+                  </Text>
+                </View>
+              )
             }
             ListFooterComponent={
               hasMore ? (
@@ -471,6 +480,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.inkMuted,
     textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.gold,
+  },
+  retryBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.ink,
   },
 
   loadMoreBtn: {
