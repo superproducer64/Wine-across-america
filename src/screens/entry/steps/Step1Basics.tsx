@@ -7,7 +7,10 @@ import {
   StyleSheet,
   Pressable,
   Image,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
@@ -27,6 +30,41 @@ export function Step1Basics() {
   const [priceMode, setPriceMode] = useState<'glass' | 'bottle'>('glass');
   const [toggleWidth, setToggleWidth] = useState(0);
   const priceAnim = useRef(new Animated.Value(0)).current;
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  const handleGeoTag = async () => {
+    if (Platform.OS === 'web') {
+      setGeoError('GPS not available on web');
+      setTimeout(() => setGeoError(null), 3000);
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setGeoError('Location permission denied');
+        setTimeout(() => setGeoError(null), 3000);
+        return;
+      }
+      const coords = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const [place] = await Location.reverseGeocodeAsync({
+        latitude: coords.coords.latitude,
+        longitude: coords.coords.longitude,
+      });
+      if (place) {
+        const parts = [place.name, place.city, place.region].filter(Boolean);
+        const locationStr = parts.join(', ');
+        setBasics({ location_name: locationStr });
+      }
+    } catch {
+      setGeoError('Could not get location');
+      setTimeout(() => setGeoError(null), 3000);
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const handlePriceMode = (mode: 'glass' | 'bottle') => {
     setPriceMode(mode);
@@ -291,12 +329,31 @@ export function Step1Basics() {
       />
 
       {/* Location */}
+      <View style={styles.locationLabelRow}>
+        <Text style={styles.label}>Location</Text>
+        <Pressable
+          style={[styles.geoBtn, geoLoading && styles.geoBtnDisabled]}
+          onPress={handleGeoTag}
+          disabled={geoLoading}
+        >
+          {geoLoading ? (
+            <ActivityIndicator size={12} color={Colors.gold} />
+          ) : (
+            <Text style={styles.geoBtnIcon}>📍</Text>
+          )}
+          <Text style={styles.geoBtnText}>
+            {geoLoading ? 'Locating…' : 'Use my location'}
+          </Text>
+        </Pressable>
+      </View>
       <TextInput
-        label="Location (restaurant, bar, etc.)"
         value={draft.location_name}
         onChangeText={(v) => setBasics({ location_name: v })}
         placeholder="e.g., Le Bernardin, NYC"
       />
+      {geoError ? (
+        <Text style={styles.geoError}>{geoError}</Text>
+      ) : null}
     </ScrollView>
     <LabelScannerModal
       visible={scannerVisible}
@@ -456,5 +513,40 @@ const styles = StyleSheet.create({
   priceToggleTextActive: {
     fontFamily: Fonts.dmSansMedium,
     color: Colors.ink,
+  },
+  locationLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+    marginTop: Spacing.md,
+  },
+  geoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.goldPale,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+  },
+  geoBtnDisabled: {
+    opacity: 0.6,
+  },
+  geoBtnIcon: {
+    fontSize: 11,
+  },
+  geoBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: Colors.gold,
+  },
+  geoError: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.red,
+    marginTop: 4,
   },
 });
