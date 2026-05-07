@@ -34,7 +34,7 @@ title = "android notification icon white"
 id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
 type = "text"
-title = "Pour Across America — Development Report"
+title = "PAA — DevRpt_410-416"
 
 [[outputs]]
 id = "qOhLXkKnrZWcUOsRZbP9w"
@@ -46,55 +46,55 @@ title = "How To Get Build Reports — Quick Reference Guide"
 id = "it0Ft7tN0xWJC5TP134Vg"
 uri = "file://PourAcrossAmerica_BuildSummary.md"
 type = "text"
-title = "Pour Across America — Build Summary"
+title = "PAA — Build Summary"
 
 [[outputs]]
 id = "XBu_YH97As-_ZCfWCLzMf"
 uri = "file://pour-across-america-dev-report-apr14-apr26.md"
 type = "text"
-title = "Pour Across America — Dev Report Apr 14–26"
+title = "PAA — Dev Rpt_414-426"
 
 [[outputs]]
 id = "rMUwpzbgrMiDxoBqfzhqz"
 uri = "file://pour-across-america-dev-report-apr01-apr13.md"
 type = "text"
-title = "Pour Across America — Dev Report Apr 1–13"
+title = "PAA — Dev Rpt_41-413"
 
 [[outputs]]
 id = "r6FnaN_esknEdyJkBMu30"
 uri = "file://pour-across-america-dev-report-apr25-26.md"
 type = "text"
-title = "Development Report — April 25–26, 2026"
+title = "PAA - Dev Rpt_425-426 2026"
 
 [[outputs]]
 id = "xEtWAHs2gZ1b-2Ax5L5Ut"
 uri = "file://pour-across-america-build-report-apr26.md"
 type = "text"
-title = "Build Report — April 26, 2026"
+title = "PAA -Dev Rpt_ 426_AM"
 
 [[outputs]]
 id = "o3vrnX43oizHZ5zUea3ej"
 uri = "file://pour-across-america-build-report-apr26-evening.md"
 type = "text"
-title = "Build Report — April 26, 2026 (Evening Session)"
+title = "PAA- Dev Rpt_426_PMBuild Report — April 26, 2026 (Evening Session)"
 
 [[outputs]]
 id = "QJ4u8Tx6fUJPwBZaQZ0gK"
 uri = "file://pour-across-america-build-report-apr27.md"
 type = "text"
-title = "Build Report — April 27, 2026"
+title = "PAA- Dev Rpt_427"
 
 [[outputs]]
 id = "Kf4rqkvNisfbpbMb5vlAr"
 uri = "file://POUR_ACROSS_AMERICA_CONTEXT.md"
 type = "text"
-title = "Pour Across America — LLM Context Document"
+title = "PAA — LLM Context Document"
 
 [[outputs]]
 id = "H_nLagXvnxbUTHPcGgtEs"
 uri = "file://build-reports/PAA-Build-Report-2026-04-30.md"
 type = "text"
-title = "PAA Build Report — Updated with Security Audit"
+title = "PAA- Dev Rpt_427-51ated with Security Audit"
 
 [[outputs]]
 id = "7YLVVJUce1_gNIF6dL7mw"
@@ -286,10 +286,10 @@ title = "supported-regions.geojson — rename after download"
 id = "2a0-zpB4CVCX4irWBQQ_S"
 uri = "file://assets/appstore/privacy-policy.md"
 type = "text"
-title = "Pour Across America — Privacy Policy"
+title = "PAA — Privacy Policy"
 
 [[outputs]]
 id = "KedFZKmoDbvW8R971aGVb"
 uri = "file://build-reports/PAA-Build-Report-2026-05-03.md"
 type = "text"
-title = "PAA Build Report — May 1–3, 2026"
+title = "PAA- Dev Rpt_51-53026"
