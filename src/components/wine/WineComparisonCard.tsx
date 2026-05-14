@@ -23,15 +23,6 @@ export function WineComparisonCard({ entryA, entryB }: Props) {
           <ProWineCard entry={entryA} compact />
         </View>
 
-        {/* VS separator */}
-        <View style={styles.vsWrap}>
-          <View style={styles.vsLine} />
-          <View style={styles.vsCircle}>
-            <Text style={styles.vsText}>VS.</Text>
-          </View>
-          <View style={styles.vsLine} />
-        </View>
-
         {/* Wine B */}
         <View style={styles.cardWrap}>
           <ProWineCard entry={entryB} compact />
@@ -111,39 +102,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 0,
+    gap: Spacing.sm,
   },
   cardWrap: {
     flex: 1,
-  },
-
-  // VS
-  vsWrap: {
-    width: 36,
-    alignItems: 'center',
-    paddingTop: 80,
-    gap: 4,
-  },
-  vsLine: {
-    flex: 1,
-    width: 1,
-    backgroundColor: Colors.border,
-  },
-  vsCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.inkMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
-  },
-  vsText: {
-    fontFamily: Fonts.playfairSemiBold,
-    fontSize: 9,
-    color: Colors.inkMid,
-    letterSpacing: 0.5,
   },
 
   // Score comparison block
