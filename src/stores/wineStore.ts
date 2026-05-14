@@ -112,7 +112,10 @@ export const useWineStore = create<WineStore>((set, get) => ({
       ...(grape_blends           ? { grape_blends }           : {}),
     };
     const { data, error } = await createWineEntry(payload);
-    if (error || !data) return null;
+    if (error || !data) {
+      console.error('[wineStore] addEntry failed:', JSON.stringify(error), 'payload keys:', Object.keys(payload).join(', '));
+      return null;
+    }
 
     const entry = data as WineEntry;
     set((state) => ({
