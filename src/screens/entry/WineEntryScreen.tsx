@@ -43,7 +43,7 @@ export function WineEntryScreen(_props: Props) {
   const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
   const { draft, reset } = useEntryDraftStore();
   const { user, profile } = useAuthStore();
-  const { addEntry, lastSaveError } = useWineStore();
+  const { addEntry } = useWineStore();
 
   const isSommelier = profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
   const STEPS = BASE_STEPS;
@@ -86,7 +86,8 @@ export function WineEntryScreen(_props: Props) {
       setSavedEntryId(entry.id);
     } else {
       setConfirmBlend(false);
-      setError(lastSaveError ? `Save failed: ${lastSaveError}` : 'Failed to save wine entry. Please try again.');
+      const storeErr = useWineStore.getState().lastSaveError;
+      setError(storeErr ? `Save failed: ${storeErr}` : 'Failed to save wine entry. Please try again.');
     }
   };
 
