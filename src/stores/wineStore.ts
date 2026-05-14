@@ -19,6 +19,7 @@ interface WineStore {
   hasMore: boolean;
   currentPage: number;
   loadError: string | null;
+  lastSaveError: string | null;
   searchResults: WineEntry[];
   searching: boolean;
 
@@ -39,6 +40,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
   hasMore: false,
   currentPage: 0,
   loadError: null,
+  lastSaveError: null,
   searchResults: [],
   searching: false,
 
@@ -113,9 +115,12 @@ export const useWineStore = create<WineStore>((set, get) => ({
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) {
-      console.warn('[wineStore] addEntry FAILED — code:', error?.code, '| message:', error?.message, '| details:', error?.details, '| hint:', error?.hint, '| payload keys:', Object.keys(payload).join(', '));
+      const msg = [error?.code, error?.message, error?.details, error?.hint].filter(Boolean).join(' | ') || 'Unknown error';
+      console.warn('[wineStore] addEntry FAILED:', msg, '| payload keys:', Object.keys(payload).join(', '));
+      set({ lastSaveError: msg });
       return null;
     }
+    set({ lastSaveError: null });
 
     const entry = data as WineEntry;
     set((state) => ({
