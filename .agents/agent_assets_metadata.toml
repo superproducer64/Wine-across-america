@@ -293,3 +293,9 @@ id = "KedFZKmoDbvW8R971aGVb"
 uri = "file://build-reports/PAA-Build-Report-2026-05-03.md"
 type = "text"
 title = "PAA- Dev Rpt_51-53026"
+
+[[outputs]]
+id = "vVTbkkADu4BuaLQPUpWNC"
+uri = "file://build-reports/PAA-Build-Report-2026-05-14.md"
+type = "text"
+title = "PAA Build Report — May 3 to May 14, 2026"
