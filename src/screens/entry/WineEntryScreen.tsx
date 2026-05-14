@@ -39,6 +39,7 @@ export function WineEntryScreen(_props: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [confirmBlend, setConfirmBlend] = useState(false);
   const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
   const { draft, reset } = useEntryDraftStore();
   const { user, profile } = useAuthStore();
@@ -74,7 +75,7 @@ export function WineEntryScreen(_props: Props) {
     navigation.goBack();
   };
 
-  const handleSubmit = async () => {
+  const doSubmit = async () => {
     if (!user) return;
     setError('');
     setSubmitting(true);
@@ -84,8 +85,22 @@ export function WineEntryScreen(_props: Props) {
       reset();
       setSavedEntryId(entry.id);
     } else {
+      setConfirmBlend(false);
       setError('Failed to save wine entry. Please try again.');
     }
+  };
+
+  const handleSubmit = () => {
+    const blends = draft.grape_blends ?? [];
+    const hasAnyPct = blends.some((e) => e.percentage !== null);
+    if (hasAnyPct) {
+      const total = blends.reduce((sum, e) => sum + (e.percentage ?? 0), 0);
+      if (total !== 100) {
+        setConfirmBlend(true);
+        return;
+      }
+    }
+    doSubmit();
   };
 
   // Success state
@@ -131,6 +146,36 @@ export function WineEntryScreen(_props: Props) {
               label="Discard"
               onPress={handleDiscard}
               variant="destructive"
+              style={styles.confirmBtn}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Blend confirmation state
+  if (confirmBlend) {
+    const blends = draft.grape_blends ?? [];
+    const total = blends.reduce((sum, e) => sum + (e.percentage ?? 0), 0);
+    return (
+      <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
+        <View style={styles.confirmContainer}>
+          <Text style={styles.confirmTitle}>Incomplete blend</Text>
+          <Text style={styles.confirmSub}>
+            Your grape blend adds up to {total}% — not 100%. Would you like to go back and fix it, or save as-is?
+          </Text>
+          <View style={styles.confirmActions}>
+            <Button
+              label="Go Back & Fix"
+              onPress={() => setConfirmBlend(false)}
+              style={styles.confirmBtn}
+            />
+            <Button
+              label={`Save Anyway (${total}%)`}
+              onPress={() => doSubmit()}
+              loading={submitting}
+              variant="secondary"
               style={styles.confirmBtn}
             />
           </View>
