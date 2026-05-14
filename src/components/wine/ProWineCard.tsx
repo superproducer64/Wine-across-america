@@ -141,16 +141,37 @@ export function ProWineCard({ entry, compact = false }: Props) {
     <View style={[styles.card, compact && styles.cardCompact]}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        {entry.label_photo_url ? (
-          <Image
-            source={{ uri: entry.label_photo_url }}
-            style={[styles.headerThumbnail, compact && styles.headerThumbnailCompact]}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
-            placeholderContentFit="cover"
-            transition={300}
-          />
+        {(entry.label_photo_url || entry.back_label_photo_url) ? (
+          <View style={styles.photoRow}>
+            {entry.label_photo_url ? (
+              <Image
+                source={{ uri: entry.label_photo_url }}
+                style={[
+                  styles.headerThumbnail,
+                  compact && styles.headerThumbnailCompact,
+                  entry.back_label_photo_url ? styles.headerThumbnailDuo : undefined,
+                ]}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
+                placeholderContentFit="cover"
+                transition={300}
+              />
+            ) : null}
+            {entry.back_label_photo_url ? (
+              <Image
+                source={{ uri: entry.back_label_photo_url }}
+                style={[
+                  styles.headerThumbnail,
+                  compact && styles.headerThumbnailCompact,
+                  styles.headerThumbnailDuo,
+                ]}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={300}
+              />
+            ) : null}
+          </View>
         ) : null}
         <Text style={[styles.producer, compact && styles.producerCompact]} numberOfLines={2}>
           {entry.producer || entry.name || 'Unknown Producer'}
@@ -262,16 +283,25 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
     gap: 4,
   },
+  photoRow: {
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   headerThumbnail: {
     width: 56,
     height: 56,
     borderRadius: Radius.md,
     backgroundColor: Colors.surfaceAlt,
-    marginBottom: 4,
   },
   headerThumbnailCompact: {
     width: 40,
     height: 40,
+  },
+  headerThumbnailDuo: {
+    width: 48,
+    height: 48,
   },
   producer: {
     fontFamily: Fonts.playfairSemiBold,
