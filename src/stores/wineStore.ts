@@ -113,7 +113,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) {
-      console.error('[wineStore] addEntry failed:', JSON.stringify(error), 'payload keys:', Object.keys(payload).join(', '));
+      console.warn('[wineStore] addEntry FAILED — code:', error?.code, '| message:', error?.message, '| details:', error?.details, '| hint:', error?.hint, '| payload keys:', Object.keys(payload).join(', '));
       return null;
     }
 
