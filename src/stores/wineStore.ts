@@ -90,11 +90,16 @@ export const useWineStore = create<WineStore>((set, get) => ({
 
   addEntry: async (userId, draft) => {
     const technical_score = computeTechnicalScore(draft as Partial<WineEntry>);
-    const { data, error } = await createWineEntry({
-      ...draft,
+    // Build payload, omitting back_label_photo_url when null so the insert
+    // succeeds on DB instances where migration 004 hasn't been applied yet.
+    const { back_label_photo_url, ...rest } = draft;
+    const payload: Record<string, unknown> = {
+      ...rest,
       user_id: userId,
       technical_score,
-    });
+      ...(back_label_photo_url ? { back_label_photo_url } : {}),
+    };
+    const { data, error } = await createWineEntry(payload);
     if (error || !data) return null;
 
     const entry = data as WineEntry;
