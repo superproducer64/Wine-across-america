@@ -11,7 +11,7 @@ export interface WineLabelData {
 
 // ─── GPT-4o Vision label analysis ────────────────────────────────────────────
 
-export async function analyzeWineLabelWithAI(imageUri: string): Promise<WineLabelData> {
+export async function analyzeWineLabelWithAI(imageUri: string, backImageUri?: string | null): Promise<WineLabelData> {
   const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
   const empty: WineLabelData = {
@@ -71,9 +71,31 @@ Return ONLY valid JSON with these exact keys (use null or empty string/array if 
 Be precise. vintage must be a number or null. grapes must be an array of strings.`;
 
   try {
-    const imageContent = imageUri.startsWith('http')
+    const frontContent = imageUri.startsWith('http')
       ? { type: 'image_url', image_url: { url: imageUri, detail: 'high' } }
       : { type: 'image_url', image_url: { url: `data:${mediaType};base64,${base64Image}`, detail: 'high' } };
+
+    const contentParts: object[] = [{ type: 'text', text: prompt }, frontContent];
+
+    if (backImageUri) {
+      let backBase64 = backImageUri;
+      let backMediaType = 'image/jpeg';
+      if (backImageUri.startsWith('data:')) {
+        const m = backImageUri.match(/^data:([^;]+);base64,(.+)$/);
+        if (m) { backMediaType = m[1]; backBase64 = m[2]; }
+        contentParts.push({ type: 'image_url', image_url: { url: `data:${backMediaType};base64,${backBase64}`, detail: 'high' } });
+      } else if (backImageUri.startsWith('http')) {
+        contentParts.push({ type: 'image_url', image_url: { url: backImageUri, detail: 'high' } });
+      } else {
+        try {
+          const resp = await fetch(backImageUri);
+          const blob = await resp.blob();
+          const dataUri = await blobToBase64(blob);
+          const m = dataUri.match(/^data:([^;]+);base64,(.+)$/);
+          if (m) contentParts.push({ type: 'image_url', image_url: { url: dataUri, detail: 'high' } });
+        } catch { /* skip back image if it can't be fetched */ }
+      }
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -83,14 +105,11 @@ Be precise. vintage must be a number or null. grapes must be an array of strings
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        max_tokens: 600,
+        max_tokens: 800,
         messages: [
           {
             role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              imageContent,
-            ],
+            content: contentParts,
           },
         ],
       }),

@@ -190,13 +190,14 @@ export interface WineEntry {
   sig_enjoyment: number | null;
   signature_score: number | null;
 
-  // Label photo
+  // Label photos
   label_photo_url: string | null;
   // Stores a tiny 32×32 base64 JPEG data URI (data:image/jpeg;base64,…) that
   // expo-image uses as an instant placeholder while the full label loads.
   // Named "blurhash" per the original spec but contains a data URI, not a
   // strict blurhash string — the visual effect is the same.
   label_photo_blurhash: string | null;
+  back_label_photo_url: string | null;
 
   created_at: string;
   updated_at: string;

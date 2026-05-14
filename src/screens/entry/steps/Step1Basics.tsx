@@ -71,7 +71,7 @@ export function Step1Basics() {
     setBasics({ region, appellation: '' });
   };
 
-  const handleScanApply = (data: Partial<WineLabelData> & { photoUrl?: string; photoBlurHash?: string }) => {
+  const handleScanApply = (data: Partial<WineLabelData> & { photoUrl?: string; photoBlurHash?: string; backPhotoUrl?: string }) => {
     const updates: Parameters<typeof setBasics>[0] = {};
     if (data.name) updates.name = data.name;
     if (data.producer) updates.producer = data.producer;
@@ -80,7 +80,7 @@ export function Step1Basics() {
     if (data.region) updates.region = data.region;
     if (data.appellation) updates.appellation = data.appellation;
     if (Object.keys(updates).length > 0) setBasics(updates);
-    if (data.photoUrl) setLabelPhoto(data.photoUrl, data.photoBlurHash ?? null);
+    if (data.photoUrl) setLabelPhoto(data.photoUrl, data.photoBlurHash ?? null, data.backPhotoUrl ?? null);
     if (data.grapes && data.grapes.length > 0) {
       setGrapeBlends(data.grapes.map((g) => ({ name: g, percentage: 100 })));
     }

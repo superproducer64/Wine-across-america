@@ -51,9 +51,10 @@ function makeDefaultDraft(): WineEntryDraft {
     sig_structure: null,
     sig_enjoyment: null,
 
-    // Label photo
+    // Label photos
     label_photo_url: null,
     label_photo_blurhash: null,
+    back_label_photo_url: null,
 
     // Grape blends (structured, with optional %)
     grape_blends: null,
@@ -83,7 +84,7 @@ interface EntryDraftStore {
     'terroir_soil' | 'terroir_climate' | 'terroir_visible'>>) => void;
 
   setGrapeBlends: (blends: import('@/types').GrapeBlendEntry[]) => void;
-  setLabelPhoto: (url: string | null, blurhash?: string | null) => void;
+  setLabelPhoto: (url: string | null, blurhash?: string | null, backUrl?: string | null) => void;
   setStep: (step: number) => void;
   reset: () => void;
   loadForEdit: (entry: WineEntryDraft) => void;
@@ -120,12 +121,13 @@ export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
       },
     })),
 
-  setLabelPhoto: (url, blurhash) =>
+  setLabelPhoto: (url, blurhash, backUrl) =>
     set((state) => ({
       draft: {
         ...state.draft,
         label_photo_url: url,
         label_photo_blurhash: blurhash !== undefined ? blurhash : state.draft.label_photo_blurhash,
+        back_label_photo_url: backUrl !== undefined ? backUrl : state.draft.back_label_photo_url,
       },
     })),
 
