@@ -90,14 +90,26 @@ export const useWineStore = create<WineStore>((set, get) => ({
 
   addEntry: async (userId, draft) => {
     const technical_score = computeTechnicalScore(draft as Partial<WineEntry>);
-    // Build payload, omitting back_label_photo_url when null so the insert
-    // succeeds on DB instances where migration 004 hasn't been applied yet.
-    const { back_label_photo_url, ...rest } = draft;
+    // Destructure fields that may not yet exist as DB columns (added via
+    // migrations 004 / 005).  Each is only included in the payload when it
+    // carries a real value so the INSERT succeeds on older DB instances too.
+    const {
+      back_label_photo_url,
+      label_photo_url,
+      label_photo_blurhash,
+      aromas_other_note,
+      grape_blends,
+      ...rest
+    } = draft;
     const payload: Record<string, unknown> = {
       ...rest,
       user_id: userId,
       technical_score,
-      ...(back_label_photo_url ? { back_label_photo_url } : {}),
+      ...(label_photo_url        ? { label_photo_url }        : {}),
+      ...(label_photo_blurhash   ? { label_photo_blurhash }   : {}),
+      ...(back_label_photo_url   ? { back_label_photo_url }   : {}),
+      ...(aromas_other_note      ? { aromas_other_note }      : {}),
+      ...(grape_blends           ? { grape_blends }           : {}),
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) return null;
