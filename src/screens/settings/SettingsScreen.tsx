@@ -42,13 +42,11 @@ export function SettingsScreen() {
 
   const isSommelierApproved =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
-  const isSommelierPending =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'pending';
-  const isSommelierRejected =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'rejected';
-  const isSommelierNeedsResubmission =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'needs_resubmission';
-  const isEnthusiast = !isSommelierApproved && !isSommelierPending;
+  const isSommelierPending = profile?.sommelier_status === 'pending';
+  const isSommelierRejected = profile?.sommelier_status === 'rejected';
+  const isSommelierNeedsResubmission = profile?.sommelier_status === 'needs_resubmission';
+  const isEnthusiast =
+    !isSommelierApproved && !isSommelierPending && !isSommelierRejected && !isSommelierNeedsResubmission;
 
   const handleSommelierApply = async () => {
     if (!certDataUrl || !user) {
