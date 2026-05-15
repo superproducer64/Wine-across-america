@@ -2,12 +2,53 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
 import { ScoreSlider } from '@/components/ui/ScoreSlider';
+import { SegmentedPicker, PickerOption } from '@/components/ui/SegmentedPicker';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
+import { useAuthStore } from '@/stores/authStore';
 import { STRUCTURE_DIMENSIONS } from '@/types';
+
+// ─── Simplified picker options for Wine Explorer ───────────────────────────
+// Maps to the same 1-10 numeric storage, so Sommelier's slider reads them fine.
+
+const BODY_OPTIONS: PickerOption[] = [
+  { label: 'Light', sublabel: '💧 watery', value: 2 },
+  { label: 'Medium', sublabel: '🍵 tea-like', value: 5 },
+  { label: 'Full', sublabel: '🍷 silky', value: 8 },
+  { label: 'Bold', sublabel: '🥛 creamy', value: 10 },
+];
+
+const ALCOHOL_OPTIONS: PickerOption[] = [
+  { label: 'Low', sublabel: '< 11%', value: 2 },
+  { label: 'Medium', sublabel: '11–13%', value: 5 },
+  { label: 'High', sublabel: '13–15%', value: 8 },
+  { label: 'Warm', sublabel: '15%+', value: 10 },
+];
+
+const INTENSITY_OPTIONS: PickerOption[] = [
+  { label: 'Delicate', sublabel: 'subtle', value: 2 },
+  { label: 'Medium', sublabel: 'moderate', value: 5 },
+  { label: 'Pronounced', sublabel: 'expressive', value: 8 },
+  { label: 'Powerful', sublabel: 'intense', value: 10 },
+];
+
+// The three axes that get simplified pickers for Wine Explorer
+const PICKER_KEYS = new Set(['body', 'alcohol', 'intensity']);
+
+// Map each dimension key to its picker options
+const PICKER_OPTIONS: Record<string, PickerOption[]> = {
+  body: BODY_OPTIONS,
+  alcohol: ALCOHOL_OPTIONS,
+  intensity: INTENSITY_OPTIONS,
+};
 
 export function Step2StructureWheel() {
   const { draft, setStructureWheel } = useEntryDraftStore();
+  const { profile } = useAuthStore();
+
+  // Sommelier-approved users get the full 1-10 slider for all axes
+  const isSommelier =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
 
   const scores = {
     sweetness: draft.sweetness,
@@ -26,7 +67,9 @@ export function Step2StructureWheel() {
     >
       <Text style={styles.stepTitle}>Structure Wheel</Text>
       <Text style={styles.intro}>
-        Rate each dimension from 1–10. The radar chart updates live as you score.
+        {isSommelier
+          ? 'Rate each dimension from 1–10. The radar chart updates live as you score.'
+          : 'Select a level for each dimension. The radar chart updates live as you choose.'}
       </Text>
 
       {/* Live radar preview */}
@@ -34,20 +77,44 @@ export function Step2StructureWheel() {
         <RadarChart scores={scores} size={200} />
       </View>
 
-      {/* Sliders */}
-      {STRUCTURE_DIMENSIONS.map((dim) => (
-        <ScoreSlider
-          key={dim.key}
-          label={dim.displayLabel}
-          value={scores[dim.key]}
-          min={1}
-          max={10}
-          tip={dim.tip}
-          lowLabel={dim.lowAnchor}
-          highLabel={dim.highAnchor}
-          onChange={(v) => setStructureWheel({ [dim.key]: v })}
-        />
-      ))}
+      {/* Profile badge */}
+      {!isSommelier && (
+        <View style={styles.modeBadge}>
+          <Text style={styles.modeBadgeText}>Wine Explorer mode — tap to select</Text>
+        </View>
+      )}
+
+      {/* Controls — slider for all on Sommelier, picker for body/alcohol/intensity on Explorer */}
+      {STRUCTURE_DIMENSIONS.map((dim) => {
+        const useSimplePicker = !isSommelier && PICKER_KEYS.has(dim.key);
+
+        if (useSimplePicker) {
+          return (
+            <SegmentedPicker
+              key={dim.key}
+              label={dim.displayLabel}
+              tip={dim.tip}
+              options={PICKER_OPTIONS[dim.key]}
+              value={scores[dim.key]}
+              onChange={(v) => setStructureWheel({ [dim.key]: v })}
+            />
+          );
+        }
+
+        return (
+          <ScoreSlider
+            key={dim.key}
+            label={dim.displayLabel}
+            value={scores[dim.key]}
+            min={1}
+            max={10}
+            tip={dim.tip}
+            lowLabel={dim.lowAnchor}
+            highLabel={dim.highAnchor}
+            onChange={(v) => setStructureWheel({ [dim.key]: v })}
+          />
+        );
+      })}
     </ScrollView>
   );
 }
@@ -80,5 +147,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 0.5,
     borderColor: Colors.border,
+  },
+  modeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.goldPale,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginBottom: Spacing.lg,
+  },
+  modeBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: Colors.inkMid,
+    letterSpacing: 0.2,
   },
 });
