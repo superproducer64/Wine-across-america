@@ -41,6 +41,7 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectMode, setRejectMode] = useState<'rejected' | 'needs_resubmission'>('rejected');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [reasonError, setReasonError] = useState(false);
 
   useEffect(() => {
     if (app.sommelier_cert_url) {
@@ -68,10 +69,16 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   const handleCancelReject = () => {
     setShowRejectForm(false);
     setRejectionReason('');
+    setReasonError(false);
   };
 
   const handleConfirmReject = () => {
-    onDecision(app.id, rejectMode, rejectionReason.trim() || undefined);
+    if (!rejectionReason.trim()) {
+      setReasonError(true);
+      return;
+    }
+    setReasonError(false);
+    onDecision(app.id, rejectMode, rejectionReason.trim());
   };
 
   return (
@@ -123,9 +130,9 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
             {rejectMode === 'needs_resubmission' ? 'Reason for resubmission request' : 'Reason for rejection'}
           </Text>
           <TextInput
-            style={styles.rejectInput}
+            style={[styles.rejectInput, reasonError && styles.rejectInputError]}
             value={rejectionReason}
-            onChangeText={setRejectionReason}
+            onChangeText={(v) => { setRejectionReason(v); if (v.trim()) setReasonError(false); }}
             placeholder={
               rejectMode === 'needs_resubmission'
                 ? 'e.g. Certificate image unclear, please upload a higher-resolution scan…'
@@ -137,9 +144,11 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
             textAlignVertical="top"
             autoFocus
           />
-          <Text style={styles.rejectFormHint}>
-            This message will be visible to the applicant.
-          </Text>
+          {reasonError ? (
+            <Text style={styles.rejectInputErrorText}>A reason is required before submitting.</Text>
+          ) : (
+            <Text style={styles.rejectFormHint}>This message will be visible to the applicant.</Text>
+          )}
           <View style={styles.appActions}>
             <Button
               label="Cancel"
@@ -467,6 +476,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.ink,
     minHeight: 90,
+  },
+  rejectInputError: {
+    borderWidth: 2,
+    backgroundColor: 'rgba(220,53,69,0.05)',
+  },
+  rejectInputErrorText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.red,
   },
   rejectFormHint: {
     fontFamily: Fonts.dmSans,
