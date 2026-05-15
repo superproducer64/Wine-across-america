@@ -102,6 +102,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
       aromas_other_note,
       grape_blends,
       sweetness,
+      custom_aromas,
       ...rest
     } = draft;
     const payload: Record<string, unknown> = {
@@ -114,6 +115,8 @@ export const useWineStore = create<WineStore>((set, get) => ({
       ...(aromas_other_note      ? { aromas_other_note }      : {}),
       ...(grape_blends           ? { grape_blends }           : {}),
       ...(sweetness !== undefined ? { sweetness }             : {}),
+      // custom_aromas is always an array; include even when empty so it overwrites stale data
+      custom_aromas: custom_aromas ?? [],
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) {

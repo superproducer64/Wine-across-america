@@ -282,6 +282,8 @@ export interface WineEntry {
   aromas_l1: string[];
   aromas_l2: string[];
   aromas_other_note: string | null;
+  /** User-typed custom aroma/flavor tags, saved alongside predefined L1/L2 tags */
+  custom_aromas: string[];
   tags: string[];
   want_another_glass: boolean;
   want_to_buy: boolean;

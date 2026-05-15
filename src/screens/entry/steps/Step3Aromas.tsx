@@ -17,11 +17,26 @@ import {
   getCategorySubcategories,
 } from '@/types';
 
+const MAX_CUSTOM_TAGS = 20;
+const MAX_TAG_LENGTH = 40;
+
 export function Step3Aromas() {
-  const { draft, setAromas, setAromasOtherNote, applyWineShortcut } = useEntryDraftStore();
+  const { draft, setAromas, setAromasOtherNote, setCustomAromas, applyWineShortcut } = useEntryDraftStore();
   const { profile } = useAuthStore();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
+  const [customInput, setCustomInput] = useState('');
+
+  const addCustomTag = () => {
+    const tag = customInput.trim();
+    if (!tag || draft.custom_aromas.includes(tag) || draft.custom_aromas.length >= MAX_CUSTOM_TAGS) return;
+    setCustomAromas([...draft.custom_aromas, tag.slice(0, MAX_TAG_LENGTH)]);
+    setCustomInput('');
+  };
+
+  const removeCustomTag = (tag: string) => {
+    setCustomAromas(draft.custom_aromas.filter((t) => t !== tag));
+  };
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -197,6 +212,49 @@ export function Step3Aromas() {
           );
         })}
       </View>
+
+      {/* Custom Aroma Tags */}
+      <Text style={styles.sectionLabel}>Personal Flavor Notes</Text>
+      <Text style={styles.shortcutHint}>
+        Add your own words — anything you taste that's not in the list above.
+      </Text>
+
+      <View style={styles.customTagInputRow}>
+        <RNTextInput
+          style={styles.customTagInput}
+          value={customInput}
+          onChangeText={setCustomInput}
+          placeholder="e.g. dried herbs, pencil shavings…"
+          placeholderTextColor={Colors.inkFaint}
+          maxLength={MAX_TAG_LENGTH}
+          returnKeyType="done"
+          onSubmitEditing={addCustomTag}
+        />
+        <Pressable
+          style={[
+            styles.customTagAddBtn,
+            (!customInput.trim() || draft.custom_aromas.length >= MAX_CUSTOM_TAGS) && styles.customTagAddBtnDisabled,
+          ]}
+          onPress={addCustomTag}
+          disabled={!customInput.trim() || draft.custom_aromas.length >= MAX_CUSTOM_TAGS}
+        >
+          <Text style={styles.customTagAddBtnText}>Add</Text>
+        </Pressable>
+      </View>
+
+      {draft.custom_aromas.length > 0 && (
+        <View style={styles.customTagChips}>
+          {draft.custom_aromas.map((tag) => (
+            <Pressable key={tag} style={styles.customTagChip} onPress={() => removeCustomTag(tag)}>
+              <Text style={styles.customTagChipText}>{tag}</Text>
+              <Text style={styles.customTagChipRemove}>×</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+      {draft.custom_aromas.length >= MAX_CUSTOM_TAGS && (
+        <Text style={styles.customTagLimit}>Maximum {MAX_CUSTOM_TAGS} custom tags reached.</Text>
+      )}
 
       {/* Summary */}
       {draft.aromas_l1.length > 0 && (
@@ -442,5 +500,72 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.inkMuted,
     fontStyle: 'italic',
+  },
+  customTagInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  customTagInput: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+  },
+  customTagAddBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.ink,
+  },
+  customTagAddBtnDisabled: {
+    backgroundColor: Colors.border,
+  },
+  customTagAddBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.surface,
+  },
+  customTagChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: Spacing.sm,
+  },
+  customTagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.ink + '12',
+    borderWidth: 0.5,
+    borderColor: Colors.inkMuted,
+  },
+  customTagChipText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMid,
+  },
+  customTagChipRemove: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 14,
+    color: Colors.inkMuted,
+    lineHeight: 16,
+  },
+  customTagLimit: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
+    marginBottom: Spacing.sm,
   },
 });

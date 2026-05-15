@@ -220,8 +220,9 @@ export async function searchWineEntries(userId: string, searchQuery: string, fil
     .eq('user_id', userId);
 
   if (searchQuery) {
+    // Search across text fields; aromas_other_note covers user-written free notes
     query = query.or(
-      `name.ilike.%${searchQuery}%,producer.ilike.%${searchQuery}%,region.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%`
+      `name.ilike.%${searchQuery}%,producer.ilike.%${searchQuery}%,region.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%,aromas_other_note.ilike.%${searchQuery}%,free_notes.ilike.%${searchQuery}%`
     );
   }
 

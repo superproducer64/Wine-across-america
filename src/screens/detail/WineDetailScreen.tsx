@@ -52,6 +52,10 @@ function buildShareText(entry: WineEntry): string {
     lines.push(`Aromas: ${entry.aromas_l1.join(', ')}`);
   }
 
+  if (entry.custom_aromas?.length > 0) {
+    lines.push(`Notes: ${entry.custom_aromas.join(', ')}`);
+  }
+
   if (entry.grapes.length > 0) {
     lines.push(`Grapes: ${entry.grapes.join(', ')}`);
   }
@@ -342,6 +346,25 @@ export function WineDetailScreen({ route, navigation }: Props) {
 
         {/* Original Wine Card */}
         <VivinoStyleCard entry={entry} />
+
+        {/* Custom Aroma Tags */}
+        {((entry.custom_aromas?.length ?? 0) > 0 || entry.aromas_other_note) && (
+          <View style={styles.customAromasBlock}>
+            <Text style={styles.customAromasHeading}>Personal Flavor Notes</Text>
+            {(entry.custom_aromas?.length ?? 0) > 0 && (
+              <View style={styles.customAromasChips}>
+                {(entry.custom_aromas ?? []).map((tag) => (
+                  <View key={tag} style={styles.customAromasChip}>
+                    <Text style={styles.customAromasChipText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {entry.aromas_other_note ? (
+              <Text style={styles.aromasOtherNote}>{entry.aromas_other_note}</Text>
+            ) : null}
+          </View>
+        )}
 
         {/* Price history + Log Another Visit */}
         <View style={styles.priceBlock}>
@@ -865,6 +888,46 @@ const styles = StyleSheet.create({
   },
   shareButtonInAppText: {
     color: Colors.gold,
+  },
+  customAromasBlock: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: 8,
+  },
+  customAromasHeading: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+  },
+  customAromasChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  customAromasChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.ink + '10',
+    borderWidth: 0.5,
+    borderColor: Colors.inkMuted,
+  },
+  customAromasChipText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMid,
+  },
+  aromasOtherNote: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMid,
+    lineHeight: 19,
+    fontStyle: 'italic',
   },
   loadingContainer: {
     flex: 1,
