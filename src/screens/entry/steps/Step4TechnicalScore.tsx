@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider } from '@/components/ui/ScoreSlider';
@@ -7,6 +7,14 @@ import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
 
 export function Step4TechnicalScore() {
   const { draft, setTechnicalScore } = useEntryDraftStore();
+
+  // Auto-fill Intensity from structure score × 2 on mount.
+  // The user can override by moving the slider freely afterward.
+  useEffect(() => {
+    const autofilled = Math.min(20, Math.round(draft.intensity * 2));
+    setTechnicalScore({ score_intensity: autofilled });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const total = computeTechnicalScore(draft);
   const pct = (total / 100) * 100;
@@ -22,6 +30,10 @@ export function Step4TechnicalScore() {
     total >= 70 ? 'Very Good' :
     total >= 60 ? 'Good' :
     'Fair';
+
+  // Shows badge when value still matches the autofill formula
+  const autofilledValue = Math.min(20, Math.round(draft.intensity * 2));
+  const isAutoFilled = draft.score_intensity === autofilledValue;
 
   return (
     <ScrollView
@@ -53,7 +65,14 @@ export function Step4TechnicalScore() {
       {/* Sliders */}
       {TECHNICAL_CATEGORIES.map((cat) => (
         <View key={cat.key} style={styles.catBlock}>
-          <Text style={styles.catDesc}>{cat.description}</Text>
+          <View style={styles.catHeader}>
+            <Text style={styles.catDesc}>{cat.description}</Text>
+            {cat.key === 'score_intensity' && isAutoFilled && (
+              <View style={styles.autoBadge}>
+                <Text style={styles.autoBadgeText}>Auto · Structure ×2</Text>
+              </View>
+            )}
+          </View>
           <ScoreSlider
             label={cat.label}
             value={draft[cat.key] ?? 10}
@@ -130,11 +149,32 @@ const styles = StyleSheet.create({
   catBlock: {
     marginBottom: 4,
   },
+  catHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 2,
+  },
   catDesc: {
     fontFamily: Fonts.dmSans,
     fontSize: 12,
     color: Colors.inkMuted,
     fontStyle: 'italic',
-    marginBottom: 4,
+    flex: 1,
+  },
+  autoBadge: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  autoBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 9,
+    color: Colors.inkMid,
+    letterSpacing: 0.3,
   },
 });
