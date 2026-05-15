@@ -10,6 +10,7 @@ import {
   Share,
   Platform,
   TextInput,
+  Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
@@ -293,7 +294,30 @@ export function WineDetailScreen({ route, navigation }: Props) {
             })}
           </Text>
           {entry.location_name ? (
-            <Text style={styles.metaText}>📍 {entry.location_name}</Text>
+            <Pressable
+              onPress={() => {
+                if (entry.location_geo) {
+                  const { lat, lng } = entry.location_geo;
+                  const url = Platform.OS === 'ios'
+                    ? `maps://?ll=${lat},${lng}&q=${encodeURIComponent(entry.location_name)}`
+                    : `https://maps.google.com/?q=${lat},${lng}`;
+                  Linking.openURL(url).catch(() => {});
+                }
+              }}
+              disabled={!entry.location_geo}
+            >
+              <View style={styles.locationMetaRow}>
+                <Text style={styles.metaText}>📍 {entry.location_name}</Text>
+                {entry.location_geo ? (
+                  <Text style={styles.locationGeoTag}>Map ↗</Text>
+                ) : null}
+              </View>
+              {entry.location_geo ? (
+                <Text style={styles.locationCoords}>
+                  {entry.location_geo.lat.toFixed(5)}, {entry.location_geo.lng.toFixed(5)}
+                </Text>
+              ) : null}
+            </Pressable>
           ) : null}
         </View>
 
@@ -586,6 +610,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 13,
     color: Colors.inkMuted,
+  },
+  locationMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  locationGeoTag: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: Colors.gold,
+    letterSpacing: 0.3,
+  },
+  locationCoords: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 10,
+    color: Colors.inkFaint,
+    letterSpacing: 0.2,
+    marginTop: 1,
   },
   notesBlock: {
     backgroundColor: Colors.goldPale,

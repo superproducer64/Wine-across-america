@@ -98,6 +98,13 @@ export function Step5NotesAndTerroir({ isSommelier }: Props) {
           </Pressable>
         </View>
         {locError ? <Text style={styles.locError}>{locError}</Text> : null}
+        {draft.location_geo ? (
+          <View style={styles.geoBadge}>
+            <Text style={styles.geoBadgeText}>
+              📡 Geo-referenced · {draft.location_geo.lat.toFixed(5)}, {draft.location_geo.lng.toFixed(5)}
+            </Text>
+          </View>
+        ) : null}
         <TextInput
           label="Or type a location"
           value={draft.location_name}
@@ -401,5 +408,23 @@ const styles = StyleSheet.create({
   terriorChipTextSelected: {
     color: Colors.white,
     fontFamily: Fonts.dmSansMedium,
+  },
+  geoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EAF5EE',
+    borderRadius: Radius.sm,
+    borderWidth: 0.5,
+    borderColor: '#A5D6B5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: Spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  geoBadgeText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.green,
+    letterSpacing: 0.2,
   },
 });
