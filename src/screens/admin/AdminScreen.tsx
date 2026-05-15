@@ -31,7 +31,7 @@ type Application = {
 
 type ApplicationRowProps = {
   app: Application;
-  onDecision: (id: string, decision: 'approved' | 'rejected', reason?: string) => void;
+  onDecision: (id: string, decision: 'approved' | 'rejected' | 'needs_resubmission', reason?: string) => void;
   busy: boolean;
 };
 
@@ -39,6 +39,7 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectMode, setRejectMode] = useState<'rejected' | 'needs_resubmission'>('rejected');
   const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
@@ -55,6 +56,12 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   });
 
   const handleRejectPress = () => {
+    setRejectMode('rejected');
+    setShowRejectForm(true);
+  };
+
+  const handleResubmitPress = () => {
+    setRejectMode('needs_resubmission');
     setShowRejectForm(true);
   };
 
@@ -64,7 +71,7 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   };
 
   const handleConfirmReject = () => {
-    onDecision(app.id, 'rejected', rejectionReason.trim() || undefined);
+    onDecision(app.id, rejectMode, rejectionReason.trim() || undefined);
   };
 
   return (
@@ -112,12 +119,18 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
 
       {showRejectForm ? (
         <View style={styles.rejectForm}>
-          <Text style={styles.rejectFormLabel}>Reason for rejection</Text>
+          <Text style={styles.rejectFormLabel}>
+            {rejectMode === 'needs_resubmission' ? 'Reason for resubmission request' : 'Reason for rejection'}
+          </Text>
           <TextInput
             style={styles.rejectInput}
             value={rejectionReason}
             onChangeText={setRejectionReason}
-            placeholder="e.g. Certificate image unclear, wrong certification level…"
+            placeholder={
+              rejectMode === 'needs_resubmission'
+                ? 'e.g. Certificate image unclear, please upload a higher-resolution scan…'
+                : 'e.g. Wrong certification level, does not meet requirements…'
+            }
             placeholderTextColor={Colors.inkFaint}
             multiline
             numberOfLines={3}
@@ -136,7 +149,7 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
               disabled={busy}
             />
             <Button
-              label="Confirm Rejection"
+              label={rejectMode === 'needs_resubmission' ? 'Request Resubmission' : 'Confirm Rejection'}
               onPress={handleConfirmReject}
               variant="destructive"
               style={styles.actionBtn}
@@ -150,6 +163,13 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
             label="Reject"
             onPress={handleRejectPress}
             variant="destructive"
+            style={styles.actionBtn}
+            disabled={busy}
+          />
+          <Button
+            label="Resubmit"
+            onPress={handleResubmitPress}
+            variant="secondary"
             style={styles.actionBtn}
             disabled={busy}
           />
@@ -192,7 +212,7 @@ export function AdminScreen() {
 
   const handleDecision = async (
     userId: string,
-    decision: 'approved' | 'rejected',
+    decision: 'approved' | 'rejected' | 'needs_resubmission',
     reason?: string
   ) => {
     setBusyId(userId);
@@ -208,6 +228,8 @@ export function AdminScreen() {
       setSuccessMessage(
         decision === 'approved'
           ? `${name} has been approved as a Sommelier.`
+          : decision === 'needs_resubmission'
+          ? `${name} has been asked to resubmit their certification.`
           : `${name}'s application has been rejected.`
       );
       setApplications((prev) => prev.filter((a) => a.id !== userId));

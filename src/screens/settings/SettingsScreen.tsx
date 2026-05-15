@@ -46,6 +46,8 @@ export function SettingsScreen() {
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'pending';
   const isSommelierRejected =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'rejected';
+  const isSommelierNeedsResubmission =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'needs_resubmission';
   const isEnthusiast = !isSommelierApproved && !isSommelierPending;
 
   const handleSommelierApply = async () => {
@@ -115,6 +117,11 @@ export function SettingsScreen() {
                   <Text style={[styles.verifiedPillText, styles.rejectedPillText]}>Not Approved</Text>
                 </View>
               )}
+              {isSommelierNeedsResubmission && (
+                <View style={[styles.verifiedPill, styles.resubmitPill]}>
+                  <Text style={[styles.verifiedPillText, styles.resubmitPillText]}>Needs Resubmission</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -127,15 +134,33 @@ export function SettingsScreen() {
           </View>
         ) : null}
 
-        {/* Sommelier upgrade (for enthusiasts and rejected) */}
-        {(isEnthusiast || isSommelierRejected) && (
+        {/* Needs Resubmission banner */}
+        {isSommelierNeedsResubmission && (
+          <View style={styles.resubmitReasonCard}>
+            <Text style={styles.resubmitReasonLabel}>Action Required</Text>
+            <Text style={styles.resubmitReasonText}>
+              {profile?.sommelier_rejection_reason
+                ? profile.sommelier_rejection_reason
+                : 'Your certification could not be verified. Please resubmit a clearer copy of your Level 3 certification.'}
+            </Text>
+          </View>
+        )}
+
+        {/* Sommelier upgrade (for enthusiasts, rejected, and needs_resubmission) */}
+        {(isEnthusiast || isSommelierRejected || isSommelierNeedsResubmission) && (
           <View style={styles.sommelierCard}>
             <View style={styles.sommelierHeader}>
               <Text style={styles.sommelierTitle}>
-                {isSommelierRejected ? '🎓 Reapply as Sommelier' : '🎓 Apply as Sommelier'}
+                {isSommelierNeedsResubmission
+                  ? '🎓 Resubmit Certification'
+                  : isSommelierRejected
+                  ? '🎓 Reapply as Sommelier'
+                  : '🎓 Apply as Sommelier'}
               </Text>
               <Text style={styles.sommelierDesc}>
-                {isSommelierRejected
+                {isSommelierNeedsResubmission
+                  ? 'Upload a revised copy of your Level 3 certification. Make sure the document is legible and clearly shows your name and program.'
+                  : isSommelierRejected
                   ? 'Your previous application was not approved. You may reapply with a valid Level 3 certification.'
                   : 'Unlock professional terroir analysis fields. Requires a Level 3 certification from any recognized sommelier program (CMS, WSET, ISG, etc.).'}
               </Text>
@@ -450,6 +475,33 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   rejectionReasonText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 14,
+    color: Colors.ink,
+    lineHeight: 20,
+  },
+  resubmitPill: {
+    backgroundColor: 'rgba(180,100,0,0.1)',
+    borderColor: '#B46400',
+  },
+  resubmitPillText: { color: '#8B4D00' },
+  resubmitReasonCard: {
+    backgroundColor: 'rgba(180,100,0,0.06)',
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: '#B46400',
+    padding: Spacing.md,
+    gap: 4,
+  },
+  resubmitReasonLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: '#B46400',
+    opacity: 0.9,
+  },
+  resubmitReasonText: {
     fontFamily: Fonts.dmSans,
     fontSize: 14,
     color: Colors.ink,

@@ -289,7 +289,7 @@ export type WineEntryDraft = Omit<WineEntry, 'id' | 'user_id' | 'technical_score
 // ─── User / Auth ──────────────────────────────────────────────────────────────
 
 export type UserRole = 'enthusiast' | 'sommelier';
-export type SommelierStatus = 'pending' | 'approved' | 'rejected';
+export type SommelierStatus = 'pending' | 'approved' | 'rejected' | 'needs_resubmission';
 
 export interface UserProfile {
   id: string;

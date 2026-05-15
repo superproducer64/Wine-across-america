@@ -365,14 +365,15 @@ export async function fetchPendingSommelierApplications() {
 
 export async function updateSommelierStatus(
   userId: string,
-  decision: 'approved' | 'rejected',
+  decision: 'approved' | 'rejected' | 'needs_resubmission',
   rejectionReason?: string
 ): Promise<{ error: string | null }> {
   const updates: Record<string, unknown> = {
     sommelier_status: decision,
+    // approved → elevate role; anything else → keep / revert to enthusiast
     user_role: decision === 'approved' ? 'sommelier' : 'enthusiast',
   };
-  if (decision === 'rejected' && rejectionReason?.trim()) {
+  if ((decision === 'rejected' || decision === 'needs_resubmission') && rejectionReason?.trim()) {
     updates.sommelier_rejection_reason = rejectionReason.trim();
   }
   if (decision === 'approved') {
