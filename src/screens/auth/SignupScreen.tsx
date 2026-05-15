@@ -151,7 +151,7 @@ export function SignupScreen({ navigation }: Props) {
               >
                 <Text style={styles.rolePillIcon}>🍷</Text>
                 <Text style={[styles.rolePillLabel, role === 'enthusiast' && styles.rolePillLabelActive]}>
-                  Wine Enthusiast
+                  Wine Explorer
                 </Text>
               </Pressable>
               <Pressable

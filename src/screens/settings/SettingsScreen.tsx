@@ -77,7 +77,7 @@ export function SettingsScreen() {
 
   const roleBadge = isSommelierApproved
     ? { label: 'Sommelier', icon: '🎓', color: Colors.gold }
-    : { label: 'Wine Enthusiast', icon: '🍷', color: Colors.inkMuted };
+    : { label: 'Wine Explorer', icon: '🍷', color: Colors.inkMuted };
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
