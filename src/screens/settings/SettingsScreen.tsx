@@ -126,13 +126,17 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* Rejection reason banner */}
-        {isSommelierRejected && profile?.sommelier_rejection_reason ? (
-          <View style={styles.rejectionReasonCard}>
-            <Text style={styles.rejectionReasonLabel}>Reason for rejection</Text>
-            <Text style={styles.rejectionReasonText}>{profile.sommelier_rejection_reason}</Text>
+        {/* Rejection banner — always shown when rejected */}
+        {isSommelierRejected && (
+          <View style={styles.rejectionBanner}>
+            <Text style={styles.rejectionBannerTitle}>Application Not Approved</Text>
+            <Text style={styles.rejectionBannerBody}>
+              {profile?.sommelier_rejection_reason
+                ? profile.sommelier_rejection_reason
+                : 'Your sommelier application was reviewed and could not be approved at this time. You are welcome to reapply with a valid Level 3 certification.'}
+            </Text>
           </View>
-        ) : null}
+        )}
 
         {/* Needs Resubmission banner */}
         {isSommelierNeedsResubmission && (
@@ -458,6 +462,26 @@ const styles = StyleSheet.create({
     borderColor: Colors.red,
   },
   rejectedPillText: { color: Colors.red },
+  rejectionBanner: {
+    backgroundColor: 'rgba(220,53,69,0.08)',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.red,
+    padding: Spacing.md,
+    gap: 6,
+  },
+  rejectionBannerTitle: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.red,
+    letterSpacing: 0.2,
+  },
+  rejectionBannerBody: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.ink,
+    lineHeight: 19,
+  },
   rejectionReasonCard: {
     backgroundColor: 'rgba(220,53,69,0.06)',
     borderRadius: Radius.md,
