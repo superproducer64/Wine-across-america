@@ -16,6 +16,7 @@ function makeDefaultDraft(): WineEntryDraft {
     location_geo: null,
 
     // Structure Wheel
+    sweetness: 5,
     acidity: 5,
     tannin: 5,
     body: 5,

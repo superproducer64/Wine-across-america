@@ -153,6 +153,7 @@ export interface WineEntry {
   location_geo: { lat: number; lng: number } | null;
 
   // Structure Wheel (1-10)
+  sweetness: number;
   acidity: number;
   tannin: number;
   body: number;
@@ -381,7 +382,7 @@ export const GRAPE_VARIETIES = [
 // ─── Structure Wheel ─────────────────────────────────────────────────────────
 
 export interface StructureDimension {
-  key: keyof Pick<WineEntry, 'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>;
+  key: keyof Pick<WineEntry, 'sweetness' | 'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>;
   label: string;
   displayLabel: string;
   lowAnchor: string;
@@ -390,6 +391,14 @@ export interface StructureDimension {
 }
 
 export const STRUCTURE_DIMENSIONS: StructureDimension[] = [
+  {
+    key: 'sweetness',
+    label: 'Sweetness',
+    displayLabel: 'Sweetness',
+    lowAnchor: '🍋 Bone dry',
+    highAnchor: '🍯 Very sweet',
+    tip: 'Residual sugar on the tip of the tongue',
+  },
   {
     key: 'acidity',
     label: 'Acidity',

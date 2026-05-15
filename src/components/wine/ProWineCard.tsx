@@ -191,11 +191,13 @@ export function ProWineCard({ entry, compact = false }: Props) {
         {/* Left: Radar + Profile */}
         <View style={styles.leftCol}>
           <WineRadarChart
+            sweetness={entry.sweetness ?? 5}
             acidity={entry.acidity}
             body={entry.body}
             alcohol={entry.alcohol}
             tannin={entry.tannin}
             intensity={entry.intensity}
+            finish_length={entry.finish_length ?? 5}
             size={radarSize}
             color={Colors.ink}
           />

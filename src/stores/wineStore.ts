@@ -101,6 +101,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
       label_photo_blurhash,
       aromas_other_note,
       grape_blends,
+      sweetness,
       ...rest
     } = draft;
     const payload: Record<string, unknown> = {
@@ -112,6 +113,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
       ...(back_label_photo_url   ? { back_label_photo_url }   : {}),
       ...(aromas_other_note      ? { aromas_other_note }      : {}),
       ...(grape_blends           ? { grape_blends }           : {}),
+      ...(sweetness !== undefined ? { sweetness }             : {}),
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) {

@@ -10,6 +10,7 @@ export function Step2StructureWheel() {
   const { draft, setStructureWheel } = useEntryDraftStore();
 
   const scores = {
+    sweetness: draft.sweetness,
     acidity: draft.acidity,
     tannin: draft.tannin,
     body: draft.body,

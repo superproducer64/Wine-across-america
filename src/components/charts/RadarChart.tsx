@@ -5,6 +5,7 @@ import { Colors, Fonts } from '@/theme';
 
 interface RadarChartProps {
   scores: {
+    sweetness: number;
     acidity: number;
     tannin: number;
     body: number;
@@ -17,6 +18,7 @@ interface RadarChartProps {
 }
 
 const DIMENSIONS = [
+  { key: 'sweetness', label: 'Sweet' },
   { key: 'acidity', label: 'Acidity' },
   { key: 'tannin', label: 'Tannin' },
   { key: 'body', label: 'Body' },

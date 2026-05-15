@@ -4,22 +4,28 @@ import Svg, { Polygon, Line, Circle, Text as SvgText } from 'react-native-svg';
 import { Colors, Fonts } from '@/theme';
 
 interface Props {
-  acidity: number;   // 1-10
+  sweetness: number;  // 1-10
+  acidity: number;
+  tannin: number;
   body: number;
   alcohol: number;
-  tannin: number;
   intensity: number;
+  finish_length: number;
   size?: number;
   color?: string;
 }
 
+// 7 axes evenly spaced starting at top (−90°), step = 360/7 ≈ 51.43°
+const STEP = 360 / 7;
 const AXES = [
-  { label: 'Acidity',   key: 'acidity',   angleDeg: -90 },
-  { label: 'Body',      key: 'body',       angleDeg: -18 },
-  { label: 'Alcohol',   key: 'alcohol',    angleDeg:  54 },
-  { label: 'Tannin',    key: 'tannin',     angleDeg: 126 },
-  { label: 'Intensity', key: 'intensity',  angleDeg: 198 },
-];
+  { label: 'Sweet',     key: 'sweetness',    angleDeg: -90 + STEP * 0 },
+  { label: 'Acidity',   key: 'acidity',      angleDeg: -90 + STEP * 1 },
+  { label: 'Tannin',    key: 'tannin',       angleDeg: -90 + STEP * 2 },
+  { label: 'Body',      key: 'body',         angleDeg: -90 + STEP * 3 },
+  { label: 'Alcohol',   key: 'alcohol',      angleDeg: -90 + STEP * 4 },
+  { label: 'Intensity', key: 'intensity',    angleDeg: -90 + STEP * 5 },
+  { label: 'Finish',    key: 'finish_length',angleDeg: -90 + STEP * 6 },
+] as const;
 
 const RINGS = 4;
 
@@ -40,11 +46,13 @@ function polygonPoints(pts: { x: number; y: number }[]) {
 }
 
 export function WineRadarChart({
+  sweetness,
   acidity,
+  tannin,
   body,
   alcohol,
-  tannin,
   intensity,
+  finish_length,
   size = 160,
   color = Colors.gold,
 }: Props) {
@@ -53,15 +61,19 @@ export function WineRadarChart({
   const maxR = size * 0.36;
   const labelR = size * 0.48;
 
-  const values = [
-    (acidity - 1) / 9,
-    (body - 1) / 9,
-    (alcohol - 1) / 9,
-    (tannin - 1) / 9,
-    (intensity - 1) / 9,
-  ];
+  const valueMap: Record<string, number> = {
+    sweetness,
+    acidity,
+    tannin,
+    body,
+    alcohol,
+    intensity,
+    finish_length,
+  };
 
-  // Outer pentagon grid rings
+  const values = AXES.map((ax) => (valueMap[ax.key] - 1) / 9);
+
+  // Grid rings
   const rings = Array.from({ length: RINGS }, (_, i) => {
     const r = (maxR * (i + 1)) / RINGS;
     return AXES.map((ax) => point(cx, cy, r, ax.angleDeg));
