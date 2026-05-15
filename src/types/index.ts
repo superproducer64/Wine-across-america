@@ -23,7 +23,22 @@ export interface AromaCategory {
   id: string;
   label: string;
   emoji: string;
+  /** When true the entire category (and all its subcategories) is hidden from Wine Explorer */
+  sommelier_only?: boolean;
+  /** Subcategories shown to all profiles */
   subcategories: string[];
+  /** Subcategories shown only to approved Sommelier users */
+  sommelierSubcategories?: string[];
+}
+
+/** All subcategory strings for a category, respecting the caller's profile */
+export function getCategorySubcategories(
+  cat: AromaCategory,
+  isSommelier: boolean
+): string[] {
+  const shared = cat.subcategories;
+  if (!isSommelier) return shared;
+  return [...shared, ...(cat.sommelierSubcategories ?? [])];
 }
 
 export const AROMA_CATEGORIES: AromaCategory[] = [
@@ -31,79 +46,92 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     id: 'citrus',
     label: 'Citrus',
     emoji: '🍋',
-    subcategories: ['Lemon', 'Lime', 'Grapefruit', 'Orange peel', 'Yuzu'],
+    subcategories: ['Lemon', 'Lime', 'Grapefruit'],
+    sommelierSubcategories: ['Orange peel', 'Yuzu'],
   },
   {
     id: 'tree-fruit',
     label: 'Tree Fruit',
     emoji: '🍎',
-    subcategories: ['Apple', 'Pear', 'Peach', 'Apricot', 'Quince'],
+    subcategories: ['Apple', 'Pear', 'Peach'],
+    sommelierSubcategories: ['Apricot', 'Quince'],
   },
   {
     id: 'tropical',
     label: 'Tropical',
     emoji: '🍍',
-    subcategories: ['Pineapple', 'Mango', 'Passion fruit', 'Guava', 'Lychee'],
+    subcategories: ['Pineapple', 'Mango'],
+    sommelierSubcategories: ['Passion fruit', 'Guava', 'Lychee'],
   },
   {
     id: 'red-fruit',
     label: 'Red Fruit',
     emoji: '🍓',
-    subcategories: ['Strawberry', 'Raspberry', 'Cranberry', 'Red cherry', 'Red plum'],
+    subcategories: ['Strawberry', 'Raspberry'],
+    sommelierSubcategories: ['Cranberry', 'Red cherry', 'Red plum'],
   },
   {
     id: 'dark-fruit',
     label: 'Dark Fruit',
     emoji: '🫐',
-    subcategories: ['Blackberry', 'Blueberry', 'Black cherry', 'Black plum', 'Cassis'],
+    subcategories: ['Blackberry', 'Blueberry'],
+    sommelierSubcategories: ['Black cherry', 'Black plum', 'Cassis'],
   },
   {
     id: 'dried-fruit',
     label: 'Dried Fruit',
     emoji: '🍇',
-    subcategories: ['Raisin', 'Fig', 'Prune', 'Date', 'Dried apricot'],
+    subcategories: ['Raisin', 'Fig'],
+    sommelierSubcategories: ['Prune', 'Date', 'Dried apricot'],
   },
   {
     id: 'floral',
     label: 'Floral',
     emoji: '🌸',
-    subcategories: ['Rose', 'Violet', 'Jasmine', 'Orange blossom', 'Lavender'],
+    subcategories: ['Rose', 'Violet'],
+    sommelierSubcategories: ['Jasmine', 'Orange blossom', 'Lavender'],
   },
   {
     id: 'herbaceous',
     label: 'Herbaceous',
     emoji: '🌿',
-    subcategories: ['Grass', 'Bell pepper', 'Asparagus', 'Tomato leaf', 'Sage'],
+    subcategories: ['Grass', 'Bell pepper'],
+    sommelierSubcategories: ['Asparagus', 'Tomato leaf', 'Sage'],
   },
   {
     id: 'earthy',
     label: 'Earthy',
     emoji: '🌍',
-    subcategories: ['Mushroom', 'Forest floor', 'Truffle', 'Wet earth', 'Clay'],
+    subcategories: ['Mushroom', 'Forest floor'],
+    sommelierSubcategories: ['Truffle', 'Wet earth', 'Clay'],
   },
   {
     id: 'mineral',
     label: 'Mineral',
     emoji: '🪨',
+    sommelier_only: true,
     subcategories: ['Chalk', 'Flint', 'Slate', 'Wet stone', 'Graphite'],
   },
   {
     id: 'oak-spice',
     label: 'Oak & Spice',
     emoji: '🌰',
-    subcategories: ['Vanilla', 'Cedar', 'Clove', 'Cinnamon', 'Toast'],
+    subcategories: ['Vanilla', 'Cedar'],
+    sommelierSubcategories: ['Clove', 'Cinnamon', 'Toast'],
   },
   {
     id: 'savory',
     label: 'Savory',
     emoji: '🫙',
+    sommelier_only: true,
     subcategories: ['Olive', 'Leather', 'Game', 'Meat', 'Tobacco'],
   },
   {
     id: 'sweet-baking',
     label: 'Sweet & Baking',
     emoji: '🍫',
-    subcategories: ['Chocolate', 'Coffee', 'Caramel', 'Mocha', 'Honey'],
+    subcategories: ['Chocolate', 'Coffee', 'Caramel'],
+    sommelierSubcategories: ['Mocha', 'Honey'],
   },
   {
     id: 'other',

@@ -9,47 +9,59 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
-import { AROMA_CATEGORIES, WINE_SHORTCUTS, WineShortcut } from '@/types';
+import { useAuthStore } from '@/stores/authStore';
+import {
+  AROMA_CATEGORIES,
+  WINE_SHORTCUTS,
+  WineShortcut,
+  getCategorySubcategories,
+} from '@/types';
 
 export function Step3Aromas() {
   const { draft, setAromas, setAromasOtherNote, applyWineShortcut } = useEntryDraftStore();
+  const { profile } = useAuthStore();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
 
+  const isSommelier =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+
+  // Categories visible to the current user
+  const visibleCategories = AROMA_CATEGORIES.filter(
+    (cat) => isSommelier || !cat.sommelier_only
+  );
+
   const toggleL1 = (id: string) => {
     const current = draft.aromas_l1;
-    let next: string[];
     if (current.includes(id)) {
-      next = current.filter((a) => a !== id);
-      // Also remove all L2 aromas from this category
       const category = AROMA_CATEGORIES.find((c) => c.id === id);
-      const l2Next = draft.aromas_l2.filter(
-        (a) => !category?.subcategories.includes(a)
-      );
-      setAromas(next, l2Next);
+      // Remove all subcategories (shared + sommelier) when de-selecting a category
+      const allSubs = category
+        ? getCategorySubcategories(category, true)
+        : [];
+      const l2Next = draft.aromas_l2.filter((a) => !allSubs.includes(a));
+      setAromas(current.filter((a) => a !== id), l2Next);
       if (expandedCategory === id) setExpandedCategory(null);
       return;
-    } else {
-      next = [...current, id];
-      setExpandedCategory(id);
     }
-    setAromas(next, draft.aromas_l2);
+    setAromas([...current, id], draft.aromas_l2);
+    setExpandedCategory(id);
     setActiveShortcutId(null);
   };
 
   const toggleL2 = (aroma: string) => {
     const current = draft.aromas_l2;
-    if (current.includes(aroma)) {
-      setAromas(draft.aromas_l1, current.filter((a) => a !== aroma));
-    } else {
-      setAromas(draft.aromas_l1, [...current, aroma]);
-    }
+    setAromas(
+      draft.aromas_l1,
+      current.includes(aroma)
+        ? current.filter((a) => a !== aroma)
+        : [...current, aroma]
+    );
     setActiveShortcutId(null);
   };
 
   const handleShortcut = (shortcut: WineShortcut) => {
     if (activeShortcutId === shortcut.id) {
-      // Tap again to deselect — clear aromas and reset structure
       setAromas([], []);
       setActiveShortcutId(null);
     } else {
@@ -60,10 +72,7 @@ export function Step3Aromas() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.stepTitle}>Aroma Profile</Text>
       <Text style={styles.intro}>
         Select the aromas you detect, or choose a style shortcut to auto-fill aromas and structure.
@@ -98,11 +107,21 @@ export function Step3Aromas() {
       </ScrollView>
 
       {/* Layer 1 Categories */}
-      <Text style={styles.sectionLabel}>Categories</Text>
+      <View style={styles.categoriesHeader}>
+        <Text style={styles.sectionLabel}>Categories</Text>
+        {isSommelier && (
+          <View style={styles.sommelierModeBadge}>
+            <Text style={styles.sommelierModeBadgeText}>🎓 Expanded</Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.categoriesGrid}>
-        {AROMA_CATEGORIES.map((cat) => {
+        {visibleCategories.map((cat) => {
           const selected = draft.aromas_l1.includes(cat.id);
           const isExpanded = expandedCategory === cat.id;
+          const subcategories = getCategorySubcategories(cat, isSommelier);
+
           return (
             <View key={cat.id} style={styles.categoryBlock}>
               <Pressable
@@ -113,32 +132,44 @@ export function Step3Aromas() {
                 <Text style={[styles.catLabel, selected && styles.catLabelSelected]}>
                   {cat.label}
                 </Text>
+                {cat.sommelier_only && (
+                  <View style={styles.sommelierBadge}>
+                    <Text style={styles.sommelierBadgeText}>S</Text>
+                  </View>
+                )}
               </Pressable>
 
               {/* Layer 2 drill-down */}
               {selected && isExpanded && (
                 <View>
                   <View style={styles.l2Grid}>
-                    {cat.subcategories.map((aroma) => (
-                      <Pressable
-                        key={aroma}
-                        style={[
-                          styles.l2Chip,
-                          draft.aromas_l2.includes(aroma) && styles.l2ChipSelected,
-                        ]}
-                        onPress={() => toggleL2(aroma)}
-                      >
-                        <Text
+                    {subcategories.map((aroma) => {
+                      const isSommelierSub =
+                        isSommelier &&
+                        (cat.sommelierSubcategories ?? []).includes(aroma);
+                      return (
+                        <Pressable
+                          key={aroma}
                           style={[
-                            styles.l2Text,
-                            draft.aromas_l2.includes(aroma) && styles.l2TextSelected,
+                            styles.l2Chip,
+                            draft.aromas_l2.includes(aroma) && styles.l2ChipSelected,
+                            isSommelierSub && styles.l2ChipSommelier,
                           ]}
+                          onPress={() => toggleL2(aroma)}
                         >
-                          {aroma}
-                        </Text>
-                      </Pressable>
-                    ))}
+                          <Text
+                            style={[
+                              styles.l2Text,
+                              draft.aromas_l2.includes(aroma) && styles.l2TextSelected,
+                            ]}
+                          >
+                            {aroma}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
+
                   {cat.id === 'other' && (
                     <View style={styles.otherNoteWrapper}>
                       <Text style={styles.otherNoteLabel}>Describe other aromas</Text>
@@ -180,14 +211,10 @@ export function Step3Aromas() {
               .join(' · ')}
           </Text>
           {draft.aromas_l2.length > 0 && (
-            <Text style={styles.summaryL2}>
-              {draft.aromas_l2.join(' · ')}
-            </Text>
+            <Text style={styles.summaryL2}>{draft.aromas_l2.join(' · ')}</Text>
           )}
           {draft.aromas_other_note ? (
-            <Text style={styles.summaryL2}>
-              ✨ {draft.aromas_other_note}
-            </Text>
+            <Text style={styles.summaryL2}>✨ {draft.aromas_other_note}</Text>
           ) : null}
         </View>
       )}
@@ -252,30 +279,43 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.goldPale,
     borderColor: Colors.gold,
   },
-  shortcutEmoji: {
-    fontSize: 22,
-  },
+  shortcutEmoji: { fontSize: 22 },
   shortcutName: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 12,
     color: Colors.ink,
     lineHeight: 16,
   },
-  shortcutNameActive: {
-    color: Colors.ink,
-  },
+  shortcutNameActive: { color: Colors.ink },
   shortcutStyle: {
     fontFamily: Fonts.dmSans,
     fontSize: 10,
     color: Colors.inkMuted,
     lineHeight: 13,
   },
-  categoriesGrid: {
+  categoriesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  categoryBlock: {
-    gap: 6,
+  sommelierModeBadge: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: Spacing.md,
+    marginBottom: 8,
   },
+  sommelierModeBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: Colors.inkMid,
+    letterSpacing: 0.2,
+  },
+  categoriesGrid: { gap: 8 },
+  categoryBlock: { gap: 6 },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,17 +331,30 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.goldPale,
     borderColor: Colors.gold,
   },
-  catEmoji: {
-    fontSize: 16,
-  },
+  catEmoji: { fontSize: 16 },
   catLabel: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 14,
     color: Colors.inkMid,
+    flex: 1,
   },
   catLabelSelected: {
     fontFamily: Fonts.dmSansMedium,
     color: Colors.inkMid,
+  },
+  sommelierBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sommelierBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 9,
+    color: Colors.surface,
+    lineHeight: 12,
   },
   l2Grid: {
     flexDirection: 'row',
@@ -321,6 +374,9 @@ const styles = StyleSheet.create({
   l2ChipSelected: {
     backgroundColor: Colors.gold + '33',
     borderColor: Colors.gold,
+  },
+  l2ChipSommelier: {
+    borderStyle: 'dashed',
   },
   l2Text: {
     fontFamily: Fonts.dmSans,
