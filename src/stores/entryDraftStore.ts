@@ -72,7 +72,9 @@ interface EntryDraftStore {
     'grapes' | 'price' | 'tasting_date' | 'location_name' | 'location_geo'>>) => void;
 
   setStructureWheel: (data: Partial<Pick<WineEntryDraft,
-    'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>>) => void;
+    'sweetness' | 'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>>) => void;
+
+  applyWineShortcut: (shortcut: import('@/types').WineShortcut) => void;
 
   setAromas: (aromas_l1: string[], aromas_l2: string[]) => void;
   setAromasOtherNote: (note: string) => void;
@@ -100,6 +102,16 @@ export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
 
   setStructureWheel: (data) =>
     set((state) => ({ draft: { ...state.draft, ...data } })),
+
+  applyWineShortcut: (shortcut) =>
+    set((state) => ({
+      draft: {
+        ...state.draft,
+        aromas_l1: shortcut.aromas_l1,
+        aromas_l2: shortcut.aromas_l2,
+        ...shortcut.structure,
+      },
+    })),
 
   setAromas: (aromas_l1, aromas_l2) =>
     set((state) => ({ draft: { ...state.draft, aromas_l1, aromas_l2 } })),

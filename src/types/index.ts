@@ -113,14 +113,94 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
   },
 ];
 
-// Smart shortcuts for aroma quick-select
-export const AROMA_SHORTCUTS: Record<string, string[]> = {
-  'Crisp white': ['citrus', 'mineral', 'herbaceous'],
-  'Rich white': ['tree-fruit', 'oak-spice', 'sweet-baking'],
-  'Light red': ['red-fruit', 'floral', 'earthy'],
-  'Bold red': ['dark-fruit', 'oak-spice', 'savory'],
-  'Sparkling': ['citrus', 'floral', 'mineral'],
-};
+// ─── Wine Style Shortcuts ─────────────────────────────────────────────────────
+
+export interface WineShortcut {
+  id: string;
+  name: string;
+  emoji: string;
+  styleLabel: string;
+  forWines: string;
+  aromas_l1: string[];
+  aromas_l2: string[];
+  structure: {
+    sweetness: number;
+    acidity: number;
+    tannin: number;
+    body: number;
+    alcohol: number;
+    intensity: number;
+    finish_length: number;
+  };
+}
+
+export const WINE_SHORTCUTS: WineShortcut[] = [
+  {
+    id: 'fresh-crisp-white',
+    name: 'Fresh & Crisp White',
+    emoji: '🍋',
+    styleLabel: 'Light · Refreshing · Zesty',
+    forWines: 'Sauvignon Blanc, Albariño, Pinot Grigio, Txakoli',
+    aromas_l1: ['citrus', 'herbaceous', 'mineral'],
+    aromas_l2: ['Lemon', 'Lime', 'Grass', 'Flint'],
+    structure: { sweetness: 2, acidity: 8, tannin: 1, body: 3, alcohol: 4, intensity: 6, finish_length: 5 },
+  },
+  {
+    id: 'ripe-round-white',
+    name: 'Ripe & Round White',
+    emoji: '🍑',
+    styleLabel: 'Smooth · Fruity · Round',
+    forWines: 'Unoaked Chardonnay, Viognier, Chenin Blanc',
+    aromas_l1: ['tree-fruit', 'tropical'],
+    aromas_l2: ['Peach', 'Apricot', 'Mango'],
+    structure: { sweetness: 3, acidity: 5, tannin: 1, body: 6, alcohol: 6, intensity: 6, finish_length: 6 },
+  },
+  {
+    id: 'oaky-chardonnay',
+    name: 'Oaky Chardonnay',
+    emoji: '🌰',
+    styleLabel: 'Rich · Creamy · Oak-Driven',
+    forWines: 'Oaked Chardonnay, Napa Chardonnay, White Burgundy',
+    aromas_l1: ['oak-spice', 'tree-fruit', 'other'],
+    aromas_l2: ['Vanilla', 'Toast', 'Peach', 'Butter', 'Cream'],
+    structure: { sweetness: 2, acidity: 5, tannin: 1, body: 7, alcohol: 7, intensity: 7, finish_length: 7 },
+  },
+  {
+    id: 'light-juicy-red',
+    name: 'Light & Juicy Red',
+    emoji: '🍓',
+    styleLabel: 'Fresh · Vibrant · Easy Drinking',
+    forWines: 'Pinot Noir, Gamay, Light Reds',
+    aromas_l1: ['red-fruit', 'floral', 'herbaceous'],
+    aromas_l2: ['Strawberry', 'Raspberry', 'Violet'],
+    structure: { sweetness: 2, acidity: 7, tannin: 3, body: 4, alcohol: 4, intensity: 5, finish_length: 5 },
+  },
+  {
+    id: 'ripe-smooth-red',
+    name: 'Ripe & Smooth Red',
+    emoji: '🫐',
+    styleLabel: 'Soft · Fruit-Forward · Smooth',
+    forWines: 'Merlot, Zinfandel, Grenache',
+    aromas_l1: ['dark-fruit', 'oak-spice', 'sweet-baking'],
+    aromas_l2: ['Blackberry', 'Black plum', 'Clove'],
+    structure: { sweetness: 3, acidity: 5, tannin: 5, body: 6, alcohol: 7, intensity: 6, finish_length: 6 },
+  },
+  {
+    id: 'bold-structured-red',
+    name: 'Bold & Structured Red',
+    emoji: '🍷',
+    styleLabel: 'Powerful · Structured · Intense',
+    forWines: 'Cabernet Sauvignon, Syrah, Malbec',
+    aromas_l1: ['dark-fruit', 'oak-spice', 'savory'],
+    aromas_l2: ['Cassis', 'Cedar', 'Tobacco'],
+    structure: { sweetness: 2, acidity: 5, tannin: 8, body: 8, alcohol: 8, intensity: 8, finish_length: 7 },
+  },
+];
+
+// Legacy alias kept so nothing else breaks during migration
+export const AROMA_SHORTCUTS: Record<string, string[]> = Object.fromEntries(
+  WINE_SHORTCUTS.map((s) => [s.name, s.aromas_l1])
+);
 
 // ─── Price Entry ─────────────────────────────────────────────────────────────
 

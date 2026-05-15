@@ -9,11 +9,12 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
-import { AROMA_CATEGORIES, AROMA_SHORTCUTS } from '@/types';
+import { AROMA_CATEGORIES, WINE_SHORTCUTS, WineShortcut } from '@/types';
 
 export function Step3Aromas() {
-  const { draft, setAromas, setAromasOtherNote } = useEntryDraftStore();
+  const { draft, setAromas, setAromasOtherNote, applyWineShortcut } = useEntryDraftStore();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
 
   const toggleL1 = (id: string) => {
     const current = draft.aromas_l1;
@@ -33,6 +34,7 @@ export function Step3Aromas() {
       setExpandedCategory(id);
     }
     setAromas(next, draft.aromas_l2);
+    setActiveShortcutId(null);
   };
 
   const toggleL2 = (aroma: string) => {
@@ -42,11 +44,19 @@ export function Step3Aromas() {
     } else {
       setAromas(draft.aromas_l1, [...current, aroma]);
     }
+    setActiveShortcutId(null);
   };
 
-  const applyShortcut = (shortcutId: string) => {
-    const categoryIds = AROMA_SHORTCUTS[shortcutId] ?? [];
-    setAromas(categoryIds, []);
+  const handleShortcut = (shortcut: WineShortcut) => {
+    if (activeShortcutId === shortcut.id) {
+      // Tap again to deselect — clear aromas and reset structure
+      setAromas([], []);
+      setActiveShortcutId(null);
+    } else {
+      applyWineShortcut(shortcut);
+      setActiveShortcutId(shortcut.id);
+      setExpandedCategory(null);
+    }
   };
 
   return (
@@ -56,22 +66,34 @@ export function Step3Aromas() {
     >
       <Text style={styles.stepTitle}>Aroma Profile</Text>
       <Text style={styles.intro}>
-        Select the aromas you detect. Tap a category for specific notes.
+        Select the aromas you detect, or choose a style shortcut to auto-fill aromas and structure.
       </Text>
 
-      {/* Quick shortcuts */}
-      <Text style={styles.sectionLabel}>Quick shortcuts</Text>
+      {/* Style Shortcuts */}
+      <Text style={styles.sectionLabel}>Style Shortcuts</Text>
+      <Text style={styles.shortcutHint}>
+        Tap a style to auto-fill aromas and structure sliders — you can adjust anything after.
+      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.shortcutScroll}>
         <View style={styles.shortcutRow}>
-          {Object.keys(AROMA_SHORTCUTS).map((label) => (
-            <Pressable
-              key={label}
-              style={styles.shortcut}
-              onPress={() => applyShortcut(label)}
-            >
-              <Text style={styles.shortcutText}>{label}</Text>
-            </Pressable>
-          ))}
+          {WINE_SHORTCUTS.map((shortcut) => {
+            const active = activeShortcutId === shortcut.id;
+            return (
+              <Pressable
+                key={shortcut.id}
+                style={[styles.shortcutCard, active && styles.shortcutCardActive]}
+                onPress={() => handleShortcut(shortcut)}
+              >
+                <Text style={styles.shortcutEmoji}>{shortcut.emoji}</Text>
+                <Text style={[styles.shortcutName, active && styles.shortcutNameActive]} numberOfLines={2}>
+                  {shortcut.name}
+                </Text>
+                <Text style={styles.shortcutStyle} numberOfLines={1}>
+                  {shortcut.styleLabel}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -201,26 +223,52 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: Spacing.md,
   },
+  shortcutHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    marginBottom: Spacing.sm,
+    lineHeight: 17,
+  },
   shortcutScroll: {
     marginBottom: Spacing.md,
   },
   shortcutRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     paddingRight: Spacing.xl,
+    paddingBottom: 4,
   },
-  shortcut: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.ink,
-    borderWidth: 0.5,
-    borderColor: Colors.borderStrong,
+  shortcutCard: {
+    width: 120,
+    padding: 12,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 4,
   },
-  shortcutText: {
-    fontFamily: Fonts.dmSansRegular,
+  shortcutCardActive: {
+    backgroundColor: Colors.goldPale,
+    borderColor: Colors.gold,
+  },
+  shortcutEmoji: {
+    fontSize: 22,
+  },
+  shortcutName: {
+    fontFamily: Fonts.dmSansMedium,
     fontSize: 12,
-    color: Colors.goldLight,
+    color: Colors.ink,
+    lineHeight: 16,
+  },
+  shortcutNameActive: {
+    color: Colors.ink,
+  },
+  shortcutStyle: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 10,
+    color: Colors.inkMuted,
+    lineHeight: 13,
   },
   categoriesGrid: {
     gap: 8,
