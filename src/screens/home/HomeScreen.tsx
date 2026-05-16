@@ -17,6 +17,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useWineStore } from '@/stores/wineStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { WineListItem } from '@/components/wine/WineListItem';
+import { WineGridItem } from '@/components/wine/WineGridItem';
 import { SkeletonWineListItem } from '@/components/wine/SkeletonWineListItem';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -239,9 +240,13 @@ export function HomeScreen() {
             keyExtractor={(item) => item.id}
             numColumns={isWide ? 2 : 1}
             columnWrapperStyle={isWide ? { gap: Spacing.md } : undefined}
-            renderItem={({ item }) => (
-              <WineListItem entry={item} onPress={handleWinePress} style={isWide ? styles.gridItem : undefined} />
-            )}
+            renderItem={({ item }) =>
+              isWide ? (
+                <WineGridItem entry={item} onPress={handleWinePress} />
+              ) : (
+                <WineListItem entry={item} onPress={handleWinePress} />
+              )
+            }
             scrollEnabled={false}
             removeClippedSubviews
             initialNumToRender={8}
@@ -460,9 +465,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 13,
     color: Colors.gold,
-  },
-  gridItem: {
-    flex: 1,
   },
   emptyState: {
     alignItems: 'center',

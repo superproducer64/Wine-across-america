@@ -15,6 +15,7 @@ import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer';
 import { TextInput } from '@/components/ui/TextInput';
 import { WineListItem } from '@/components/wine/WineListItem';
+import { WineGridItem } from '@/components/wine/WineGridItem';
 import { useAuthStore } from '@/stores/authStore';
 import { useWineStore } from '@/stores/wineStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -189,9 +190,13 @@ export function SearchScreen() {
           keyExtractor={(item) => item.id}
           numColumns={isWide ? 2 : 1}
           columnWrapperStyle={isWide ? { gap: Spacing.md } : undefined}
-          renderItem={({ item }) => (
-            <WineListItem entry={item} onPress={handleWinePress} style={isWide ? { flex: 1 } : undefined} />
-          )}
+          renderItem={({ item }) =>
+            isWide ? (
+              <WineGridItem entry={item} onPress={handleWinePress} />
+            ) : (
+              <WineListItem entry={item} onPress={handleWinePress} />
+            )
+          }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews
