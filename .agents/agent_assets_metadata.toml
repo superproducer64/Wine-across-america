@@ -305,3 +305,9 @@ id = "aJs1u2PUxei65t1gEJy_U"
 uri = "file://build-reports/PAA-Build-Report-2026-05-01-to-05-14.md"
 type = "text"
 title = "PAA Build Report — May 1 to May 14, 2026"
+
+[[outputs]]
+id = "3J5Dz1nCY54h5sH8I_QvY"
+uri = "file://PAA_Master_Build_Report.md"
+type = "text"
+title = "PAA Master Build Report"
