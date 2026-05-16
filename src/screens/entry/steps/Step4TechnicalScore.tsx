@@ -4,9 +4,11 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider } from '@/components/ui/ScoreSlider';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
+import { useResponsive } from '@/hooks/useResponsive';
 
 export function Step4TechnicalScore() {
   const { draft, setTechnicalScore } = useEntryDraftStore();
+  const { isWide } = useResponsive();
 
   // Auto-fill Intensity from structure score × 2 on mount.
   // The user can override by moving the slider freely afterward.
@@ -35,34 +37,31 @@ export function Step4TechnicalScore() {
   const autofilledValue = Math.min(20, Math.round(draft.intensity * 2));
   const isAutoFilled = draft.score_intensity === autofilledValue;
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-    >
-      <Text style={styles.stepTitle}>Technical Score</Text>
-      <Text style={styles.intro}>
-        Rate each quality dimension from 0–20. They sum to a maximum of 100.
-      </Text>
-
-      {/* Live total */}
-      <View style={styles.totalCard}>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total Score</Text>
-          <Text style={[styles.totalScore, { color: tierColor }]}>{total}</Text>
-        </View>
-        <Text style={styles.tierLabel}>{tierLabel}</Text>
-        <View style={styles.totalTrack}>
-          <View
-            style={[
-              styles.totalFill,
-              { width: `${pct}%`, backgroundColor: tierColor },
-            ]}
-          />
-        </View>
+  const scoreCard = (
+    <View style={[styles.totalCard, isWide && styles.totalCardWide]}>
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Total Score</Text>
+        <Text style={[styles.totalScore, { color: tierColor }]}>{total}</Text>
       </View>
+      <Text style={styles.tierLabel}>{tierLabel}</Text>
+      <View style={styles.totalTrack}>
+        <View
+          style={[
+            styles.totalFill,
+            { width: `${pct}%`, backgroundColor: tierColor },
+          ]}
+        />
+      </View>
+      {isWide && (
+        <Text style={styles.scoreCardHint}>
+          Adjust the sliders on the right to fine-tune your score. Each dimension is worth up to 20 points.
+        </Text>
+      )}
+    </View>
+  );
 
-      {/* Sliders */}
+  const sliders = (
+    <View style={isWide ? styles.slidersCol : undefined}>
       {TECHNICAL_CATEGORIES.map((cat) => (
         <View key={cat.key} style={styles.catBlock}>
           <View style={styles.catHeader}>
@@ -83,6 +82,34 @@ export function Step4TechnicalScore() {
           />
         </View>
       ))}
+    </View>
+  );
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+    >
+      <Text style={styles.stepTitle}>Technical Score</Text>
+      <Text style={styles.intro}>
+        Rate each quality dimension from 0–20. They sum to a maximum of 100.
+      </Text>
+
+      {isWide ? (
+        <View style={styles.twoColRow}>
+          <View style={styles.leftCol}>
+            {scoreCard}
+          </View>
+          <View style={styles.rightCol}>
+            {sliders}
+          </View>
+        </View>
+      ) : (
+        <>
+          {scoreCard}
+          {sliders}
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -93,6 +120,9 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingBottom: Spacing.huge,
     gap: 4,
+  },
+  contentWide: {
+    padding: Spacing.xxl,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -107,12 +137,27 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     lineHeight: 19,
   },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+    alignItems: 'flex-start',
+  },
+  leftCol: {
+    flex: 5,
+    minWidth: 200,
+  },
+  rightCol: {
+    flex: 7,
+  },
   totalCard: {
     backgroundColor: Colors.ink,
     borderRadius: Radius.md,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     gap: 6,
+  },
+  totalCardWide: {
+    marginBottom: 0,
   },
   totalRow: {
     flexDirection: 'row',
@@ -145,6 +190,17 @@ const styles = StyleSheet.create({
   totalFill: {
     height: '100%',
     borderRadius: Radius.full,
+  },
+  scoreCardHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: Spacing.md,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+  slidersCol: {
+    gap: 4,
   },
   catBlock: {
     marginBottom: 4,

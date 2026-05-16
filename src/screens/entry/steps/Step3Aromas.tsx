@@ -16,13 +16,21 @@ import {
   WineShortcut,
   getCategorySubcategories,
 } from '@/types';
+import { useResponsive } from '@/hooks/useResponsive';
 
 const MAX_CUSTOM_TAGS = 20;
 const MAX_TAG_LENGTH = 40;
 
 export function Step3Aromas() {
-  const { draft, setAromas, setAromasOtherNote, setCustomAromas, applyWineShortcut } = useEntryDraftStore();
+  const {
+    draft,
+    setAromas,
+    setAromasOtherNote,
+    setCustomAromas,
+    applyWineShortcut,
+  } = useEntryDraftStore();
   const { profile } = useAuthStore();
+  const { isWide } = useResponsive();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState('');
@@ -86,13 +94,48 @@ export function Step3Aromas() {
     }
   };
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.stepTitle}>Aroma Profile</Text>
-      <Text style={styles.intro}>
-        Select the aromas you detect, or choose a style shortcut to auto-fill aromas and structure.
+  const summaryPanel = (draft.aromas_l1.length > 0 || isWide) ? (
+    <View style={[styles.summary, isWide && styles.summarySticky]}>
+      <Text style={styles.summaryTitle}>
+        {draft.aromas_l1.length > 0 ? 'Selected' : 'No aromas selected yet'}
       </Text>
+      {draft.aromas_l1.length > 0 && (
+        <>
+          <Text style={styles.summaryText}>
+            {draft.aromas_l1
+              .map((id) => {
+                const cat = AROMA_CATEGORIES.find((c) => c.id === id);
+                return cat ? `${cat.emoji} ${cat.label}` : id;
+              })
+              .join(' · ')}
+          </Text>
+          {draft.aromas_l2.length > 0 && (
+            <Text style={styles.summaryL2}>
+              {draft.aromas_l2.join(' · ')}
+            </Text>
+          )}
+          {draft.aromas_other_note ? (
+            <Text style={styles.summaryL2}>
+              ✨ {draft.aromas_other_note}
+            </Text>
+          ) : null}
+          {draft.custom_aromas.length > 0 && (
+            <Text style={styles.summaryL2}>
+              💭 {draft.custom_aromas.join(', ')}
+            </Text>
+          )}
+        </>
+      )}
+      {draft.aromas_l1.length === 0 && (
+        <Text style={styles.summaryHint}>
+          Tap a category on the left to build your aroma profile.
+        </Text>
+      )}
+    </View>
+  ) : null;
 
+  const categoriesPanel = (
+    <>
       {/* Style Shortcuts */}
       <Text style={styles.sectionLabel}>Style Shortcuts</Text>
       <Text style={styles.shortcutHint}>
@@ -212,7 +255,11 @@ export function Step3Aromas() {
           );
         })}
       </View>
+    </>
+  );
 
+  const personalNotesPanel = (
+    <>
       {/* Custom Aroma Tags */}
       <Text style={styles.sectionLabel}>Personal Flavor Notes</Text>
       <Text style={styles.shortcutHint}>
@@ -255,26 +302,35 @@ export function Step3Aromas() {
       {draft.custom_aromas.length >= MAX_CUSTOM_TAGS && (
         <Text style={styles.customTagLimit}>Maximum {MAX_CUSTOM_TAGS} custom tags reached.</Text>
       )}
+    </>
+  );
 
-      {/* Summary */}
-      {draft.aromas_l1.length > 0 && (
-        <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>Selected</Text>
-          <Text style={styles.summaryText}>
-            {draft.aromas_l1
-              .map((id) => {
-                const cat = AROMA_CATEGORIES.find((c) => c.id === id);
-                return cat ? `${cat.emoji} ${cat.label}` : id;
-              })
-              .join(' · ')}
-          </Text>
-          {draft.aromas_l2.length > 0 && (
-            <Text style={styles.summaryL2}>{draft.aromas_l2.join(' · ')}</Text>
-          )}
-          {draft.aromas_other_note ? (
-            <Text style={styles.summaryL2}>✨ {draft.aromas_other_note}</Text>
-          ) : null}
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+    >
+      <Text style={styles.stepTitle}>Aroma Profile</Text>
+      <Text style={styles.intro}>
+        Select the aromas you detect. Tap a category for specific notes.
+      </Text>
+
+      {isWide ? (
+        <View style={styles.twoColRow}>
+          <View style={styles.leftCol}>
+            {categoriesPanel}
+            {personalNotesPanel}
+          </View>
+          <View style={styles.rightCol}>
+            {summaryPanel}
+          </View>
         </View>
+      ) : (
+        <>
+          {categoriesPanel}
+          {personalNotesPanel}
+          {summaryPanel}
+        </>
       )}
     </ScrollView>
   );
@@ -285,6 +341,9 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.xl,
     paddingBottom: Spacing.huge,
+  },
+  contentWide: {
+    padding: Spacing.xxl,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -298,6 +357,18 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     marginBottom: Spacing.lg,
     lineHeight: 19,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+    alignItems: 'flex-start',
+  },
+  leftCol: {
+    flex: 3,
+  },
+  rightCol: {
+    flex: 2,
+    minWidth: 160,
   },
   sectionLabel: {
     fontFamily: Fonts.dmSansMedium,
@@ -475,7 +546,6 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   summary: {
-    marginTop: Spacing.xl,
     padding: Spacing.md,
     backgroundColor: Colors.surfaceAlt,
     borderRadius: Radius.md,
@@ -483,12 +553,16 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 4,
   },
+  summarySticky: {
+    marginTop: 0,
+  },
   summaryTitle: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: Colors.inkMuted,
+    marginBottom: 4,
   },
   summaryText: {
     fontFamily: Fonts.dmSansRegular,
@@ -567,5 +641,12 @@ const styles = StyleSheet.create({
     color: Colors.inkFaint,
     fontStyle: 'italic',
     marginBottom: Spacing.sm,
+  },
+  summaryHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
 });

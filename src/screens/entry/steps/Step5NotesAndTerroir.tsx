@@ -12,6 +12,7 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { TerriorSoil, TerriorClimate, TERROIR_SOIL_LABELS, TERROIR_CLIMATE_LABELS } from '@/types';
+import { useResponsive } from '@/hooks/useResponsive';
 
 const SOILS: TerriorSoil[] = ['limestone', 'volcanic', 'granite', 'clay', 'sand'];
 const CLIMATES: TerriorClimate[] = ['cool', 'moderate', 'warm'];
@@ -32,6 +33,7 @@ interface Props {
 
 export function Step5NotesAndTerroir({ isSommelier }: Props) {
   const { draft, setBasics, setNotesAndTerroir } = useEntryDraftStore();
+  const { isWide } = useResponsive();
   const [locLoading, setLocLoading] = useState(false);
   const [locError, setLocError] = useState('');
   const [tagText, setTagText] = useState(draft.tags.join(', '));
@@ -58,14 +60,8 @@ export function Step5NotesAndTerroir({ isSommelier }: Props) {
     setNotesAndTerroir({ tags });
   };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.stepTitle}>Notes & Finishing Touches</Text>
-
+  const leftColumn = (
+    <View style={isWide && styles.colWide}>
       {/* Location */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Where are you tasting?</Text>
@@ -149,74 +145,78 @@ export function Step5NotesAndTerroir({ isSommelier }: Props) {
           />
         </View>
       </View>
+    </View>
+  );
 
+  const rightColumn = (
+    <View style={isWide && styles.colWide}>
       {/* Terroir Toggle — Sommelier only */}
       {isSommelier ? (
-      <View style={styles.section}>
-        <View style={styles.terriorHeaderRow}>
-          <View>
-            <Text style={styles.sectionLabel}>Terroir Layer</Text>
-            <Text style={styles.terriorSub}>Add soil & climate context</Text>
+        <View style={styles.section}>
+          <View style={styles.terriorHeaderRow}>
+            <View>
+              <Text style={styles.sectionLabel}>Terroir Layer</Text>
+              <Text style={styles.terriorSub}>Add soil & climate context</Text>
+            </View>
+            <Switch
+              value={draft.terroir_visible}
+              onValueChange={(v) => setNotesAndTerroir({ terroir_visible: v })}
+              thumbColor={Colors.surface}
+              trackColor={{ false: Colors.surfaceAlt, true: Colors.green }}
+            />
           </View>
-          <Switch
-            value={draft.terroir_visible}
-            onValueChange={(v) => setNotesAndTerroir({ terroir_visible: v })}
-            thumbColor={Colors.surface}
-            trackColor={{ false: Colors.surfaceAlt, true: Colors.green }}
-          />
+
+          {draft.terroir_visible && (
+            <View style={styles.terriorExpanded}>
+              <Text style={styles.miniLabel}>Soil Type</Text>
+              <View style={styles.chipRow}>
+                {SOILS.map((soil) => (
+                  <Pressable
+                    key={soil}
+                    style={[
+                      styles.terriorChip,
+                      draft.terroir_soil === soil && styles.terriorChipSelected,
+                    ]}
+                    onPress={() => setNotesAndTerroir({ terroir_soil: soil })}
+                  >
+                    <Text style={styles.terriorChipIcon}>{SOIL_ICONS[soil]}</Text>
+                    <Text
+                      style={[
+                        styles.terriorChipText,
+                        draft.terroir_soil === soil && styles.terriorChipTextSelected,
+                      ]}
+                    >
+                      {TERROIR_SOIL_LABELS[soil]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[styles.miniLabel, { marginTop: Spacing.md }]}>Climate</Text>
+              <View style={styles.chipRow}>
+                {CLIMATES.map((climate) => (
+                  <Pressable
+                    key={climate}
+                    style={[
+                      styles.terriorChip,
+                      draft.terroir_climate === climate && styles.terriorChipSelected,
+                    ]}
+                    onPress={() => setNotesAndTerroir({ terroir_climate: climate })}
+                  >
+                    <Text
+                      style={[
+                        styles.terriorChipText,
+                        draft.terroir_climate === climate && styles.terriorChipTextSelected,
+                      ]}
+                    >
+                      {TERROIR_CLIMATE_LABELS[climate]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
-
-        {draft.terroir_visible && (
-          <View style={styles.terriorExpanded}>
-            <Text style={styles.miniLabel}>Soil Type</Text>
-            <View style={styles.chipRow}>
-              {SOILS.map((soil) => (
-                <Pressable
-                  key={soil}
-                  style={[
-                    styles.terriorChip,
-                    draft.terroir_soil === soil && styles.terriorChipSelected,
-                  ]}
-                  onPress={() => setNotesAndTerroir({ terroir_soil: soil })}
-                >
-                  <Text style={styles.terriorChipIcon}>{SOIL_ICONS[soil]}</Text>
-                  <Text
-                    style={[
-                      styles.terriorChipText,
-                      draft.terroir_soil === soil && styles.terriorChipTextSelected,
-                    ]}
-                  >
-                    {TERROIR_SOIL_LABELS[soil]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={[styles.miniLabel, { marginTop: Spacing.md }]}>Climate</Text>
-            <View style={styles.chipRow}>
-              {CLIMATES.map((climate) => (
-                <Pressable
-                  key={climate}
-                  style={[
-                    styles.terriorChip,
-                    draft.terroir_climate === climate && styles.terriorChipSelected,
-                  ]}
-                  onPress={() => setNotesAndTerroir({ terroir_climate: climate })}
-                >
-                  <Text
-                    style={[
-                      styles.terriorChipText,
-                      draft.terroir_climate === climate && styles.terriorChipTextSelected,
-                    ]}
-                  >
-                    {TERROIR_CLIMATE_LABELS[climate]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
       ) : null}
 
       {/* Tags */}
@@ -240,6 +240,28 @@ export function Step5NotesAndTerroir({ isSommelier }: Props) {
           placeholder="Any additional observations, food pairing ideas, or context..."
         />
       </View>
+    </View>
+  );
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.stepTitle}>Notes & Finishing Touches</Text>
+
+      {isWide ? (
+        <View style={styles.twoColRow}>
+          {leftColumn}
+          {rightColumn}
+        </View>
+      ) : (
+        <>
+          {leftColumn}
+          {rightColumn}
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -250,11 +272,22 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingBottom: Spacing.huge,
   },
+  contentWide: {
+    padding: Spacing.xxl,
+  },
   stepTitle: {
     fontFamily: Fonts.playfair,
     fontSize: 22,
     color: Colors.ink,
     marginBottom: Spacing.xl,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+    alignItems: 'flex-start',
+  },
+  colWide: {
+    flex: 1,
   },
   section: {
     marginBottom: Spacing.xl,

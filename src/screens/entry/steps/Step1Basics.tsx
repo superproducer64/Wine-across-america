@@ -21,10 +21,12 @@ import { CountrySearchPicker } from '@/components/wine/CountrySearchPicker';
 import { GrapeBlendInput } from '@/components/wine/GrapeBlendInput';
 import { DatePickerInput } from '@/components/ui/DatePickerInput';
 import { WineLabelData } from '@/utils/wineOcr';
+import { useResponsive } from '@/hooks/useResponsive';
 
 export function Step1Basics() {
   const { draft, setBasics, setLabelPhoto, setGrapeBlends } = useEntryDraftStore();
   const { user } = useAuthStore();
+  const { isWide } = useResponsive();
   const [scannerVisible, setScannerVisible] = useState(false);
   const [priceMode, setPriceMode] = useState<'glass' | 'bottle'>('glass');
   const [toggleWidth, setToggleWidth] = useState(0);
@@ -89,14 +91,11 @@ export function Step1Basics() {
   const getPriceEntry = (type: 'glass' | 'bottle'): PriceEntry | undefined => {
     const typed = draft.price.find((p) => p.type === type);
     if (typed) return typed;
-    // Legacy fallback: treat the first untyped entry (old single-price format) as bottle
     if (type === 'bottle') return draft.price.find((p) => !p.type);
     return undefined;
   };
 
   const handlePriceChange = (type: 'glass' | 'bottle', field: 'amount' | 'currency', value: string) => {
-    // Remove both the typed entry and any legacy untyped entry when updating bottle,
-    // so we don't end up with duplicate entries.
     const withoutType = draft.price.filter((p) => {
       if (p.type === type) return false;
       if (type === 'bottle' && !p.type) return false;
@@ -123,22 +122,14 @@ export function Step1Basics() {
       };
       setBasics({ price: [...withoutType, updated] });
     } else {
-      // currency change — only persist if an amount-bearing entry already exists
       if (!existing) return;
       const updated: PriceEntry = { ...existing, currency: value, type };
       setBasics({ price: [...withoutType, updated] });
     }
   };
 
-  return (
-    <>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.stepTitle}>Wine Basics</Text>
-
+  const leftColumn = (
+    <View style={[styles.column, isWide && styles.columnWide]}>
       {/* Scan Label button */}
       <Pressable style={styles.scanBtn} onPress={() => setScannerVisible(true)}>
         <Text style={styles.scanBtnIcon}>📷</Text>
@@ -180,7 +171,11 @@ export function Step1Basics() {
         keyboardType="number-pad"
         placeholder="e.g., 2019"
       />
+    </View>
+  );
 
+  const rightColumn = (
+    <View style={[styles.column, isWide && styles.columnWide]}>
       {/* Country Selector */}
       <Text style={styles.label}>Country</Text>
       <CountrySearchPicker
@@ -188,7 +183,7 @@ export function Step1Basics() {
         onSelect={handleCountrySelect}
       />
 
-      {/* Region Selector — searchable list for US, chips for everything else */}
+      {/* Region Selector */}
       {draft.country === 'United States' ? (
         <>
           <Text style={styles.label}>State</Text>
@@ -335,13 +330,36 @@ export function Step1Basics() {
       {geoError ? (
         <Text style={styles.geoError}>{geoError}</Text>
       ) : null}
-    </ScrollView>
-    <LabelScannerModal
-      visible={scannerVisible}
-      onClose={() => setScannerVisible(false)}
-      onApply={handleScanApply}
-      userId={user?.id ?? ''}
-    />
+    </View>
+  );
+
+  return (
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.stepTitle}>Wine Basics</Text>
+
+        {isWide ? (
+          <View style={styles.twoColRow}>
+            {leftColumn}
+            {rightColumn}
+          </View>
+        ) : (
+          <>
+            {leftColumn}
+            {rightColumn}
+          </>
+        )}
+      </ScrollView>
+      <LabelScannerModal
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onApply={handleScanApply}
+        userId={user?.id ?? ''}
+      />
     </>
   );
 }
@@ -352,6 +370,18 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     gap: 4,
     paddingBottom: Spacing.huge,
+  },
+  contentWide: {
+    padding: Spacing.xxl,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+    alignItems: 'flex-start',
+  },
+  column: {},
+  columnWide: {
+    flex: 1,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -368,7 +398,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: Spacing.md,
   },
-  // Scan label button
   scanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,8 +427,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.gold,
   },
-
-  // Photo preview
   photoPreview: {
     marginBottom: Spacing.lg,
     borderRadius: Radius.lg,
@@ -422,7 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.red,
   },
-
   chipScroll: {
     marginBottom: Spacing.md,
   },
