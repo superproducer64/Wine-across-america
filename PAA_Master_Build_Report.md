@@ -153,6 +153,29 @@
 
 ---
 
+## Day 17 — May 16, 2026 · 1700–2300 CST · *Est. 5 hrs*
+
+**Android Build & Google Play Store Submission**
+
+- Added Android submit configuration to `eas.json` (internal testing track, service account key path)
+- Navigated Google Play Console API access setup — created Google Cloud project `pour-across-america`, enabled Publishing API, generated `eas-submit` service account, downloaded JSON key
+- Saved service account key as `google-service-account.json` (gitignored for security)
+- Corrected Android package name in `app.json` from `com.pouracrossamerica.app` → `com.paa.myapp` to match existing Play Console listing
+- Cleared stale EAS `projectId` and re-initialized project under user's Expo account
+- **Build attempt 1** — failed: `targetSdkVersion 34` rejected by Google Play (requires API 35)
+- Updated `compileSdkVersion` and `targetSdkVersion` to 35 in `app.json`
+- **Build attempt 2** — failed: `buildToolsVersion 35.0.0` not available on EAS servers
+- Reverted `buildToolsVersion` to `34.0.0` while keeping SDK targets at 35
+- Created custom config plugin `plugins/withAndroidSdk35.js` using `withGradleProperties` to add `android.suppressUnsupportedCompileSdk=35` to gradle.properties
+- **Build attempt 3** — failed: `expo-modules-core` Kotlin compile error — `PermissionsService.kt:166` null-safety violation when compiling against API 35
+- Applied `patch-package` fix — changed `requestedPermissions.contains(permission)` → `requestedPermissions?.contains(permission) ?: false`
+- Generated `patches/expo-modules-core+1.12.26.patch`, added `patch-package` as dev dependency, wired `npx patch-package` into `postinstall` script
+- **Build attempt 4** — succeeded ✅ — signed AAB produced targeting API 35
+- Uploaded AAB to Google Play Console internal testing track, removed shadowed version code 2, published release
+- **Pour Across America is live on Google Play internal testing** 🎉
+
+---
+
 ## Grand Total Summary
 
 | Period | Active Days | Est. Hours |
@@ -162,8 +185,9 @@
 | May 1–7 · Store Prep, Geo, Stability | 3 | 15 hrs |
 | May 14 · Gap Analysis Sprint | 1 | 10 hrs |
 | May 15 · Communication & SEO | 1 | 4.75 hrs |
-| May 16 · Tablet Responsive Layouts | 1 | 4 hrs |
-| **Total** | **16 active days** | **~70.75 hrs** |
+| May 16 (AM) · Tablet Responsive Layouts | 1 | 4 hrs |
+| May 16 (PM) · Android Build & Play Store Submission | 1 | 5 hrs |
+| **Total** | **17 active days** | **~75.75 hrs** |
 
 ---
 
@@ -176,7 +200,8 @@
 | April 27 | Apple Sign In + push notifications |
 | May 1 | Android release + App Store assets complete |
 | May 14 | Full gap analysis resolved (sweetness, radar, sommelier tiers, shortcuts) |
-| May 16 | Full tablet/desktop responsive experience |
+| May 16 AM | Full tablet/desktop responsive experience |
+| May 16 PM | **Android app published to Google Play internal testing** |
 
 ---
 
