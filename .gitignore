@@ -20,3 +20,6 @@ yarn-error.*
 .pnp
 .pnp.js
 
+
+# Google Play service account key (sensitive - never commit)
+google-service-account.json
