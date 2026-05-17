@@ -27,6 +27,10 @@
         "appleId": "nu2u@sbcglobal.net",
         "ascAppId": "6765561268",
         "appleTeamId": "4JZRW3MPP2"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
       }
     }
   }
