@@ -97,10 +97,6 @@
       ]
     ],
     "scheme": "pouracrossamerica",
-    "extra": {
-      "eas": {
-        "projectId": "75fff303-968f-4a52-92a2-9019eff1b385"
-      }
-    }
+    "extra": {}
   }
 }
