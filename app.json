@@ -71,6 +71,7 @@
       "description": "A professional wine tasting journal. Log wines, scan labels with AI, score and compare bottles, and track your tastings across the country."
     },
     "plugins": [
+      "./plugins/withAndroidSdk35",
       "expo-secure-store",
       [
         "expo-notifications",
