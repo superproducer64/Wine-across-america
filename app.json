@@ -34,7 +34,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1F1518"
       },
-      "package": "com.pouracrossamerica.app",
+      "package": "com.paa.myapp",
       "versionCode": 1,
       "allowBackup": false,
       "permissions": [
