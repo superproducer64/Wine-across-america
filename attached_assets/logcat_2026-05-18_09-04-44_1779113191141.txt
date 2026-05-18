@@ -1,0 +1,433 @@
+[2026-05-18 09:03:25.188 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@f8bc487
+
+[2026-05-18 09:03:25.192 Uid(value=10195):21307:21323 D/OpenGLRenderer]
+endAllActiveAnimators on 0xb400006eef45d6a0 (uo3) with handle 0xb400006e2f4c9ed0
+
+[2026-05-18 09:03:25.192 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = nf2{b334862 V.E...... ......ID 0,0-273,616 #1020002 android:id/content aid=1073741846}
+
+[2026-05-18 09:03:25.193 Uid(value=10195):21307:21371 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#17](f:0,a:1) destructor()
+
+[2026-05-18 09:03:25.193 Uid(value=10195):21307:21371 D/BufferQueueConsumer]
+[VRI[Pop-Up Window]#17(BLAST Consumer)17](id:533b00000011,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:03:25.204 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4ce700
+
+[2026-05-18 09:03:31.525 Uid(value=10195):21307:21307 I/]
+-(0)[21307:om.dp.logcatapp]conn2ap_btif0_wakeup_out_b EIRQ handler
+
+[2026-05-18 09:03:35.564 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:03:35.590 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:03:35.591 Uid(value=10195):21307:21317 D/BLASTBufferQueue]
+[VRI[MainActivity]#14](f:0,a:1) destructor()
+
+[2026-05-18 09:03:35.591 Uid(value=10195):21307:21317 D/BufferQueueConsumer]
+[VRI[MainActivity]#14(BLAST Consumer)14](id:533b0000000e,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:03:48.537 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:03:48.587 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000012,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:03:48.590 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:03:48.615 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#18](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21518758694127(auto) mPendingTransactions.size=0 graphicBufferId=91512868176054 transform=0
+
+[2026-05-18 09:03:55.010 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:03:55.068 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#18](f:0,a:1) destructor()
+
+[2026-05-18 09:03:55.068 Uid(value=10195):21307:21323 D/BufferQueueConsumer]
+[VRI[MainActivity]#18(BLAST Consumer)18](id:533b00000012,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:03:55.069 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:03:57.680 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:03:57.726 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000013,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:03:57.730 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:03:57.795 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#19](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21527936371743(auto) mPendingTransactions.size=0 graphicBufferId=91512868176065 transform=0
+
+[2026-05-18 09:03:59.512 Uid(value=10195):21307:21307 I/ScrollIdentify]
+on fling
+
+[2026-05-18 09:04:12.605 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:04:12.635 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[MainActivity]#19](f:0,a:1) destructor()
+
+[2026-05-18 09:04:12.635 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[MainActivity]#19(BLAST Consumer)19](id:533b00000013,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:12.651 Uid(value=10195):21307:21323 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 09:04:17.987 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000014,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:17.991 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:18.042 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#20](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21548184889283(auto) mPendingTransactions.size=0 graphicBufferId=91512868176075 transform=0
+
+[2026-05-18 09:04:19.761 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:19.764 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:19.767 Uid(value=10195):21307:21307 D/VRI[MainActivity]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:19.778 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f4be4d0
+
+[2026-05-18 09:04:19.778 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:19.778 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:19.824 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000015,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:19.826 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:19.852 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#21](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21549996462129(auto) mPendingTransactions.size=0 graphicBufferId=91512868176085 transform=0
+
+[2026-05-18 09:04:20.099 Uid(value=10195):21323:21323 W/-(0)[21323:RenderThread]wmt_lib_ps_handler]
+1 callbacks suppressed
+
+[2026-05-18 09:04:20.099 Uid(value=10195):21323:21323 I/]
+-(0)[21323:RenderThread]conn2ap_btif0_wakeup_out_b EIRQ handler
+
+[2026-05-18 09:04:21.984 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@caddeb8
+
+[2026-05-18 09:04:21.995 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = DecorView@76b0576[MainActivity]
+
+[2026-05-18 09:04:21.996 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[MainActivity]#21](f:0,a:1) destructor()
+
+[2026-05-18 09:04:21.996 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[MainActivity]#21(BLAST Consumer)21](id:533b00000015,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:22.008 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4be4d0
+
+[2026-05-18 09:04:22.031 Uid(value=10195):21307:23467 D/libMEOW]
+meow delete tls: 0xb400006fcf4fd100
+
+[2026-05-18 09:04:22.046 Uid(value=10195):21307:21307 D/VRI[SavedLogsViewerActivity]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:22.051 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f48b770
+
+[2026-05-18 09:04:22.051 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:22.051 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:22.118 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000016,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:22.120 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:22.141 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[SavedLogsViewerActivity]#22](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21552286052899(auto) mPendingTransactions.size=0 graphicBufferId=91512868176095 transform=0
+
+[2026-05-18 09:04:22.714 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[MainActivity]#20](f:0,a:1) destructor()
+
+[2026-05-18 09:04:22.714 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[MainActivity]#20(BLAST Consumer)20](id:533b00000014,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:27.258 Uid(value=10195):21307:21307 D/VRI[Pop-Up Window]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:27.268 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f4d3380
+
+[2026-05-18 09:04:27.268 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:27.268 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:27.274 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:27.305 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000017,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:27.308 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:27.322 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#23](f:0,a:1) acquireNextBufferLocked size=382x168 mFrameNumber=1 applyTransaction=true mTimestamp=21557467204591(auto) mPendingTransactions.size=0 graphicBufferId=91512868176105 transform=0
+
+[2026-05-18 09:04:29.393 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@7e99651
+
+[2026-05-18 09:04:29.396 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = nf2{24786a8 V.E...... ......ID 0,0-326,112 #1020002 android:id/content aid=1073741826}
+
+[2026-05-18 09:04:29.400 Uid(value=10195):21307:21317 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#23](f:0,a:1) destructor()
+
+[2026-05-18 09:04:29.401 Uid(value=10195):21307:21317 D/BufferQueueConsumer]
+[VRI[Pop-Up Window]#23(BLAST Consumer)23](id:533b00000017,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:29.409 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4d3380
+
+[2026-05-18 09:04:30.557 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:30.586 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000018,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:30.588 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:30.613 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#24](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21560757711438(auto) mPendingTransactions.size=0 graphicBufferId=91512868176115 transform=0
+
+[2026-05-18 09:04:30.317 Uid(value=10195):21323:21323 I/]
+-(0)[21323:RenderThread][thread:21323] 2026-05-18 14:04:30.708065 UTC;android time 2026-05-18 14:04:30.708065
+
+[2026-05-18 09:04:31.177 Uid(value=10195):21307:21323 D/OpenGLRenderer]
+endAllActiveAnimators on 0xb400006eef4cba80 (uo3) with handle 0xb400006e2f4a8240
+
+[2026-05-18 09:04:31.189 Uid(value=10195):21307:21319 D/BLASTBufferQueue]
+[VRI[SavedLogsViewerActivity]#22](f:0,a:1) destructor()
+
+[2026-05-18 09:04:31.189 Uid(value=10195):21307:21319 D/BufferQueueConsumer]
+[VRI[SavedLogsViewerActivity]#22(BLAST Consumer)22](id:533b00000016,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:31.199 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@a90d334
+
+[2026-05-18 09:04:31.201 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = DecorView@e11712d[SavedLogsViewerActivity]
+
+[2026-05-18 09:04:31.206 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f48b770
+
+[2026-05-18 09:04:32.543 Uid(value=10195):21307:21307 D/VRI[Pop-Up Window]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:32.553 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f4af4a0
+
+[2026-05-18 09:04:32.554 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:32.554 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:32.560 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:32.606 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b00000019,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:32.608 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:32.631 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#25](f:0,a:1) acquireNextBufferLocked size=329x672 mFrameNumber=1 applyTransaction=true mTimestamp=21562776328592(auto) mPendingTransactions.size=0 graphicBufferId=91512868176125 transform=0
+
+[2026-05-18 09:04:33.161 Uid(value=10195):21307:21312 I/om.dp.logcatapp]
+Background concurrent copying GC freed 4146KB AllocSpace bytes, 1(20KB) LOS objects, 49% free, 8184KB/15MB, paused 146us,78us total 152.193ms
+
+[2026-05-18 09:04:33.814 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:33.816 Uid(value=10195):21307:21307 D/VRI[MainActivity]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:33.830 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f4c0c00
+
+[2026-05-18 09:04:33.830 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:33.830 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:33.877 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b0000001a,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:33.879 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:33.902 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#26](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21564046201899(auto) mPendingTransactions.size=0 graphicBufferId=91512868176135 transform=0
+
+[2026-05-18 09:04:34.028 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@3c3ad51
+
+[2026-05-18 09:04:34.032 Uid(value=10195):21307:21323 D/OpenGLRenderer]
+endAllActiveAnimators on 0xb400006eef4f7ea0 (uo3) with handle 0xb400006e2f4d03b0
+
+[2026-05-18 09:04:34.032 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = nf2{ada0b4 V.E...... ......ID 0,0-273,616 #1020002 android:id/content aid=1073741850}
+
+[2026-05-18 09:04:34.033 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#25](f:0,a:1) destructor()
+
+[2026-05-18 09:04:34.033 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[Pop-Up Window]#25(BLAST Consumer)25](id:533b00000019,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:34.038 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4af4a0
+
+[2026-05-18 09:04:36.629 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@a638c14
+
+[2026-05-18 09:04:36.636 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = DecorView@9af9d7e[MainActivity]
+
+[2026-05-18 09:04:36.637 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[MainActivity]#26](f:0,a:1) destructor()
+
+[2026-05-18 09:04:36.637 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[MainActivity]#26(BLAST Consumer)26](id:533b0000001a,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:36.650 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4c0c00
+
+[2026-05-18 09:04:36.669 Uid(value=10195):21307:23486 D/libMEOW]
+meow new tls: 0xb400006fcf4bd0c0
+
+[2026-05-18 09:04:36.669 Uid(value=10195):21307:23486 D/libMEOW]
+applied 1 plugins for [com.dp.logcatapp]:
+
+[2026-05-18 09:04:36.669 Uid(value=10195):21307:23486 D/libMEOW]
+  plugin 1: [libMEOW_gift.so]: 0xb400006fbf413010
+
+[2026-05-18 09:04:36.670 Uid(value=10195):21307:23486 D/libMEOW]
+rebuild call chain: 0xb400006fcf5cd1d0
+
+[2026-05-18 09:04:36.670 Uid(value=10195):21307:23486 D/libMEOW]
+meow delete tls: 0xb400006fcf4bd0c0
+
+[2026-05-18 09:04:36.688 Uid(value=10195):21307:21307 D/VRI[SavedLogsViewerActivity]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:36.694 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f48b260
+
+[2026-05-18 09:04:36.694 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:36.694 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:36.746 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b0000001b,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:36.748 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:36.767 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[SavedLogsViewerActivity]#27](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21566911483976(auto) mPendingTransactions.size=0 graphicBufferId=91512868176145 transform=0
+
+[2026-05-18 09:04:37.343 Uid(value=10195):21307:21307 D/BLASTBufferQueue]
+[VRI[MainActivity]#24](f:0,a:1) destructor()
+
+[2026-05-18 09:04:37.343 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[VRI[MainActivity]#24(BLAST Consumer)24](id:533b00000018,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:40.801 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:40.825 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b0000001c,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:40.832 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:40.859 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[MainActivity]#28](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=21571003444284(auto) mPendingTransactions.size=0 graphicBufferId=91512868176155 transform=0
+
+[2026-05-18 09:04:41.411 Uid(value=10195):21307:21323 D/OpenGLRenderer]
+endAllActiveAnimators on 0xb400006eef707630 (uo3) with handle 0xb400006e2f4d0110
+
+[2026-05-18 09:04:41.423 Uid(value=10195):21307:21469 D/BLASTBufferQueue]
+[VRI[SavedLogsViewerActivity]#27](f:0,a:1) destructor()
+
+[2026-05-18 09:04:41.423 Uid(value=10195):21307:21469 D/BufferQueueConsumer]
+[VRI[SavedLogsViewerActivity]#27(BLAST Consumer)27](id:533b0000001b,api:0,p:-1,c:21307) disconnect
+
+[2026-05-18 09:04:41.438 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@3c3e361
+
+[2026-05-18 09:04:41.441 Uid(value=10195):21307:21307 D/View]
+[Warning] assignParent to null: this = DecorView@f91afb8[SavedLogsViewerActivity]
+
+[2026-05-18 09:04:41.445 Uid(value=10195):21307:21307 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f48b260
+
+[2026-05-18 09:04:42.374 Uid(value=10195):21307:21307 D/VRI[Pop-Up Window]]
+hardware acceleration = true, forceHwAccelerated = false
+
+[2026-05-18 09:04:42.387 Uid(value=10195):21307:21307 D/InputTransport]
+Create ARC handle: 0xb400006e2f48b800
+
+[2026-05-18 09:04:42.387 Uid(value=10195):21307:21307 D/InputEventReceiver]
+Input log is disabled in InputEventReceiver.
+
+[2026-05-18 09:04:42.387 Uid(value=10195):21307:21307 D/InputTransport]
+Input log is disabled in InputChannel.
+
+[2026-05-18 09:04:42.393 Uid(value=10195):21307:21307 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 09:04:42.437 Uid(value=10195):21307:21307 D/BufferQueueConsumer]
+[](id:533b0000001d,api:0,p:-1,c:21307) connect: controlledByApp=false
+
+[2026-05-18 09:04:42.440 Uid(value=10195):21307:21323 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 09:04:42.469 Uid(value=10195):21307:21323 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#29](f:0,a:1) acquireNextBufferLocked size=329x672 mFrameNumber=1 applyTransaction=true mTimestamp=21572613830746(auto) mPendingTransactions.size=0 graphicBufferId=91512868176165 transform=0
+
