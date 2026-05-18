@@ -1,0 +1,102 @@
+[2026-05-18 14:32:14.303 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+[ANR Warning]Input routeing takes more than 6000ms since 2026-05-18 12:44:53.750, this = com.mediatek.view.impl.ViewDebugManagerImpl@1f639c5
+
+[2026-05-18 14:32:14.303 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$EarlyPostImeInputStage@7b34090 at 2026-05-18 14:32:14.301
+
+[2026-05-18 14:32:14.303 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$SyntheticInputStage@27a8daf at 2026-05-18 14:32:14.302
+
+[2026-05-18 14:32:14.304 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$ViewPostImeInputStage@c58318e at 2026-05-18 14:32:14.301
+
+[2026-05-18 14:32:14.304 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$NativePostImeInputStage@45e8d89 at 2026-05-18 14:32:14.301
+
+[2026-05-18 14:32:14.305 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+[ANR Warning]Input routeing takes more than 6000ms since 2026-05-18 12:44:53.750, this = com.mediatek.view.impl.ViewDebugManagerImpl@1f639c5
+
+[2026-05-18 14:32:14.305 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$EarlyPostImeInputStage@7b34090 at 2026-05-18 14:32:14.304
+
+[2026-05-18 14:32:14.306 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$SyntheticInputStage@27a8daf at 2026-05-18 14:32:14.305
+
+[2026-05-18 14:32:14.306 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$ViewPostImeInputStage@c58318e at 2026-05-18 14:32:14.304
+
+[2026-05-18 14:32:14.306 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$NativePostImeInputStage@45e8d89 at 2026-05-18 14:32:14.304
+
+[2026-05-18 14:32:22.617 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+[ANR Warning]Input routeing takes more than 6000ms since 2026-05-18 12:44:53.750, this = com.mediatek.view.impl.ViewDebugManagerImpl@1f639c5
+
+[2026-05-18 14:32:22.617 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$EarlyPostImeInputStage@7b34090 at 2026-05-18 14:32:22.616
+
+[2026-05-18 14:32:22.617 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$SyntheticInputStage@27a8daf at 2026-05-18 14:32:22.617
+
+[2026-05-18 14:32:22.618 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$ViewPostImeInputStage@c58318e at 2026-05-18 14:32:22.616
+
+[2026-05-18 14:32:22.618 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$NativePostImeInputStage@45e8d89 at 2026-05-18 14:32:22.616
+
+[2026-05-18 14:32:22.619 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+[ANR Warning]Input routeing takes more than 6000ms since 2026-05-18 12:44:53.750, this = com.mediatek.view.impl.ViewDebugManagerImpl@1f639c5
+
+[2026-05-18 14:32:22.619 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$EarlyPostImeInputStage@7b34090 at 2026-05-18 14:32:22.618
+
+[2026-05-18 14:32:22.619 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$SyntheticInputStage@27a8daf at 2026-05-18 14:32:22.618
+
+[2026-05-18 14:32:22.619 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$ViewPostImeInputStage@c58318e at 2026-05-18 14:32:22.618
+
+[2026-05-18 14:32:22.619 Uid(value=10195):8776:8776 V/VRI[MainActivity]]
+Input event delivered to android.view.ViewRootImpl$NativePostImeInputStage@45e8d89 at 2026-05-18 14:32:22.618
+
+[2026-05-18 14:32:28.538 Uid(value=10195):8776:8776 I/ImeTracker]
+com.dp.logcatapp:1b8f18b1: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT_BY_INSETS_API
+
+[2026-05-18 14:32:28.539 Uid(value=10195):8776:8776 I/ImeTracker]
+com.dp.logcatapp:a7df3426: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT_BY_INSETS_API
+
+[2026-05-18 14:32:28.565 Uid(value=10195):8776:8776 W/RemoteInputConnectionImpl]
+requestCursorAnchorInfo on inactive InputConnection
+
+[2026-05-18 14:32:28.576 Uid(value=10195):8776:8776 I/ImeTracker]
+com.dp.logcatapp:a7df3426: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+
+[2026-05-18 14:32:28.577 Uid(value=10195):8776:8776 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=ImeCallback=ImeOnBackInvokedCallback@89760520 Callback=android.window.IOnBackInvokedCallback$Stub$Proxy@51f3350
+
+[2026-05-18 14:32:28.834 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:28.872 Uid(value=10195):8776:8776 I/ImeTracker]
+com.dp.logcatapp:330c4844: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT_BY_INSETS_API
+
+[2026-05-18 14:32:28.874 Uid(value=10195):8776:8776 I/ImeTracker]
+com.dp.logcatapp:1b8f18b1: onHidden
+
+[2026-05-18 14:32:30.312 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:33.189 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:34.637 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:39.501 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:43.242 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
+[2026-05-18 14:32:43.998 Uid(value=10195):8776:8776 I/ScrollIdentify]
+on fling
+
