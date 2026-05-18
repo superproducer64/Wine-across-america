@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Platform } from 'react-native';
+import React, { useEffect, Component } from 'react';
+import { View, Platform, Text, ScrollView } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -18,6 +18,53 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync();
 }
+
+// ─── Error Boundary ───────────────────────────────────────────────────────────
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: string;
+  stack: string;
+}
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '', stack: '' };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error: String(error), stack: error.stack ?? '' };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary] caught:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ScrollView
+          style={{ flex: 1, backgroundColor: '#1F1518', padding: 24 }}
+          contentContainerStyle={{ paddingTop: 60 }}
+        >
+          <Text style={{ color: '#C4847A', fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
+            App Error — please screenshot this
+          </Text>
+          <Text style={{ color: '#fff', fontSize: 13, marginBottom: 16 }}>
+            {this.state.error}
+          </Text>
+          <Text style={{ color: '#aaa', fontSize: 11 }}>
+            {this.state.stack}
+          </Text>
+        </ScrollView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -40,10 +87,12 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <RootNavigator />
-      </View>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <RootNavigator />
+        </View>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
