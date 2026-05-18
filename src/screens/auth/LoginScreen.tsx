@@ -9,13 +9,18 @@ import {
   Pressable,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { signInWithEmail, signInWithApple, generateAppleNonce } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
 import { useResponsive } from '@/hooks/useResponsive';
+
+// expo-apple-authentication is iOS-only — require() it lazily so Android never
+// tries to link the native module (which doesn't exist on Android).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getAppleAuth = (): any =>
+  Platform.OS === 'ios' ? require('expo-apple-authentication') : null;
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -44,6 +49,9 @@ export function LoginScreen({ navigation }: Props) {
     setError('');
     setAppleLoading(true);
     try {
+      const AppleAuthentication = getAppleAuth();
+      if (!AppleAuthentication) return;
+
       const { rawNonce, hashedNonce } = await generateAppleNonce();
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -85,6 +93,28 @@ export function LoginScreen({ navigation }: Props) {
 
   const isIOS = Platform.OS === 'ios';
   const { isWide } = useResponsive();
+
+  const renderAppleButton = () => {
+    if (!isIOS) return null;
+    const AA = getAppleAuth();
+    if (!AA) return null;
+    return (
+      <>
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+        <AA.AppleAuthenticationButton
+          buttonType={AA.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AA.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={Radius.md}
+          style={styles.appleBtn}
+          onPress={handleAppleSignIn}
+        />
+      </>
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -134,23 +164,7 @@ export function LoginScreen({ navigation }: Props) {
             style={styles.submitBtn}
           />
 
-          {isIOS && (
-            <>
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                cornerRadius={Radius.md}
-                style={styles.appleBtn}
-                onPress={handleAppleSignIn}
-              />
-            </>
-          )}
+          {renderAppleButton()}
         </View>
 
         {/* Footer */}
