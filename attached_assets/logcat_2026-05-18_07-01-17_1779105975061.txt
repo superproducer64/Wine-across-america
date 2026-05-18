@@ -1,0 +1,55 @@
+[2026-05-18 07:00:47.461 Uid(value=10195):8311:8311 W/WindowOnBackDispatcher]
+sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@1533020
+
+[2026-05-18 07:00:47.465 Uid(value=10195):8311:8326 D/OpenGLRenderer]
+endAllActiveAnimators on 0xb400006eef4b3840 (uo3) with handle 0xb400006e2f4b05e0
+
+[2026-05-18 07:00:47.466 Uid(value=10195):8311:8311 D/View]
+[Warning] assignParent to null: this = nf2{a99174f V.E...... ......ID 0,0-273,616 #1020002 android:id/content aid=1073741881}
+
+[2026-05-18 07:00:47.478 Uid(value=10195):8311:8311 D/InputTransport]
+Destroy ARC handle: 0xb400006e2f4940e0
+
+[2026-05-18 07:00:47.490 Uid(value=10195):8311:15200 D/BLASTBufferQueue]
+[VRI[Pop-Up Window]#62](f:0,a:1) destructor()
+
+[2026-05-18 07:00:47.491 Uid(value=10195):8311:15200 D/BufferQueueConsumer]
+[VRI[Pop-Up Window]#62(BLAST Consumer)62](id:20770000003e,api:0,p:-1,c:8311) disconnect
+
+[2026-05-18 07:00:51.257 Uid(value=10195):8311:8311 I/ScrollIdentify]
+on fling
+
+[2026-05-18 07:00:52.570 Uid(value=10195):8311:8311 I/ScrollIdentify]
+on fling
+
+[2026-05-18 07:00:57.538 Uid(value=10195):8311:8311 I/ScrollIdentify]
+on fling
+
+[2026-05-18 07:01:02.302 Uid(value=10195):8311:8311 I/ScrollIdentify]
+on fling
+
+[2026-05-18 07:01:06.099 Uid(value=10195):8311:8326 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 07:01:06.145 Uid(value=10195):8311:8311 D/BLASTBufferQueue]
+[VRI[MainActivity]#61](f:0,a:1) destructor()
+
+[2026-05-18 07:01:06.145 Uid(value=10195):8311:8311 D/BufferQueueConsumer]
+[VRI[MainActivity]#61(BLAST Consumer)61](id:20770000003d,api:0,p:-1,c:8311) disconnect
+
+[2026-05-18 07:01:06.151 Uid(value=10195):8311:8326 I/GED]
+ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+
+[2026-05-18 07:01:12.352 Uid(value=10195):8311:8311 W/WindowOnBackDispatcher]
+OnBackInvokedCallback is not enabled for the application.
+Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+
+[2026-05-18 07:01:12.408 Uid(value=10195):8311:8311 D/BufferQueueConsumer]
+[](id:20770000003f,api:0,p:-1,c:8311) connect: controlledByApp=false
+
+[2026-05-18 07:01:12.413 Uid(value=10195):8311:8326 E/OpenGLRenderer]
+Unable to match the desired swap behavior.
+
+[2026-05-18 07:01:12.437 Uid(value=10195):8311:8326 D/BLASTBufferQueue]
+[VRI[MainActivity]#63](f:0,a:1) acquireNextBufferLocked size=720x1612 mFrameNumber=1 applyTransaction=true mTimestamp=20534521288915(auto) mPendingTransactions.size=0 graphicBufferId=35695473197666 transform=0
+
