@@ -1,34 +1,98 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, Component } from 'react';
+import { View, Platform, Text, ScrollView } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import {
+  useFonts,
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_400Regular_Italic,
+  PlayfairDisplay_600SemiBold,
+} from '@expo-google-fonts/playfair-display';
+import {
+  DMSans_300Light,
+  DMSans_400Regular,
+  DMSans_500Medium,
+} from '@expo-google-fonts/dm-sans';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { RootNavigator } from '@/navigation/RootNavigator';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Pour Across America</Text>
-      <Text style={styles.sub}>Loading test — if you see this, native modules are OK</Text>
-    </View>
-  );
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1F1518',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  text: {
-    color: '#C4847A',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  sub: {
-    color: '#ffffff',
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-});
+// ─── Error Boundary ───────────────────────────────────────────────────────────
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: string;
+  stack: string;
+}
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '', stack: '' };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error: String(error), stack: error.stack ?? '' };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary] caught:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ScrollView
+          style={{ flex: 1, backgroundColor: '#1F1518', padding: 24 }}
+          contentContainerStyle={{ paddingTop: 60 }}
+        >
+          <Text style={{ color: '#C4847A', fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
+            App Error — screenshot this
+          </Text>
+          <Text style={{ color: '#fff', fontSize: 13, marginBottom: 16 }}>
+            {this.state.error}
+          </Text>
+          <Text style={{ color: '#aaa', fontSize: 11 }}>
+            {this.state.stack}
+          </Text>
+        </ScrollView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_400Regular_Italic,
+    PlayfairDisplay_600SemiBold,
+    DMSans_300Light,
+    DMSans_400Regular,
+    DMSans_500Medium,
+  });
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' && (fontsLoaded || fontError)) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (Platform.OS !== 'web' && !fontsLoaded && !fontError) {
+    return null;
+  }
+
+  return (
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <RootNavigator />
+        </View>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
+  );
+}
