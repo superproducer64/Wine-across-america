@@ -1,48 +1,76 @@
-// Use require() instead of import so we control execution order.
-// The error handler MUST be registered before App and its dependencies load,
-// otherwise module-init crashes are swallowed silently.
+// DIAGNOSTIC BUILD — tests each major module in isolation to find the crash.
+(function () {
+  var Alert = require('react-native').Alert;
 
-// 1. Set up global error handler first — before anything else loads.
-const { Alert } = require('react-native');
-const prevHandler = ErrorUtils.getGlobalHandler();
-ErrorUtils.setGlobalHandler((error, isFatal) => {
-  if (isFatal) {
+  function showError(label, err) {
     Alert.alert(
-      'PAA Startup Error — screenshot this',
-      `${error.name}: ${error.message}\n\n${(error.stack || '').slice(0, 800)}`,
+      'FAILED: ' + label,
+      String(err.name) + ': ' + String(err.message) + '\n\n' + String(err.stack || '').slice(0, 600),
       [{ text: 'OK' }],
       { cancelable: false }
     );
   }
-  if (prevHandler) prevHandler(error, isFatal);
-});
 
-// 2. Enable native screens.
-const { enableScreens } = require('react-native-screens');
-enableScreens();
+  var failed = false;
 
-// 3. Load App — any module-level throw will now be caught above.
-let App;
-try {
-  App = require('./App').default;
-} catch (e) {
-  Alert.alert(
-    'PAA Module Load Error — screenshot this',
-    `${e.name}: ${e.message}\n\n${(e.stack || '').slice(0, 800)}`,
-    [{ text: 'OK' }],
-    { cancelable: false }
-  );
-  // Render a blank fallback so the app doesn't silently close.
-  const { View, Text } = require('react-native');
-  const React = require('react');
-  App = () => React.createElement(View,
-    { style: { flex: 1, backgroundColor: '#1F1518', alignItems: 'center', justifyContent: 'center', padding: 24 } },
-    React.createElement(Text, { style: { color: '#C4847A', fontSize: 16, textAlign: 'center' } },
-      `Load error: ${e.message}`
-    )
-  );
-}
+  function tryLoad(label, fn) {
+    if (failed) return;
+    try { fn(); }
+    catch (e) { failed = true; showError(label, e); }
+  }
 
-// 4. Register root component.
-const { registerRootComponent } = require('expo');
-registerRootComponent(App);
+  tryLoad('react-native-screens', function () {
+    require('react-native-screens').enableScreens();
+  });
+  tryLoad('expo-splash-screen', function () {
+    require('expo-splash-screen');
+  });
+  tryLoad('expo-google-fonts/playfair', function () {
+    require('@expo-google-fonts/playfair-display');
+  });
+  tryLoad('expo-google-fonts/dm-sans', function () {
+    require('@expo-google-fonts/dm-sans');
+  });
+  tryLoad('react-native-gesture-handler', function () {
+    require('react-native-gesture-handler');
+  });
+  tryLoad('react-native-url-polyfill', function () {
+    require('react-native-url-polyfill/auto');
+  });
+  tryLoad('@supabase/supabase-js', function () {
+    require('@supabase/supabase-js');
+  });
+  tryLoad('src/lib/supabase', function () {
+    require('./src/lib/supabase');
+  });
+  tryLoad('expo-notifications', function () {
+    require('expo-notifications');
+  });
+  tryLoad('authStore', function () {
+    require('./src/stores/authStore');
+  });
+  tryLoad('wineStore', function () {
+    require('./src/stores/wineStore');
+  });
+  tryLoad('entryDraftStore', function () {
+    require('./src/stores/entryDraftStore');
+  });
+  tryLoad('subscriptionStore', function () {
+    require('./src/stores/subscriptionStore');
+  });
+  tryLoad('RootNavigator', function () {
+    require('./src/navigation/RootNavigator');
+  });
+  tryLoad('App.tsx', function () {
+    require('./App');
+  });
+
+  if (failed) return;
+
+  // All modules loaded OK — boot normally
+  var enableScreens = require('react-native-screens').enableScreens;
+  enableScreens();
+  var registerRootComponent = require('expo').registerRootComponent;
+  var App = require('./App').default;
+  registerRootComponent(App);
+})();
