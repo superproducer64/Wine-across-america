@@ -402,7 +402,9 @@ export function WineDetailScreen({ route, navigation }: Props) {
           {entry.price.length > 0 ? entry.price.map((p, i) => (
             <View key={i} style={styles.priceRow}>
               <View style={styles.priceRowLeft}>
-                <Text style={styles.priceType}>{p.type === 'glass' ? '🥂 Glass' : '🍾 Bottle'}</Text>
+                <Text style={styles.priceType}>
+                  {p.type === 'glass' ? '🥂 Per glass' : p.type === 'bottle' ? '🍾 Per bottle' : 'Price'}
+                </Text>
                 {p.location ? <Text style={styles.priceLocation}>📍 {p.location}</Text> : null}
                 {p.date ? <Text style={styles.priceDate}>{new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text> : null}
               </View>
