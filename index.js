@@ -1,5 +1,4 @@
-// DIAGNOSTIC BUILD — identifies which module causes the startup crash.
-// All top-level returns must be inside an IIFE (Babel rejects bare top-level return).
+// DIAGNOSTIC BUILD — granular sub-steps to pinpoint the crash inside createClient().
 (function () {
   var React = require('react');
   var RN = require('react-native');
@@ -46,7 +45,7 @@
     }
   }
 
-  // ── Test each module ────────────────────────────────────────────────────────
+  // ── Step 1-7: same as before ────────────────────────────────────────────────
 
   if (!tryLoad('1. react-native-screens', function () {
     require('react-native-screens').enableScreens();
@@ -56,29 +55,83 @@
     require('expo-splash-screen');
   })) return;
 
-  if (!tryLoad('3. @expo-google-fonts/playfair-display', function () {
+  if (!tryLoad('3. @expo-google-fonts', function () {
     require('@expo-google-fonts/playfair-display');
-  })) return;
-
-  if (!tryLoad('4. @expo-google-fonts/dm-sans', function () {
     require('@expo-google-fonts/dm-sans');
   })) return;
 
-  if (!tryLoad('5. react-native-gesture-handler', function () {
+  if (!tryLoad('4. react-native-gesture-handler', function () {
     require('react-native-gesture-handler');
   })) return;
 
-  if (!tryLoad('6. react-native-url-polyfill/auto', function () {
+  if (!tryLoad('5. react-native-url-polyfill', function () {
     require('react-native-url-polyfill/auto');
   })) return;
 
-  if (!tryLoad('7. @supabase/supabase-js', function () {
+  if (!tryLoad('6. @supabase/supabase-js (import)', function () {
     require('@supabase/supabase-js');
   })) return;
 
-  if (!tryLoad('8. src/lib/supabase (client init)', function () {
+  // ── NEW granular sub-steps ──────────────────────────────────────────────────
+
+  if (!tryLoad('7a. expo-secure-store (import)', function () {
+    require('expo-secure-store');
+  })) return;
+
+  if (!tryLoad('7b. expo-crypto (import)', function () {
+    require('expo-crypto');
+  })) return;
+
+  if (!tryLoad('7c. createClient — no custom storage (persistSession:false)', function () {
+    var createClient = require('@supabase/supabase-js').createClient;
+    createClient('https://xyztest.supabase.co', 'anon-key', {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+      },
+    });
+  })) return;
+
+  if (!tryLoad('7d. createClient — plain JS memory storage (persistSession:true)', function () {
+    var createClient = require('@supabase/supabase-js').createClient;
+    var mem = {};
+    createClient('https://xyztest.supabase.co', 'anon-key', {
+      auth: {
+        storage: {
+          getItem:    function (k) { return mem[k] !== undefined ? mem[k] : null; },
+          setItem:    function (k, v) { mem[k] = v; },
+          removeItem: function (k) { delete mem[k]; },
+        },
+        autoRefreshToken: false,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    });
+  })) return;
+
+  if (!tryLoad('7e. createClient — SecureStore storage (persistSession:true)', function () {
+    var createClient = require('@supabase/supabase-js').createClient;
+    var SecureStore = require('expo-secure-store');
+    createClient('https://xyztest.supabase.co', 'anon-key', {
+      auth: {
+        storage: {
+          getItem:    function (k) { return SecureStore.getItemAsync(k); },
+          setItem:    function (k, v) { return SecureStore.setItemAsync(k, v); },
+          removeItem: function (k) { return SecureStore.deleteItemAsync(k); },
+        },
+        autoRefreshToken: false,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    });
+  })) return;
+
+  if (!tryLoad('8. src/lib/supabase (full module)', function () {
     require('./src/lib/supabase');
   })) return;
+
+  // ── Remaining modules ───────────────────────────────────────────────────────
 
   if (!tryLoad('9. expo-notifications', function () {
     require('expo-notifications');
