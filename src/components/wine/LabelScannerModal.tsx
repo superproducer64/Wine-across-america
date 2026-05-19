@@ -73,22 +73,18 @@ async function pickImage(source: 'camera' | 'gallery'): Promise<string | null> {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
-      base64: true,
     });
     if (result.canceled || !result.assets?.[0]) return null;
-    const asset = result.assets[0];
-    return asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+    return result.assets[0].uri;
   } else {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return null;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
-      base64: true,
     });
     if (result.canceled || !result.assets?.[0]) return null;
-    const asset = result.assets[0];
-    return asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+    return result.assets[0].uri;
   }
 }
 
@@ -141,37 +137,43 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   const processImages = async (front: string, back: string | null) => {
     setPhase('uploading');
 
-    const tasks: Promise<unknown>[] = [
-      uploadLabelPhoto(userId, front),
-      analyzeWineLabelWithAI(front, back),
-      computeLabelPhotoPlaceholder(front),
-    ];
-    if (back) tasks.push(uploadLabelPhoto(userId, back));
+    try {
+      const tasks: Promise<unknown>[] = [
+        uploadLabelPhoto(userId, front),
+        analyzeWineLabelWithAI(front, back),
+        computeLabelPhotoPlaceholder(front),
+      ];
+      if (back) tasks.push(uploadLabelPhoto(userId, back));
 
-    const results = await Promise.all(tasks);
-    const uploadResult = results[0] as Awaited<ReturnType<typeof uploadLabelPhoto>>;
-    const extracted = results[1] as WineLabelData;
-    const blurHash = results[2] as string;
-    const backUploadResult = back ? (results[3] as Awaited<ReturnType<typeof uploadLabelPhoto>>) : null;
+      const results = await Promise.all(tasks);
+      const uploadResult = results[0] as Awaited<ReturnType<typeof uploadLabelPhoto>>;
+      const extracted = results[1] as WineLabelData;
+      const blurHash = results[2] as string;
+      const backUploadResult = back ? (results[3] as Awaited<ReturnType<typeof uploadLabelPhoto>>) : null;
 
-    setPhotoUrl(uploadResult.url);
-    setPhotoBlurHash(blurHash);
-    if (backUploadResult?.url) setBackPhotoUrl(backUploadResult.url);
+      setPhotoUrl(uploadResult.url);
+      setPhotoBlurHash(blurHash);
+      if (backUploadResult?.url) setBackPhotoUrl(backUploadResult.url);
 
-    const hasData = !!(extracted.name || extracted.producer || extracted.country || extracted.vintage);
-    setAiSuccess(hasData);
+      const hasData = !!(extracted.name || extracted.producer || extracted.country || extracted.vintage);
+      setAiSuccess(hasData);
 
-    setName(extracted.name);
-    setProducer(extracted.producer);
-    setVintageStr(extracted.vintage ? String(extracted.vintage) : '');
-    setCountry(extracted.country);
-    setRegion(extracted.region);
-    setAppellation(extracted.appellation);
-    setGrapes(extracted.grapes ?? []);
+      setName(extracted.name);
+      setProducer(extracted.producer);
+      setVintageStr(extracted.vintage ? String(extracted.vintage) : '');
+      setCountry(extracted.country);
+      setRegion(extracted.region);
+      setAppellation(extracted.appellation);
+      setGrapes(extracted.grapes ?? []);
 
-    const found = findMatches(entries, extracted.producer, extracted.vintage ? String(extracted.vintage) : '');
-    setMatches(found);
-    setPhase(found.length > 0 ? 'recognition' : 'review');
+      const found = findMatches(entries, extracted.producer, extracted.vintage ? String(extracted.vintage) : '');
+      setMatches(found);
+      setPhase(found.length > 0 ? 'recognition' : 'review');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setErrorMsg(msg || 'Something went wrong processing the image. Please try again.');
+      setPhase('error');
+    }
   };
 
   const handlePickFront = async (source: 'camera' | 'gallery') => {
