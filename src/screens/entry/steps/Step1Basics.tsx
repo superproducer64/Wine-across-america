@@ -60,17 +60,17 @@ export function Step1Basics() {
   };
 
   const regions = draft.country ? Object.keys(COUNTRIES_AND_REGIONS[draft.country] ?? {}) : [];
-  const appellations =
+  const subregions =
     draft.country && draft.region
       ? COUNTRIES_AND_REGIONS[draft.country]?.[draft.region] ?? []
       : [];
 
   const handleCountrySelect = (country: string) => {
-    setBasics({ country, region: '', appellation: '' });
+    setBasics({ country, region: '', subregion: '', appellation: '' });
   };
 
   const handleRegionSelect = (region: string) => {
-    setBasics({ region, appellation: '' });
+    setBasics({ region, subregion: '', appellation: '' });
   };
 
   const handleScanApply = (data: Partial<WineLabelData> & { photoUrl?: string; photoBlurHash?: string; backPhotoUrl?: string }) => {
@@ -213,20 +213,20 @@ export function Step1Basics() {
         </>
       ) : null}
 
-      {/* Appellation Selector */}
-      {appellations.length > 0 && (
+      {/* Subregion Selector */}
+      {subregions.length > 0 && (
         <>
-          <Text style={styles.label}>Appellation (optional)</Text>
+          <Text style={styles.label}>Subregion (optional)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
             <View style={styles.chipRow}>
-              {appellations.map((a) => (
+              {subregions.map((s) => (
                 <Pressable
-                  key={a}
-                  style={[styles.chip, draft.appellation === a && styles.chipSelected]}
-                  onPress={() => setBasics({ appellation: a })}
+                  key={s}
+                  style={[styles.chip, draft.subregion === s && styles.chipSelected]}
+                  onPress={() => setBasics({ subregion: s })}
                 >
-                  <Text style={[styles.chipText, draft.appellation === a && styles.chipTextSelected]}>
-                    {a}
+                  <Text style={[styles.chipText, draft.subregion === s && styles.chipTextSelected]}>
+                    {s}
                   </Text>
                 </Pressable>
               ))}
@@ -234,6 +234,14 @@ export function Step1Basics() {
           </ScrollView>
         </>
       )}
+
+      {/* Appellation */}
+      <TextInput
+        label="Appellation / AOC / DOC (optional)"
+        value={draft.appellation}
+        onChangeText={(v) => setBasics({ appellation: v })}
+        placeholder="e.g., Pomerol AOC, Barolo DOCG"
+      />
 
       {/* Grape Varieties */}
       <Text style={styles.label}>Grape Varieties</Text>

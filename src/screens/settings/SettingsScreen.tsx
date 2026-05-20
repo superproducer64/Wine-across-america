@@ -26,6 +26,7 @@ export function SettingsScreen() {
   const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
   const [showSommelierApply, setShowSommelierApply] = useState(false);
   const [certDataUrl, setCertDataUrl] = useState<string | null>(null);
+  const [certMime, setCertMime] = useState<string | null>(null);
   const [certUploading, setCertUploading] = useState(false);
   const [certError, setCertError] = useState('');
   const [certSuccess, setCertSuccess] = useState(false);
@@ -55,7 +56,7 @@ export function SettingsScreen() {
     }
     setCertUploading(true);
     setCertError('');
-    const { url, error: uploadError } = await uploadSommelierCert(user.id, certDataUrl);
+    const { url, error: uploadError } = await uploadSommelierCert(user.id, certDataUrl, certMime ?? undefined);
     if (uploadError || !url) {
       setCertError(uploadError ?? 'Upload failed. Please try again.');
       setCertUploading(false);
@@ -187,8 +188,9 @@ export function SettingsScreen() {
                 ) : (
                   <View style={styles.applyForm}>
                     <SommelierCertUpload
-                      onCertSelected={setCertDataUrl}
+                      onCertSelected={(uri, mime) => { setCertDataUrl(uri); setCertMime(mime); }}
                       certDataUrl={certDataUrl}
+                      certMime={certMime}
                       uploading={certUploading}
                       error={certError}
                     />

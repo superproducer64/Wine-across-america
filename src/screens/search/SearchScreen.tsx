@@ -337,6 +337,7 @@ const styles = StyleSheet.create({
   },
   sortRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.md,

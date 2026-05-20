@@ -1,0 +1,31 @@
+You are improving an existing mobile wine evaluation app called Pour Across America.
+
+Start by reviewing the existing app structure, database, components, and routing. Do not rebuild from scratch unless the current app cannot support these changes.
+
+Implement the build list from this report in phases.
+
+Phase 1:
+Fix all mobile layout issues. The app must never require horizontal scrolling. All forms, cards, charts, tabs, and sliders must fit inside mobile screen width. Only vertical scrolling is allowed.
+
+Phase 2:
+Add a dual profile system with Wine Explorer and Sommelier profiles. Wine Explorer gets a simplified interface. Sommelier gets advanced fields and expanded aroma/scoring controls. Store profile type on the user account.
+
+Phase 3:
+Improve wine entry. OCR fields must carry into the wine entry form and remain manually editable. Add Region and Subregion fields. Split Price into Price by Bottle and Price by Glass. Default Tasting Date to current date. Add geo-referenced Location storage. Grape variety should default to 100 percent when detected, but users can edit percentage and add grapes.
+
+Phase 4:
+Build the Aroma Wheel with profile-based visibility. Unmarked aroma items show to both profiles. Items marked Sommelier-only show only to Sommelier users. Add custom aroma/flavor text entries that save with the wine, appear in the flavor profile, and are searchable.
+
+Phase 5:
+Add Smart Shortcuts and Aroma Wheel tabs. Smart Shortcuts should auto-populate aroma tags and structure values, highlight selected items, and still allow full manual editing.
+
+Phase 6:
+Build a clean mobile radial chart. Use 7 axes: Sweetness, Acidity, Tannin, Body, Alcohol, Intensity, Finish. Sweetness, Acidity, and Tannin use 1 to 10 sliders for both profiles. Body, Alcohol, and Intensity use simplified Wine Explorer options and expanded Sommelier options. Finish should support technical scoring and radar display.
+
+Phase 7:
+Build the technical 100-point scoring system with five 20-point categories: Balance, Intensity, Complexity, Finish, Typicity / Precision. Auto-calculate and display the final 1 to 100 score. For technical Intensity, autofill from the structure Intensity score multiplied by 2. Allow Sommelier users to edit the autofilled value.
+
+Phase 8:
+Add Sommelier certification upload. Accept PDF, JPG, JPEG, and PNG. Add approval statuses: Not submitted, Pending review, Approved, Rejected, Needs resubmission. Add simple admin review capability if admin tools exist.
+
+Preserve existing working features. Use responsive design. Keep the interface clean, fast, and mobile-first.

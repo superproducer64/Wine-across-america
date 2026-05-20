@@ -38,7 +38,7 @@ function buildShareText(entry: WineEntry): string {
 
   if (entry.producer) lines.push(entry.producer);
 
-  const origin = [entry.appellation, entry.region, entry.country]
+  const origin = [entry.appellation, entry.subregion, entry.region, entry.country]
     .filter(Boolean)
     .join(', ');
   if (origin) lines.push(origin);
@@ -616,6 +616,7 @@ const styles = StyleSheet.create({
   locationMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
   },
   locationGeoTag: {

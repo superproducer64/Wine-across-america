@@ -252,6 +252,7 @@ export interface WineEntry {
   vintage: number | null;
   country: string;
   region: string;
+  subregion: string;
   appellation: string;
   grapes: string[];
   grape_blends: GrapeBlendEntry[] | null;

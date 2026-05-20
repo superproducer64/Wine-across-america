@@ -259,17 +259,22 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
 
 export async function uploadSommelierCert(
   userId: string,
-  imageDataUrl: string
+  fileUri: string,
+  mimeType?: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    const response = await fetch(imageDataUrl);
+    const response = await fetch(fileUri);
     const blob = await response.blob();
-    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    const resolvedMime = mimeType ?? blob.type;
+    const ext =
+      resolvedMime === 'image/png' ? 'png'
+      : resolvedMime === 'application/pdf' ? 'pdf'
+      : 'jpg';
     const path = `${userId}/${Date.now()}.${ext}`;
 
     const { error } = await supabase.storage
       .from('sommelier-certs')
-      .upload(path, blob, { contentType: blob.type, upsert: true });
+      .upload(path, blob, { contentType: resolvedMime, upsert: true });
 
     if (error) return { url: null, error: error.message };
 

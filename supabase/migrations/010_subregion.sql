@@ -1,0 +1,2 @@
+ALTER TABLE wine_entries
+  ADD COLUMN IF NOT EXISTS subregion TEXT NOT NULL DEFAULT '';

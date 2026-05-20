@@ -27,6 +27,7 @@ export function SignupScreen({ navigation }: Props) {
   const [confirm, setConfirm] = useState('');
   const [role, setRole] = useState<UserRole>('enthusiast');
   const [certDataUrl, setCertDataUrl] = useState<string | null>(null);
+  const [certMime, setCertMime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -56,7 +57,7 @@ export function SignupScreen({ navigation }: Props) {
       const data = await signUpWithEmail(email.trim(), password, name.trim(), role);
 
       if (role === 'sommelier' && certDataUrl && data.user) {
-        const { url } = await uploadSommelierCert(data.user.id, certDataUrl);
+        const { url } = await uploadSommelierCert(data.user.id, certDataUrl, certMime ?? undefined);
         if (url) {
           await submitSommelierApplication(data.user.id, url, name.trim());
         }
@@ -178,8 +179,9 @@ export function SignupScreen({ navigation }: Props) {
 
           {role === 'sommelier' && (
             <SommelierCertUpload
-              onCertSelected={setCertDataUrl}
+              onCertSelected={(uri, mime) => { setCertDataUrl(uri); setCertMime(mime); }}
               certDataUrl={certDataUrl}
+              certMime={certMime}
               uploading={loading}
             />
           )}

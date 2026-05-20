@@ -36,8 +36,10 @@ function polarToCartesian(angle: number, radius: number, cx: number, cy: number)
 }
 
 export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProps) {
-  const cx = size / 2;
-  const cy = size / 2;
+  const labelPad = 22;
+  const totalSize = size + labelPad * 2;
+  const cx = totalSize / 2;
+  const cy = totalSize / 2;
   const radius = size * 0.36;
   const labelRadius = size * 0.47;
   const n = DIMENSIONS.length;
@@ -63,8 +65,8 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
   });
 
   return (
-    <View style={{ width: size, height: size, alignSelf: 'center' }}>
-      <Svg width={size} height={size}>
+    <View style={{ width: totalSize, height: totalSize, alignSelf: 'center' }}>
+      <Svg width={totalSize} height={totalSize}>
         {/* Grid rings */}
         {gridPolygons.map((pts, i) => (
           <Polygon

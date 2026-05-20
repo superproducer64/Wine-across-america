@@ -8,6 +8,7 @@ function makeDefaultDraft(): WineEntryDraft {
     vintage: null,
     country: '',
     region: '',
+    subregion: '',
     appellation: '',
     grapes: [],
     price: [],
@@ -69,7 +70,7 @@ interface EntryDraftStore {
 
   // Setters per step
   setBasics: (data: Partial<Pick<WineEntryDraft,
-    'name' | 'producer' | 'vintage' | 'country' | 'region' | 'appellation' |
+    'name' | 'producer' | 'vintage' | 'country' | 'region' | 'subregion' | 'appellation' |
     'grapes' | 'price' | 'tasting_date' | 'location_name' | 'location_geo'>>) => void;
 
   setStructureWheel: (data: Partial<Pick<WineEntryDraft,

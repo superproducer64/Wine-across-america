@@ -132,7 +132,7 @@ export function ProWineCard({ entry, compact = false }: Props) {
     .slice(0, compact ? 4 : 5);
   const maxAromaCount = sortedAromas[0]?.[1].count ?? 1;
 
-  const origin = [entry.region, entry.country].filter(Boolean).join(', ');
+  const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
 
   const isBestValue = entry.want_to_buy && score >= 80;
