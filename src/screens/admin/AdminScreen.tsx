@@ -49,7 +49,7 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
     }
   }, [app.sommelier_cert_url]);
 
-  const initials = (app.display_name ?? app.email ?? '?')[0].toUpperCase();
+  const initials = (app.display_name ?? app.email ?? '?').charAt(0).toUpperCase();
   const submittedDate = new Date(app.created_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',

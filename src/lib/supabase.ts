@@ -109,7 +109,7 @@ export async function signInWithApple(
       .single();
 
     if (!existingProfile) {
-      await supabase.from('user_profiles').upsert({
+      const { error: upsertError } = await supabase.from('user_profiles').upsert({
         id: data.user.id,
         email: data.user.email ?? '',
         display_name: displayName ?? null,
@@ -117,6 +117,9 @@ export async function signInWithApple(
         subscription_tier: 'free',
         is_creator: false,
       });
+      if (upsertError) {
+        console.error('[signInWithApple] profile upsert failed:', upsertError.message);
+      }
     }
   }
 

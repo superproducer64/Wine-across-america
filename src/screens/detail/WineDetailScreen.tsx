@@ -133,7 +133,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
       location: visitLocation.trim(),
       type: visitType,
     };
-    const updatedPrices = [...entry.price, newPrice];
+    const updatedPrices = [...(entry.price ?? []), newPrice];
     await updateEntry(entryId, { price: updatedPrices });
     const updated = { ...entry, price: updatedPrices };
     setEntry(updated);
@@ -399,7 +399,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
             </Pressable>
           </View>
 
-          {entry.price.length > 0 ? entry.price.map((p, i) => (
+          {(entry.price ?? []).length > 0 ? (entry.price ?? []).map((p, i) => (
             <View key={i} style={styles.priceRow}>
               <View style={styles.priceRowLeft}>
                 <Text style={styles.priceType}>
