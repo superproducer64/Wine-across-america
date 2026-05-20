@@ -44,6 +44,7 @@ const PICKER_OPTIONS: Record<string, PickerOption[]> = {
 };
 
 export function Step2StructureWheel() {
+  const { draft, setStructureWheel } = useEntryDraftStore();
   const { profile } = useAuthStore();
 
   // Sommelier-approved users get the full 1-10 slider for all axes
