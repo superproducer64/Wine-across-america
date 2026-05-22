@@ -6,21 +6,18 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
-  FlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors, Fonts, Spacing, Radius, Shadows } from '@/theme';
-import { useAuthStore } from '@/stores/authStore';
-import { useWineStore } from '@/stores/wineStore';
-import { useSubscriptionStore } from '@/stores/subscriptionStore';
-import { WineListItem } from '@/components/wine/WineListItem';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { MainStackParamList, TabParamList } from '@/navigation/types';
-import { WineEntry } from '@/types';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { useAuthStore } from '@/stores/authStore';
+import { useCheeseStore } from '@/stores/cheeseStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { CheeseListItem } from '@/components/cheese/CheeseListItem';
+import { MainStackParamList, TabParamList } from '@/navigation/types';
+import { CheeseEntry, CHEESE_STYLE_LABELS } from '@/types';
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, 'Home'>,
@@ -30,43 +27,34 @@ type HomeNavProp = CompositeNavigationProp<
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavProp>();
   const { user, profile } = useAuthStore();
-  const { entries, loading, loadEntries } = useWineStore();
+  const { entries, loading, loadEntries } = useCheeseStore();
   const { isSubscribed } = useSubscriptionStore();
 
   useEffect(() => {
-    if (user) {
-      loadEntries(user.id, isSubscribed);
-    }
+    if (user) loadEntries(user.id, isSubscribed);
   }, [user, isSubscribed]);
 
   const firstName = profile?.display_name?.split(' ')[0] ?? 'there';
-  const avgScore =
-    entries.length > 0
-      ? Math.round(entries.reduce((s, e) => s + e.technical_score, 0) / entries.length)
-      : 0;
 
-  const topCountry = (() => {
+  const topStyle = (() => {
     if (!entries.length) return null;
     const counts: Record<string, number> = {};
-    entries.forEach((e) => {
-      counts[e.country] = (counts[e.country] ?? 0) + 1;
-    });
-    return Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
+    entries.forEach((e) => { counts[e.style] = (counts[e.style] ?? 0) + 1; });
+    const key = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0];
+    return key ? CHEESE_STYLE_LABELS[key as keyof typeof CHEESE_STYLE_LABELS] : null;
   })();
 
-  const topGrape = (() => {
+  const topRegion = (() => {
     if (!entries.length) return null;
     const counts: Record<string, number> = {};
-    entries.forEach((e) => e.grapes.forEach((g) => {
-      counts[g] = (counts[g] ?? 0) + 1;
-    }));
+    entries.forEach((e) => { if (e.region) counts[e.region] = (counts[e.region] ?? 0) + 1; });
     return Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
   })();
 
   const recentEntries = entries.slice(0, 10);
 
-  const handleWinePress = (entry: WineEntry) => {
-    navigation.navigate('WineDetail', { entryId: entry.id } as never);
+  const handleCheesePress = (entry: CheeseEntry) => {
+    navigation.navigate('CheeseDetail', { entryId: entry.id });
   };
 
   return (
@@ -84,45 +72,39 @@ export function HomeScreen() {
               </View>
             </Pressable>
           </View>
-          <Text style={styles.tagline}>Your wine intelligence journal</Text>
+          <Text style={styles.tagline}>Your artisan cheese journal</Text>
         </View>
 
-        {/* Analytics Summary */}
+        {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{entries.length}</Text>
-            <Text style={styles.statLabel}>Wines Logged</Text>
+            <Text style={styles.statLabel}>Cheeses Logged</Text>
             {!isSubscribed && entries.length >= 30 && (
               <Text style={styles.freeLimitHint}>Free limit reached</Text>
             )}
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{avgScore}</Text>
-            <Text style={styles.statLabel}>Avg Score</Text>
+            <Text style={styles.statValue} numberOfLines={1}>
+              {topStyle ?? '—'}
+            </Text>
+            <Text style={styles.statLabel}>Top Style</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{topCountry ?? '—'}</Text>
-            <Text style={styles.statLabel}>Top Country</Text>
+            <Text style={styles.statValue} numberOfLines={1}>
+              {topRegion ?? '—'}
+            </Text>
+            <Text style={styles.statLabel}>Top Region</Text>
           </View>
         </View>
 
-        {topGrape && (
-          <View style={styles.grapeCard}>
-            <Text style={styles.grapeEmoji}>🍇</Text>
-            <View>
-              <Text style={styles.grapeLabel}>Favourite Grape</Text>
-              <Text style={styles.grapeName}>{topGrape}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Pro Upsell */}
+        {/* Pro upsell */}
         {!isSubscribed && (
-          <Pressable style={styles.upsellCard} onPress={() => navigation.navigate('Settings')}>
-            <View>
-              <Text style={styles.upsellTitle}>Unlock Wine Intelligence</Text>
+          <Pressable style={styles.upsellCard} onPress={() => navigation.navigate('Settings' as never)}>
+            <View style={styles.upsellText}>
+              <Text style={styles.upsellTitle}>Unlock Cheese Intelligence</Text>
               <Text style={styles.upsellBody}>
-                Taste fingerprint, score-vs-price charts, compound search, and more.
+                Taste fingerprint, style radar, score-vs-price charts, and more.
               </Text>
             </View>
             <View style={styles.upsellBadge}>
@@ -131,27 +113,27 @@ export function HomeScreen() {
           </Pressable>
         )}
 
-        {/* Recent Wines */}
+        {/* Recent cheeses */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Wines</Text>
+          <Text style={styles.sectionTitle}>Recent Cheeses</Text>
           <Pressable onPress={() => navigation.navigate('Search' as never)}>
             <Text style={styles.viewAll}>View all →</Text>
           </Pressable>
         </View>
 
         {loading ? (
-          <Text style={styles.loadingText}>Loading your wines…</Text>
+          <Text style={styles.loadingText}>Loading your cheeses…</Text>
         ) : recentEntries.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🍾</Text>
+            <Text style={styles.emptyEmoji}>🧀</Text>
             <Text style={styles.emptyTitle}>Your journal is empty</Text>
             <Text style={styles.emptyBody}>
-              Tap the + button to log your first wine
+              Tap the + button to log your first cheese
             </Text>
           </View>
         ) : (
           recentEntries.map((entry) => (
-            <WineListItem key={entry.id} entry={entry} onPress={handleWinePress} />
+            <CheeseListItem key={entry.id} entry={entry} onPress={handleCheesePress} />
           ))
         )}
       </ScrollView>
@@ -160,17 +142,9 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-  },
-  content: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.huge,
-  },
-  header: {
-    marginBottom: Spacing.xl,
-  },
+  safe: { flex: 1, backgroundColor: Colors.surface },
+  content: { padding: Spacing.xl, paddingBottom: Spacing.huge },
+  header: { marginBottom: Spacing.xl },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -215,9 +189,10 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: Fonts.playfair,
-    fontSize: 22,
+    fontSize: 18,
     color: Colors.gold,
-    lineHeight: 26,
+    lineHeight: 24,
+    textAlign: 'center',
   },
   statLabel: {
     fontFamily: Fonts.dmSans,
@@ -232,30 +207,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
   },
-  grapeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.goldPale,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    borderWidth: 0.5,
-    borderColor: Colors.borderStrong,
-    marginBottom: Spacing.md,
-  },
-  grapeEmoji: { fontSize: 24 },
-  grapeLabel: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 11,
-    color: Colors.inkMuted,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  grapeName: {
-    fontFamily: Fonts.playfair,
-    fontSize: 17,
-    color: Colors.ink,
-  },
   upsellCard: {
     backgroundColor: Colors.ink,
     borderRadius: Radius.md,
@@ -267,6 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: Spacing.xl,
   },
+  upsellText: { flex: 1, marginRight: Spacing.md },
   upsellTitle: {
     fontFamily: Fonts.playfair,
     fontSize: 16,
@@ -277,7 +229,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 12,
     color: 'rgba(255,255,255,0.45)',
-    maxWidth: 240,
     lineHeight: 17,
   },
   upsellBadge: {

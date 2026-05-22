@@ -18,7 +18,7 @@ export function SettingsScreen() {
   const { isSubscribed } = useSubscriptionStore();
 
   const handleSignOut = () => {
-    Alert.alert('Sign out?', 'You will need to sign in again to access your wines.', [
+    Alert.alert('Sign out?', 'You will need to sign in again to access your cheeses.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: signOut },
     ]);
@@ -27,7 +27,7 @@ export function SettingsScreen() {
   const handleUpgrade = () => {
     Alert.alert(
       'Upgrade to Pro',
-      'Pour Across America Pro — $9.99/month or $79/year.\n\nUnlock: full history, taste fingerprint, score-vs-price chart, compound search, creator database, and more.',
+      'Cheese Across America Pro — $9.99/month or $79/year.\n\nUnlock: full history, taste fingerprint, style radar, compound search, and more.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -106,13 +106,11 @@ export function SettingsScreen() {
           <View style={styles.freeDetails}>
             <Text style={styles.freeDetailsTitle}>Free tier includes:</Text>
             {[
-              'Unlimited wine entries',
-              'Full scoring (Structure Wheel + Technical Score)',
-              'Aroma wheel input',
-              'Basic search (keyword + 3 filters)',
-              'Last 30 wines browsable',
-              'Basic analytics',
-              'One shareable tasting card',
+              'Up to 30 cheese entries',
+              'Full cheese details (style, milk type, region, pasteurization)',
+              'Basic search (keyword + style filter)',
+              'Date and price tracking',
+              'Tasting notes',
             ].map((item) => (
               <View key={item} style={styles.freeItem}>
                 <Text style={styles.freeItemDot}>·</Text>

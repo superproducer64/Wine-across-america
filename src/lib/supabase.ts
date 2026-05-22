@@ -2,28 +2,21 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { CheeseEntryDraft } from '@/types';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string): string | null | Promise<string | null> => {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
-    }
+    if (Platform.OS === 'web') return localStorage.getItem(key);
     return SecureStore.getItemAsync(key);
   },
   setItem: (key: string, value: string): void | Promise<void> => {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-      return;
-    }
+    if (Platform.OS === 'web') { localStorage.setItem(key, value); return; }
     return SecureStore.setItemAsync(key, value);
   },
   removeItem: (key: string): void | Promise<void> => {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
-      return;
-    }
+    if (Platform.OS === 'web') { localStorage.removeItem(key); return; }
     return SecureStore.deleteItemAsync(key);
   },
 };
@@ -52,9 +45,7 @@ export async function signUpWithEmail(email: string, password: string, displayNa
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: { display_name: displayName },
-    },
+    options: { data: { display_name: displayName } },
   });
   if (error) throw error;
   return data;
@@ -64,81 +55,59 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
-// ─── Wine Entry CRUD ──────────────────────────────────────────────────────────
+// ─── Cheese Entry CRUD ────────────────────────────────────────────────────────
 
-export async function createWineEntry(entry: Omit<Parameters<typeof supabase.from>[0] extends 'wine_entries' ? never : object, never>) {
-  return supabase.from('wine_entries').insert(entry).select().single();
+export async function createCheeseEntry(entry: CheeseEntryDraft & { user_id: string }) {
+  return supabase.from('cheese_entries').insert(entry).select().single();
 }
 
-export async function updateWineEntry(id: string, updates: Record<string, unknown>) {
-  return supabase.from('wine_entries').update(updates).eq('id', id).select().single();
+export async function updateCheeseEntry(id: string, updates: Partial<CheeseEntryDraft>) {
+  return supabase.from('cheese_entries').update(updates).eq('id', id).select().single();
 }
 
-export async function deleteWineEntry(id: string) {
-  return supabase.from('wine_entries').delete().eq('id', id);
+export async function deleteCheeseEntry(id: string) {
+  return supabase.from('cheese_entries').delete().eq('id', id);
 }
 
-export async function getWineEntry(id: string) {
-  return supabase.from('wine_entries').select('*').eq('id', id).single();
+export async function getCheeseEntry(id: string) {
+  return supabase.from('cheese_entries').select('*').eq('id', id).single();
 }
 
-export async function listWineEntries(userId: string, options?: {
-  limit?: number;
-  offset?: number;
-  orderBy?: string;
-  ascending?: boolean;
-  filters?: Record<string, unknown>;
-}) {
+export async function listCheeseEntries(
+  userId: string,
+  options?: { limit?: number; offset?: number; orderBy?: string; ascending?: boolean }
+) {
   let query = supabase
-    .from('wine_entries')
+    .from('cheese_entries')
     .select('*')
     .eq('user_id', userId)
     .order(options?.orderBy ?? 'created_at', { ascending: options?.ascending ?? false });
 
-  if (options?.limit) {
-    query = query.limit(options.limit);
-  }
+  if (options?.limit) query = query.limit(options.limit);
   if (options?.offset) {
     query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
   }
-
   return query;
 }
 
-export async function searchWineEntries(userId: string, searchQuery: string, filters?: {
-  minScore?: number;
-  maxScore?: number;
-  country?: string;
-  region?: string;
-  terroir_soil?: string;
-  maxPrice?: number;
-}) {
+export async function searchCheeseEntries(
+  userId: string,
+  searchQuery: string,
+  filters?: { style?: string; milk_type?: string; region?: string }
+) {
   let query = supabase
-    .from('wine_entries')
+    .from('cheese_entries')
     .select('*')
     .eq('user_id', userId);
 
   if (searchQuery) {
     query = query.or(
-      `name.ilike.%${searchQuery}%,producer.ilike.%${searchQuery}%,region.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%`
+      `name.ilike.%${searchQuery}%,producer.ilike.%${searchQuery}%,region.ilike.%${searchQuery}%`
     );
   }
-
-  if (filters?.minScore !== undefined) {
-    query = query.gte('technical_score', filters.minScore);
-  }
-  if (filters?.maxScore !== undefined) {
-    query = query.lte('technical_score', filters.maxScore);
-  }
-  if (filters?.country) {
-    query = query.eq('country', filters.country);
-  }
-  if (filters?.region) {
-    query = query.eq('region', filters.region);
-  }
-  if (filters?.terroir_soil) {
-    query = query.eq('terroir_soil', filters.terroir_soil);
-  }
+  if (filters?.style)     query = query.eq('style', filters.style);
+  if (filters?.milk_type) query = query.eq('milk_type', filters.milk_type);
+  if (filters?.region)    query = query.eq('region', filters.region);
 
   return query.order('created_at', { ascending: false });
 }

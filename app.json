@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Pour Across America",
-    "slug": "pour-across-america",
+    "name": "Cheese Across America",
+    "slug": "cheese-across-america",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pouracrossamerica.app",
+      "bundleIdentifier": "com.cheeseacrossamerica.app",
       "usesAppleSignIn": true
     },
     "android": {
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A1710"
       },
-      "package": "com.pouracrossamerica.app"
+      "package": "com.cheeseacrossamerica.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -47,7 +47,7 @@
         }
       ]
     ],
-    "scheme": "pouracrossamerica",
+    "scheme": "cheeseacrossamerica",
     "experiments": {
       "typedRoutes": true
     }

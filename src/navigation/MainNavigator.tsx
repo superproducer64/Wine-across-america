@@ -6,9 +6,9 @@ import { Colors, Fonts, Radius } from '@/theme';
 import { TabParamList, MainStackParamList } from './types';
 import { HomeScreen } from '@/screens/home/HomeScreen';
 import { SearchScreen } from '@/screens/search/SearchScreen';
-import { WineEntryScreen } from '@/screens/entry/WineEntryScreen';
+import { CheeseEntryScreen } from '@/screens/entry/CheeseEntryScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
-import { WineDetailScreen } from '@/screens/detail/WineDetailScreen';
+import { CheeseDetailScreen } from '@/screens/detail/CheeseDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -51,7 +51,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="AddEntry"
-        component={WineEntryScreen}
+        component={CheeseEntryScreen}
         options={({ navigation }) => ({
           tabBarButton: () => (
             <Pressable
@@ -81,8 +81,8 @@ export function MainNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={TabNavigator} />
       <Stack.Screen
-        name="WineDetail"
-        component={WineDetailScreen}
+        name="CheeseDetail"
+        component={CheeseDetailScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

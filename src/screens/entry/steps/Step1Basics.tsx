@@ -9,45 +9,31 @@ import {
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
-import { COUNTRIES_AND_REGIONS, GRAPE_VARIETIES, PriceEntry } from '@/types';
+import {
+  MilkType,
+  Pasteurization,
+  CheeseStyle,
+  MILK_TYPE_LABELS,
+  PASTEURIZATION_LABELS,
+  CHEESE_STYLE_LABELS,
+  CHEESE_STYLE_EXAMPLES,
+  CHEESE_STYLE_EMOJI,
+  US_REGIONS,
+} from '@/types';
+
+const MILK_TYPES: MilkType[] = ['cow', 'sheep', 'goat', 'buffalo', 'mixed'];
+const PASTEURIZATION_OPTIONS: Pasteurization[] = ['raw', 'pasteurized', 'thermized'];
+const STYLE_OPTIONS: CheeseStyle[] = ['bloomy', 'washed', 'alpine', 'blue', 'fresh', 'pressed', 'hard'];
 
 export function Step1Basics() {
-  const { draft, setBasics } = useEntryDraftStore();
+  const { draft, setField } = useEntryDraftStore();
 
-  const countries = Object.keys(COUNTRIES_AND_REGIONS).sort();
-  const regions = draft.country ? Object.keys(COUNTRIES_AND_REGIONS[draft.country] ?? {}) : [];
-  const appellations =
-    draft.country && draft.region
-      ? COUNTRIES_AND_REGIONS[draft.country]?.[draft.region] ?? []
-      : [];
+  const priceStr = draft.price != null ? String(draft.price) : '';
 
-  const handleCountrySelect = (country: string) => {
-    setBasics({ country, region: '', appellation: '' });
+  const handlePriceChange = (v: string) => {
+    const parsed = parseFloat(v);
+    setField({ price: v === '' ? null : isNaN(parsed) ? null : parsed });
   };
-
-  const handleRegionSelect = (region: string) => {
-    setBasics({ region, appellation: '' });
-  };
-
-  const handleGrapeToggle = (grape: string) => {
-    const current = draft.grapes;
-    if (current.includes(grape)) {
-      setBasics({ grapes: current.filter((g) => g !== grape) });
-    } else {
-      setBasics({ grapes: [...current, grape] });
-    }
-  };
-
-  const handlePriceChange = (field: keyof PriceEntry, value: string) => {
-    const existing = draft.price[0] ?? { amount: 0, currency: 'USD', date: '', location: '' };
-    const updated: PriceEntry = {
-      ...existing,
-      [field]: field === 'amount' ? parseFloat(value) || 0 : value,
-    };
-    setBasics({ price: [updated] });
-  };
-
-  const topGrapes = GRAPE_VARIETIES.slice(0, 30);
 
   return (
     <ScrollView
@@ -55,158 +41,122 @@ export function Step1Basics() {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.stepTitle}>Wine Basics</Text>
+      <Text style={styles.stepTitle}>Cheese Details</Text>
 
+      {/* Name */}
       <TextInput
-        label="Wine Name"
+        label="Cheese Name *"
         value={draft.name}
-        onChangeText={(v) => setBasics({ name: v })}
-        placeholder="e.g., Château Margaux"
+        onChangeText={(v) => setField({ name: v })}
+        placeholder="e.g., Humboldt Fog"
+        autoCapitalize="words"
       />
 
+      {/* Producer */}
       <TextInput
-        label="Producer / Winery"
+        label="Producer / Creamery"
         value={draft.producer}
-        onChangeText={(v) => setBasics({ producer: v })}
-        placeholder="e.g., Château Margaux"
+        onChangeText={(v) => setField({ producer: v })}
+        placeholder="e.g., Cypress Grove"
+        autoCapitalize="words"
       />
 
-      <TextInput
-        label="Vintage"
-        value={draft.vintage ? String(draft.vintage) : ''}
-        onChangeText={(v) => setBasics({ vintage: parseInt(v) || null })}
-        keyboardType="number-pad"
-        placeholder="e.g., 2019"
-      />
-
-      {/* Country Selector */}
-      <Text style={styles.label}>Country</Text>
+      {/* Milk Type */}
+      <Text style={styles.label}>Milk Type</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
         <View style={styles.chipRow}>
-          {countries.map((c) => (
+          {MILK_TYPES.map((mt) => (
             <Pressable
-              key={c}
-              style={[styles.chip, draft.country === c && styles.chipSelected]}
-              onPress={() => handleCountrySelect(c)}
+              key={mt}
+              style={[styles.chip, draft.milk_type === mt && styles.chipSelected]}
+              onPress={() => setField({ milk_type: mt })}
             >
-              <Text style={[styles.chipText, draft.country === c && styles.chipTextSelected]}>
-                {c}
+              <Text style={[styles.chipText, draft.milk_type === mt && styles.chipTextSelected]}>
+                {MILK_TYPE_LABELS[mt]}
               </Text>
             </Pressable>
           ))}
         </View>
       </ScrollView>
 
-      {/* Region Selector */}
-      {regions.length > 0 && (
-        <>
-          <Text style={styles.label}>Region</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <View style={styles.chipRow}>
-              {regions.map((r) => (
-                <Pressable
-                  key={r}
-                  style={[styles.chip, draft.region === r && styles.chipSelected]}
-                  onPress={() => handleRegionSelect(r)}
-                >
-                  <Text style={[styles.chipText, draft.region === r && styles.chipTextSelected]}>
-                    {r}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        </>
-      )}
-
-      {/* Appellation Selector */}
-      {appellations.length > 0 && (
-        <>
-          <Text style={styles.label}>Appellation (optional)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-            <View style={styles.chipRow}>
-              {appellations.map((a) => (
-                <Pressable
-                  key={a}
-                  style={[styles.chip, draft.appellation === a && styles.chipSelected]}
-                  onPress={() => setBasics({ appellation: a })}
-                >
-                  <Text style={[styles.chipText, draft.appellation === a && styles.chipTextSelected]}>
-                    {a}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        </>
-      )}
-
-      {/* Grape Selection */}
-      <Text style={styles.label}>Grape Varieties</Text>
-      {draft.grapes.length > 0 && (
-        <View style={styles.selectedGrapes}>
-          {draft.grapes.map((g) => (
-            <Pressable
-              key={g}
-              style={styles.selectedChip}
-              onPress={() => handleGrapeToggle(g)}
-            >
-              <Text style={styles.selectedChipText}>{g} ✕</Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
+      {/* Pasteurization */}
+      <Text style={styles.label}>Pasteurization</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
         <View style={styles.chipRow}>
-          {topGrapes.map((g) => (
+          {PASTEURIZATION_OPTIONS.map((p) => (
             <Pressable
-              key={g}
-              style={[styles.chip, draft.grapes.includes(g) && styles.chipSelected]}
-              onPress={() => handleGrapeToggle(g)}
+              key={p}
+              style={[styles.chip, draft.pasteurization === p && styles.chipSelected]}
+              onPress={() => setField({ pasteurization: p })}
             >
-              <Text style={[styles.chipText, draft.grapes.includes(g) && styles.chipTextSelected]}>
-                {g}
+              <Text style={[styles.chipText, draft.pasteurization === p && styles.chipTextSelected]}>
+                {PASTEURIZATION_LABELS[p]}
               </Text>
             </Pressable>
           ))}
         </View>
       </ScrollView>
 
-      {/* Price */}
-      <Text style={styles.label}>Price (optional)</Text>
-      <View style={styles.priceRow}>
-        <TextInput
-          label="Amount"
-          value={draft.price[0] ? String(draft.price[0].amount || '') : ''}
-          onChangeText={(v) => handlePriceChange('amount', v)}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
-          containerStyle={{ flex: 1 }}
-        />
-        <TextInput
-          label="Currency"
-          value={draft.price[0]?.currency ?? 'USD'}
-          onChangeText={(v) => handlePriceChange('currency', v)}
-          placeholder="USD"
-          containerStyle={{ width: 70 }}
-        />
+      {/* Style — 2-column card grid */}
+      <Text style={styles.label}>Style</Text>
+      <View style={styles.styleGrid}>
+        {STYLE_OPTIONS.map((s) => {
+          const selected = draft.style === s;
+          return (
+            <Pressable
+              key={s}
+              style={[styles.styleCard, selected && styles.styleCardSelected]}
+              onPress={() => setField({ style: s })}
+            >
+              <Text style={styles.styleEmoji}>{CHEESE_STYLE_EMOJI[s]}</Text>
+              <Text style={[styles.styleName, selected && styles.styleNameSelected]}>
+                {CHEESE_STYLE_LABELS[s]}
+              </Text>
+              <Text style={styles.styleExample} numberOfLines={2}>
+                {CHEESE_STYLE_EXAMPLES[s]}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
+
+      {/* Region */}
+      <Text style={styles.label}>State / Region</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+        <View style={styles.chipRow}>
+          {US_REGIONS.map((r) => (
+            <Pressable
+              key={r}
+              style={[styles.chip, draft.region === r && styles.chipSelected]}
+              onPress={() => setField({ region: draft.region === r ? '' : r })}
+            >
+              <Text style={[styles.chipText, draft.region === r && styles.chipTextSelected]}>
+                {r}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+      {draft.region ? (
+        <Text style={styles.selectedRegion}>Selected: {draft.region}</Text>
+      ) : null}
 
       {/* Tasting Date */}
       <TextInput
         label="Tasting Date"
         value={draft.tasting_date}
-        onChangeText={(v) => setBasics({ tasting_date: v })}
+        onChangeText={(v) => setField({ tasting_date: v })}
         placeholder="YYYY-MM-DD"
         keyboardType="numbers-and-punctuation"
       />
 
-      {/* Location */}
+      {/* Price */}
       <TextInput
-        label="Location (restaurant, bar, etc.)"
-        value={draft.location_name}
-        onChangeText={(v) => setBasics({ location_name: v })}
-        placeholder="e.g., Le Bernardin, NYC"
+        label="Price (optional)"
+        value={priceStr}
+        onChangeText={handlePriceChange}
+        placeholder="e.g., 28.00"
+        keyboardType="decimal-pad"
       />
     </ScrollView>
   );
@@ -216,8 +166,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: {
     padding: Spacing.xl,
-    gap: 4,
     paddingBottom: Spacing.huge,
+    gap: 4,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -243,8 +193,8 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.xl,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: Radius.full,
     borderWidth: 0.5,
     borderColor: Colors.border,
@@ -256,35 +206,57 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontFamily: Fonts.dmSansRegular,
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.inkMid,
   },
   chipTextSelected: {
     color: Colors.ink,
     fontFamily: Fonts.dmSansMedium,
   },
-  selectedGrapes: {
+  styleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: Spacing.md,
   },
-  selectedChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
+  styleCard: {
+    width: '47.5%',
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceAlt,
+    gap: 3,
+  },
+  styleCardSelected: {
     backgroundColor: Colors.goldPale,
-    borderWidth: 0.5,
     borderColor: Colors.gold,
   },
-  selectedChipText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 12,
+  styleEmoji: {
+    fontSize: 20,
+    marginBottom: 2,
+  },
+  styleName: {
+    fontFamily: Fonts.playfair,
+    fontSize: 14,
+    color: Colors.ink,
+    lineHeight: 18,
+  },
+  styleNameSelected: {
     color: Colors.inkMid,
   },
-  priceRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'flex-end',
+  styleExample: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 10,
+    color: Colors.inkMuted,
+    lineHeight: 14,
+    fontStyle: 'italic',
+  },
+  selectedRegion: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.gold,
+    marginBottom: Spacing.sm,
+    marginTop: -Spacing.sm,
   },
 });

@@ -12,37 +12,48 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
-import { WineListItem } from '@/components/wine/WineListItem';
+import { CheeseListItem } from '@/components/cheese/CheeseListItem';
 import { useAuthStore } from '@/stores/authStore';
-import { useWineStore } from '@/stores/wineStore';
+import { useCheeseStore } from '@/stores/cheeseStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
-import { WineEntry, COUNTRIES_AND_REGIONS } from '@/types';
+import { CheeseEntry, CHEESE_STYLE_LABELS, CheeseStyle } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
-const SORT_OPTIONS = ['Recent', 'Score ↓', 'Score ↑', 'Vintage ↓'] as const;
+type NavProp = NativeStackNavigationProp<MainStackParamList>;
+
+const SORT_OPTIONS = ['Recent', 'Name A–Z', 'Region A–Z'] as const;
 type SortOption = typeof SORT_OPTIONS[number];
 
-function sortEntries(entries: WineEntry[], sort: SortOption): WineEntry[] {
+const STYLE_FILTER_OPTIONS: Array<{ key: CheeseStyle | ''; label: string }> = [
+  { key: '', label: 'All Styles' },
+  { key: 'bloomy', label: 'Bloomy' },
+  { key: 'washed', label: 'Washed' },
+  { key: 'alpine', label: 'Alpine' },
+  { key: 'blue', label: 'Blue' },
+  { key: 'fresh', label: 'Fresh' },
+  { key: 'pressed', label: 'Pressed' },
+  { key: 'hard', label: 'Hard' },
+];
+
+function sortEntries(entries: CheeseEntry[], sort: SortOption): CheeseEntry[] {
   return [...entries].sort((a, b) => {
     switch (sort) {
-      case 'Score ↓': return b.technical_score - a.technical_score;
-      case 'Score ↑': return a.technical_score - b.technical_score;
-      case 'Vintage ↓': return (b.vintage ?? 0) - (a.vintage ?? 0);
+      case 'Name A–Z': return a.name.localeCompare(b.name);
+      case 'Region A–Z': return (a.region ?? '').localeCompare(b.region ?? '');
       default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
   });
 }
 
 export function SearchScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const navigation = useNavigation<NavProp>();
   const { user } = useAuthStore();
-  const { entries, searchResults, searching, search, clearSearch, loadEntries } = useWineStore();
+  const { entries, searchResults, searching, search, clearSearch, loadEntries } = useCheeseStore();
   const { isSubscribed } = useSubscriptionStore();
 
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('Recent');
-  const [filterCountry, setFilterCountry] = useState('');
-  const [filterMinScore, setFilterMinScore] = useState('');
+  const [filterStyle, setFilterStyle] = useState<CheeseStyle | ''>('');
   const [showFilters, setShowFilters] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -51,16 +62,10 @@ export function SearchScreen() {
   }, [user]);
 
   const runSearch = useCallback(
-    (q: string, country: string, minScore: string) => {
+    (q: string, style: CheeseStyle | '') => {
       if (!user) return;
-      if (!q && !country && !minScore) {
-        clearSearch();
-        return;
-      }
-      search(user.id, q, {
-        country: country || undefined,
-        minScore: minScore ? parseInt(minScore) : undefined,
-      });
+      if (!q && !style) { clearSearch(); return; }
+      search(user.id, q, { style: style || undefined });
     },
     [user, search, clearSearch]
   );
@@ -68,35 +73,31 @@ export function SearchScreen() {
   const handleQueryChange = (text: string) => {
     setQuery(text);
     if (debounceTimer) clearTimeout(debounceTimer);
-    const timer = setTimeout(() => {
-      runSearch(text, filterCountry, filterMinScore);
-    }, 400);
+    const timer = setTimeout(() => runSearch(text, filterStyle), 400);
     setDebounceTimer(timer);
   };
 
-  const displayEntries = query || filterCountry || filterMinScore
+  const displayEntries = query || filterStyle
     ? searchResults
     : sortEntries(entries, sortBy);
 
-  const countries = Object.keys(COUNTRIES_AND_REGIONS).sort();
-
-  const handleWinePress = (entry: WineEntry) => {
-    navigation.navigate('WineDetail', { entryId: entry.id });
+  const handleCheesePress = (entry: CheeseEntry) => {
+    navigation.navigate('CheeseDetail', { entryId: entry.id });
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Wines</Text>
+        <Text style={styles.title}>My Cheeses</Text>
         <Text style={styles.count}>{entries.length} entries</Text>
       </View>
 
-      {/* Search Bar */}
+      {/* Search bar */}
       <View style={styles.searchWrap}>
         <TextInput
           value={query}
           onChangeText={handleQueryChange}
-          placeholder="Search wines, producers, regions…"
+          placeholder="Search cheese, creamery, region…"
           containerStyle={styles.searchInput}
         />
         <Pressable
@@ -110,53 +111,35 @@ export function SearchScreen() {
       {/* Filters */}
       {showFilters && (
         <View style={styles.filtersPanel}>
-          <Text style={styles.filtersTitle}>Filters</Text>
-          <View style={styles.filterRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.filterLabel}>Country</Text>
+          <Text style={styles.filtersTitle}>Style</Text>
+          <View style={styles.styleFilterRow}>
+            {STYLE_FILTER_OPTIONS.map(({ key, label }) => (
               <Pressable
-                style={styles.filterSelect}
+                key={key}
+                style={[styles.filterChip, filterStyle === key && styles.filterChipActive]}
                 onPress={() => {
-                  // Simple cycle through countries for MVP
-                  const idx = countries.indexOf(filterCountry);
-                  const next = countries[(idx + 1) % countries.length] ?? '';
-                  setFilterCountry(next);
-                  runSearch(query, next, filterMinScore);
+                  setFilterStyle(key);
+                  runSearch(query, key);
                 }}
               >
-                <Text style={styles.filterSelectText}>
-                  {filterCountry || 'Any country'}
+                <Text style={[styles.filterChipText, filterStyle === key && styles.filterChipTextActive]}>
+                  {label}
                 </Text>
               </Pressable>
-            </View>
-
-            <View style={{ width: 90 }}>
-              <Text style={styles.filterLabel}>Min Score</Text>
-              <TextInput
-                value={filterMinScore}
-                onChangeText={(v) => {
-                  setFilterMinScore(v);
-                  runSearch(query, filterCountry, v);
-                }}
-                keyboardType="number-pad"
-                placeholder="0"
-                containerStyle={{ marginBottom: 0 }}
-              />
-            </View>
+            ))}
           </View>
-
           {!isSubscribed && (
             <View style={styles.paywallHint}>
               <Text style={styles.paywallText}>
-                🔒 Upgrade to Pro for compound search (price range, terroir, tags…)
+                🔒 Upgrade to Pro for compound search (milk type, region, price range…)
               </Text>
             </View>
           )}
         </View>
       )}
 
-      {/* Sort Options */}
-      {!query && !filterCountry && !filterMinScore && (
+      {/* Sort chips */}
+      {!query && !filterStyle && (
         <View style={styles.sortRow}>
           {SORT_OPTIONS.map((opt) => (
             <Pressable
@@ -172,7 +155,6 @@ export function SearchScreen() {
         </View>
       )}
 
-      {/* Results */}
       {searching ? (
         <View style={styles.searchingWrap}>
           <ActivityIndicator color={Colors.gold} />
@@ -182,16 +164,14 @@ export function SearchScreen() {
           data={displayEntries}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WineListItem entry={item} onPress={handleWinePress} />
+            <CheeseListItem entry={item} onPress={handleCheesePress} />
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
-                {query || filterCountry || filterMinScore
-                  ? 'No wines match your search'
-                  : 'No wines logged yet'}
+                {query || filterStyle ? 'No cheeses match your search' : 'No cheeses logged yet'}
               </Text>
             </View>
           }
@@ -228,10 +208,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     alignItems: 'flex-start',
   },
-  searchInput: {
-    flex: 1,
-    marginBottom: 0,
-  },
+  searchInput: { flex: 1, marginBottom: 0 },
   filterBtn: {
     paddingHorizontal: 14,
     paddingVertical: 11,
@@ -266,31 +243,31 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.inkMuted,
   },
-  filterRow: {
+  styleFilterRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'flex-end',
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  filterLabel: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 11,
-    color: Colors.inkMuted,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  filterSelect: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.md,
-    borderWidth: 1,
+  filterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
   },
-  filterSelectText: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 14,
+  filterChipActive: {
+    backgroundColor: Colors.gold,
+    borderColor: Colors.gold,
+  },
+  filterChipText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
     color: Colors.inkMid,
+  },
+  filterChipTextActive: {
+    color: Colors.ink,
+    fontFamily: Fonts.dmSansMedium,
   },
   paywallHint: {
     backgroundColor: Colors.blueLight,
@@ -326,9 +303,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.inkMid,
   },
-  sortTextActive: {
-    color: Colors.gold,
-  },
+  sortTextActive: { color: Colors.gold },
   listContent: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.huge,

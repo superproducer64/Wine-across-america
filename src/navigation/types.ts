@@ -7,7 +7,7 @@ export type AuthStackParamList = {
   Signup: undefined;
 };
 
-// ─── Tab Navigator (no modals) ────────────────────────────────────────────────
+// ─── Tab Navigator ────────────────────────────────────────────────────────────
 
 export type TabParamList = {
   Home: undefined;
@@ -20,7 +20,7 @@ export type TabParamList = {
 
 export type MainStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
-  WineDetail: { entryId: string };
+  CheeseDetail: { entryId: string };
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
@@ -30,5 +30,4 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainStackParamList>;
 };
 
-// Convenience re-export used by screens that navigate to WineDetail
 export type MainTabParamList = MainStackParamList;

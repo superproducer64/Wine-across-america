@@ -1,197 +1,86 @@
-// ─── Enums & Constants ───────────────────────────────────────────────────────
+// ─── Cheese Enums & Labels ────────────────────────────────────────────────────
 
-export type TerriorSoil = 'limestone' | 'volcanic' | 'granite' | 'clay' | 'sand';
-export type TerriorClimate = 'cool' | 'moderate' | 'warm';
+export type MilkType = 'cow' | 'sheep' | 'goat' | 'buffalo' | 'mixed';
+export type Pasteurization = 'raw' | 'pasteurized' | 'thermized';
+export type CheeseStyle = 'bloomy' | 'washed' | 'alpine' | 'blue' | 'fresh' | 'pressed' | 'hard';
 
-export const TERROIR_SOIL_LABELS: Record<TerriorSoil, string> = {
-  limestone: 'Limestone',
-  volcanic: 'Volcanic',
-  granite: 'Granite',
-  clay: 'Clay',
-  sand: 'Sand',
+export const MILK_TYPE_LABELS: Record<MilkType, string> = {
+  cow: 'Cow',
+  sheep: 'Sheep',
+  goat: 'Goat',
+  buffalo: 'Buffalo',
+  mixed: 'Mixed',
 };
 
-export const TERROIR_CLIMATE_LABELS: Record<TerriorClimate, string> = {
-  cool: 'Cool',
-  moderate: 'Moderate',
-  warm: 'Warm',
+export const PASTEURIZATION_LABELS: Record<Pasteurization, string> = {
+  raw: 'Raw',
+  pasteurized: 'Pasteurized',
+  thermized: 'Thermized',
 };
 
-// ─── Aroma Data ──────────────────────────────────────────────────────────────
+export const CHEESE_STYLE_LABELS: Record<CheeseStyle, string> = {
+  bloomy: 'Bloomy Rind',
+  washed: 'Washed Rind',
+  alpine: 'Alpine',
+  blue: 'Blue',
+  fresh: 'Fresh',
+  pressed: 'Pressed',
+  hard: 'Hard / Aged',
+};
 
-export interface AromaCategory {
-  id: string;
-  label: string;
-  emoji: string;
-  subcategories: string[];
-}
+export const CHEESE_STYLE_EXAMPLES: Record<CheeseStyle, string> = {
+  bloomy: 'Brie, Camembert, Humboldt Fog',
+  washed: 'Taleggio, Red Hawk, Winnimere',
+  alpine: 'Gruyère, Pleasant Ridge Reserve',
+  blue: 'Rogue River Blue, Maytag, Bayley Hazen',
+  fresh: 'Chèvre, Ricotta, Fromage Blanc',
+  pressed: 'Gouda, Manchego, Tomme',
+  hard: 'Aged Cheddar, Pecorino, Parmigiano',
+};
 
-export const AROMA_CATEGORIES: AromaCategory[] = [
-  {
-    id: 'citrus',
-    label: 'Citrus',
-    emoji: '🍋',
-    subcategories: ['Lemon', 'Lime', 'Grapefruit', 'Orange peel', 'Yuzu'],
-  },
-  {
-    id: 'tree-fruit',
-    label: 'Tree Fruit',
-    emoji: '🍎',
-    subcategories: ['Apple', 'Pear', 'Peach', 'Apricot', 'Quince'],
-  },
-  {
-    id: 'tropical',
-    label: 'Tropical',
-    emoji: '🍍',
-    subcategories: ['Pineapple', 'Mango', 'Passion fruit', 'Guava', 'Lychee'],
-  },
-  {
-    id: 'red-fruit',
-    label: 'Red Fruit',
-    emoji: '🍓',
-    subcategories: ['Strawberry', 'Raspberry', 'Cranberry', 'Red cherry', 'Red plum'],
-  },
-  {
-    id: 'dark-fruit',
-    label: 'Dark Fruit',
-    emoji: '🫐',
-    subcategories: ['Blackberry', 'Blueberry', 'Black cherry', 'Black plum', 'Cassis'],
-  },
-  {
-    id: 'dried-fruit',
-    label: 'Dried Fruit',
-    emoji: '🍇',
-    subcategories: ['Raisin', 'Fig', 'Prune', 'Date', 'Dried apricot'],
-  },
-  {
-    id: 'floral',
-    label: 'Floral',
-    emoji: '🌸',
-    subcategories: ['Rose', 'Violet', 'Jasmine', 'Orange blossom', 'Lavender'],
-  },
-  {
-    id: 'herbaceous',
-    label: 'Herbaceous',
-    emoji: '🌿',
-    subcategories: ['Grass', 'Bell pepper', 'Asparagus', 'Tomato leaf', 'Sage'],
-  },
-  {
-    id: 'earthy',
-    label: 'Earthy',
-    emoji: '🌍',
-    subcategories: ['Mushroom', 'Forest floor', 'Truffle', 'Wet earth', 'Clay'],
-  },
-  {
-    id: 'mineral',
-    label: 'Mineral',
-    emoji: '🪨',
-    subcategories: ['Chalk', 'Flint', 'Slate', 'Wet stone', 'Graphite'],
-  },
-  {
-    id: 'oak-spice',
-    label: 'Oak & Spice',
-    emoji: '🌰',
-    subcategories: ['Vanilla', 'Cedar', 'Clove', 'Cinnamon', 'Toast'],
-  },
-  {
-    id: 'savory',
-    label: 'Savory',
-    emoji: '🫙',
-    subcategories: ['Olive', 'Leather', 'Game', 'Meat', 'Tobacco'],
-  },
-  {
-    id: 'sweet-baking',
-    label: 'Sweet & Baking',
-    emoji: '🍫',
-    subcategories: ['Chocolate', 'Coffee', 'Caramel', 'Mocha', 'Honey'],
-  },
-  {
-    id: 'other',
-    label: 'Other',
-    emoji: '✨',
-    subcategories: ['Petrol', 'Rubber', 'Smoke', 'Butter', 'Cream'],
-  },
+export const CHEESE_STYLE_EMOJI: Record<CheeseStyle, string> = {
+  bloomy: '🌸',
+  washed: '🧡',
+  alpine: '⛰️',
+  blue: '💙',
+  fresh: '🥛',
+  pressed: '🧱',
+  hard: '🪵',
+};
+
+// ─── US Regions ───────────────────────────────────────────────────────────────
+
+export const US_REGIONS = [
+  'California', 'Colorado', 'Connecticut', 'Georgia',
+  'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts',
+  'Michigan', 'Minnesota', 'Missouri', 'Montana',
+  'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
+  'North Carolina', 'Ohio', 'Oregon', 'Pennsylvania',
+  'South Carolina', 'Tennessee', 'Texas', 'Utah',
+  'Vermont', 'Virginia', 'Washington', 'Wisconsin', 'Wyoming',
+  'Other',
 ];
 
-// Smart shortcuts for aroma quick-select
-export const AROMA_SHORTCUTS: Record<string, string[]> = {
-  'Crisp white': ['citrus', 'mineral', 'herbaceous'],
-  'Rich white': ['tree-fruit', 'oak-spice', 'sweet-baking'],
-  'Light red': ['red-fruit', 'floral', 'earthy'],
-  'Bold red': ['dark-fruit', 'oak-spice', 'savory'],
-  'Sparkling': ['citrus', 'floral', 'mineral'],
-};
+// ─── Cheese Entry ─────────────────────────────────────────────────────────────
 
-// ─── Price Entry ─────────────────────────────────────────────────────────────
-
-export interface PriceEntry {
-  amount: number;
-  currency: string;
-  date: string;
-  location: string;
-}
-
-// ─── Wine Entry ───────────────────────────────────────────────────────────────
-
-export interface WineEntry {
+export interface CheeseEntry {
   id: string;
   user_id: string;
-
-  // Basics
   name: string;
   producer: string;
-  vintage: number | null;
-  country: string;
+  milk_type: MilkType;
+  pasteurization: Pasteurization;
+  style: CheeseStyle;
   region: string;
-  appellation: string;
-  grapes: string[];
-  price: PriceEntry[];
   tasting_date: string;
-  location_name: string;
-  location_geo: { lat: number; lng: number } | null;
-
-  // Structure Wheel (1-10)
-  acidity: number;
-  tannin: number;
-  body: number;
-  alcohol: number;
-  intensity: number;
-  finish_length: number;
-
-  // Technical Score (0-20 each)
-  score_balance: number;
-  score_intensity: number;
-  score_complexity: number;
-  score_finish: number;
-  score_typicity: number;
-  technical_score: number; // computed
-
-  // Tasting notes
-  free_notes: string;
-  aromas_l1: string[];
-  aromas_l2: string[];
-  tags: string[];
-  want_another_glass: boolean;
-  want_to_buy: boolean;
-
-  // Terroir
-  terroir_soil: TerriorSoil | null;
-  terroir_climate: TerriorClimate | null;
-  terroir_visible: boolean;
-
-  // Creator / Signature Score (creator-only write)
-  sig_sense_of_place: number | null;
-  sig_story: number | null;
-  sig_viticulture: number | null;
-  sig_structure: number | null;
-  sig_enjoyment: number | null;
-  signature_score: number | null;
-
+  price: number | null;
+  notes: string;
   created_at: string;
   updated_at: string;
 }
 
-export type WineEntryDraft = Omit<WineEntry, 'id' | 'user_id' | 'technical_score' | 'signature_score' | 'created_at' | 'updated_at'>;
+export type CheeseEntryDraft = Omit<CheeseEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
 
@@ -203,276 +92,4 @@ export interface UserProfile {
   is_creator: boolean;
   subscription_tier: 'free' | 'pro';
   created_at: string;
-}
-
-// ─── Wine Data Lists ──────────────────────────────────────────────────────────
-
-export const COUNTRIES_AND_REGIONS: Record<string, Record<string, string[]>> = {
-  France: {
-    Bordeaux: ['Médoc', 'Saint-Émilion', 'Pomerol', 'Sauternes', 'Pessac-Léognan'],
-    Burgundy: ['Côte de Nuits', 'Côte de Beaune', 'Chablis', 'Mâconnais'],
-    'Rhône Valley': ['Northern Rhône', 'Southern Rhône', 'Châteauneuf-du-Pape'],
-    Champagne: ['Grand Cru', 'Premier Cru'],
-    Alsace: ['Alsace', 'Alsace Grand Cru'],
-    Loire: ['Sancerre', 'Pouilly-Fumé', 'Muscadet', 'Chinon'],
-    Provence: ['Côtes de Provence', 'Bandol'],
-    Languedoc: ['Languedoc-Roussillon', 'Pic Saint-Loup'],
-  },
-  Italy: {
-    Tuscany: ['Chianti Classico', 'Brunello di Montalcino', 'Bolgheri', 'Montepulciano'],
-    Piedmont: ['Barolo', 'Barbaresco', 'Barbera d\'Asti', 'Moscato d\'Asti'],
-    Veneto: ['Amarone', 'Soave', 'Valpolicella', 'Prosecco'],
-    Sicily: ['Etna', 'Marsala', 'Nero d\'Avola'],
-    Sardinia: ['Cannonau di Sardegna', 'Vermentino di Sardegna'],
-    'Friuli-Venezia Giulia': ['Collio', 'Friuli Colli Orientali'],
-  },
-  Spain: {
-    Rioja: ['Rioja Alta', 'Rioja Alavesa', 'Rioja Oriental'],
-    Ribera: ['Ribera del Duero'],
-    Priorat: ['Priorat DOCa'],
-    Galicia: ['Rías Baixas', 'Ribeira Sacra'],
-    Catalonia: ['Penedès', 'Cava'],
-    Jerez: ['Jerez-Xérès-Sherry'],
-  },
-  'United States': {
-    California: ['Napa Valley', 'Sonoma', 'Paso Robles', 'Santa Barbara', 'Monterey'],
-    Oregon: ['Willamette Valley', 'Rogue Valley'],
-    Washington: ['Columbia Valley', 'Walla Walla', 'Yakima Valley'],
-    'New York': ['Finger Lakes', 'Long Island'],
-  },
-  Germany: {
-    Mosel: ['Mosel', 'Saar', 'Ruwer'],
-    Rheingau: ['Rheingau'],
-    Pfalz: ['Pfalz'],
-    Baden: ['Baden'],
-    Rheinhessen: ['Rheinhessen'],
-  },
-  Argentina: {
-    Mendoza: ['Luján de Cuyo', 'Maipú', 'Uco Valley'],
-    Salta: ['Cafayate'],
-    Patagonia: ['Río Negro', 'Neuquén'],
-  },
-  Chile: {
-    'Maipo Valley': ['Maipo Valley'],
-    Colchagua: ['Colchagua Valley'],
-    Casablanca: ['Casablanca Valley'],
-    Leyda: ['Leyda Valley'],
-  },
-  Australia: {
-    'South Australia': ['Barossa Valley', 'Clare Valley', 'McLaren Vale', 'Eden Valley'],
-    Victoria: ['Yarra Valley', 'Mornington Peninsula', 'Heathcote'],
-    'Western Australia': ['Margaret River'],
-    'New South Wales': ['Hunter Valley'],
-  },
-  'New Zealand': {
-    Marlborough: ['Marlborough'],
-    'Central Otago': ['Central Otago'],
-    Hawke: ["Hawke's Bay"],
-  },
-  Portugal: {
-    Douro: ['Douro', 'Port'],
-    Alentejo: ['Alentejo'],
-    Lisboa: ['Lisboa'],
-    'Vinho Verde': ['Minho'],
-  },
-  Austria: {
-    Wachau: ['Wachau'],
-    Kamptal: ['Kamptal'],
-    Kremstal: ['Kremstal'],
-    Styria: ['Südsteiermark'],
-  },
-};
-
-export const GRAPE_VARIETIES = [
-  // White
-  'Chardonnay', 'Sauvignon Blanc', 'Riesling', 'Pinot Gris', 'Pinot Grigio',
-  'Gewürztraminer', 'Albariño', 'Grüner Veltliner', 'Viognier', 'Chenin Blanc',
-  'Muscadet', 'Roussanne', 'Marsanne', 'Vermentino', 'Trebbiano', 'Fiano',
-  'Greco di Tufo', 'Arneis', 'Gavi / Cortese', 'Falanghina', 'Verdejo',
-  'Torrontés', 'Assyrtiko', 'Muscat', 'Pinot Blanc',
-
-  // Red
-  'Cabernet Sauvignon', 'Merlot', 'Pinot Noir', 'Syrah / Shiraz', 'Grenache',
-  'Tempranillo', 'Sangiovese', 'Nebbiolo', 'Barbera', 'Dolcetto', 'Montepulciano',
-  'Aglianico', 'Primitivo / Zinfandel', 'Nero d\'Avola', 'Carménère', 'Malbec',
-  'Cabernet Franc', 'Mourvèdre', 'Gamay', 'Petite Sirah', 'Petit Verdot',
-  'Garnacha', 'Bobal', 'Mencía', 'Touriga Nacional', 'Tinta Barroca',
-  'Blaufränkisch', 'Zweigelt', 'St. Laurent',
-].sort();
-
-// ─── Structure Wheel ─────────────────────────────────────────────────────────
-
-export interface StructureDimension {
-  key: keyof Pick<WineEntry, 'acidity' | 'tannin' | 'body' | 'alcohol' | 'intensity' | 'finish_length'>;
-  label: string;
-  displayLabel: string;
-  lowAnchor: string;
-  highAnchor: string;
-  tip: string;
-}
-
-export const STRUCTURE_DIMENSIONS: StructureDimension[] = [
-  {
-    key: 'acidity',
-    label: 'Acidity',
-    displayLabel: 'Acidity',
-    lowAnchor: '🍌 Banana/melon',
-    highAnchor: '🍋 Lemon juice',
-    tip: 'The more your mouth waters, the higher the acidity',
-  },
-  {
-    key: 'tannin',
-    label: 'Tannin',
-    displayLabel: 'Tannin',
-    lowAnchor: '🧶 Silk',
-    highAnchor: '🍵 Strong black tea',
-    tip: 'Focus on gums and teeth, not tongue',
-  },
-  {
-    key: 'body',
-    label: 'Body',
-    displayLabel: 'Body',
-    lowAnchor: '💧 Water',
-    highAnchor: '🥛 Heavy cream',
-    tip: 'Think texture, not flavor',
-  },
-  {
-    key: 'alcohol',
-    label: 'Alcohol',
-    displayLabel: 'Alcohol',
-    lowAnchor: '❄️ No heat',
-    highAnchor: '🥃 Whiskey burn',
-    tip: 'Focus on throat/chest warmth after swallowing',
-  },
-  {
-    key: 'intensity',
-    label: 'Intensity',
-    displayLabel: 'Intensity',
-    lowAnchor: '🌫️ Faint/neutral',
-    highAnchor: '🌺 Perfume store',
-    tip: 'How quickly do you notice it?',
-  },
-  {
-    key: 'finish_length',
-    label: 'Finish Length',
-    displayLabel: 'Finish Length',
-    lowAnchor: '💨 Disappears',
-    highAnchor: '⏱️ 30+ seconds',
-    tip: 'Count seconds after swallowing',
-  },
-];
-
-// ─── Technical Score ─────────────────────────────────────────────────────────
-
-export interface TechnicalCategory {
-  key: keyof Pick<WineEntry, 'score_balance' | 'score_intensity' | 'score_complexity' | 'score_finish' | 'score_typicity'>;
-  label: string;
-  description: string;
-}
-
-export const TECHNICAL_CATEGORIES: TechnicalCategory[] = [
-  {
-    key: 'score_balance',
-    label: 'Balance',
-    description: 'Do acidity, tannin, alcohol, body, fruit, and oak work in harmony?',
-  },
-  {
-    key: 'score_intensity',
-    label: 'Intensity',
-    description: 'How expressive is the wine on the nose and palate?',
-  },
-  {
-    key: 'score_complexity',
-    label: 'Complexity',
-    description: 'How many layers? Does it evolve, open up, stay interesting?',
-  },
-  {
-    key: 'score_finish',
-    label: 'Finish Quality',
-    description: 'Quality and length of what remains after swallowing',
-  },
-  {
-    key: 'score_typicity',
-    label: 'Typicity',
-    description: 'Does it express its grape, region, and intended style clearly?',
-  },
-];
-
-// ─── Signature Score (creator) ────────────────────────────────────────────────
-
-export interface SignatureCategory {
-  key: keyof Pick<WineEntry, 'sig_sense_of_place' | 'sig_story' | 'sig_viticulture' | 'sig_structure' | 'sig_enjoyment'>;
-  label: string;
-  description: string;
-}
-
-export const SIGNATURE_CATEGORIES: SignatureCategory[] = [
-  {
-    key: 'sig_sense_of_place',
-    label: 'Sense of Place',
-    description: 'Does the wine clearly communicate its terroir and origin?',
-  },
-  {
-    key: 'sig_story',
-    label: 'Story & Authenticity',
-    description: 'Does the producer have a compelling, honest story?',
-  },
-  {
-    key: 'sig_viticulture',
-    label: 'Viticulture & Winemaking',
-    description: 'Quality of farming and cellar practices',
-  },
-  {
-    key: 'sig_structure',
-    label: 'Structure & Balance',
-    description: 'Technical quality assessment',
-  },
-  {
-    key: 'sig_enjoyment',
-    label: 'Overall Enjoyment',
-    description: 'Would you drink this again? Pure pleasure factor.',
-  },
-];
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-export function computeTechnicalScore(entry: Partial<WineEntry>): number {
-  return (
-    (entry.score_balance ?? 0) +
-    (entry.score_intensity ?? 0) +
-    (entry.score_complexity ?? 0) +
-    (entry.score_finish ?? 0) +
-    (entry.score_typicity ?? 0)
-  );
-}
-
-export function computeSignatureScore(entry: Partial<WineEntry>): number | null {
-  const vals = [
-    entry.sig_sense_of_place,
-    entry.sig_story,
-    entry.sig_viticulture,
-    entry.sig_structure,
-    entry.sig_enjoyment,
-  ];
-  if (vals.some((v) => v == null)) return null;
-  return vals.reduce((sum, v) => sum + (v ?? 0), 0);
-}
-
-export function getStyleSummary(entry: Partial<WineEntry>) {
-  const acidity = entry.acidity ?? 5;
-  const tannin = entry.tannin ?? 5;
-  const body = entry.body ?? 5;
-  const alcohol = entry.alcohol ?? 5;
-
-  // Normalize to 0-1
-  return {
-    // Low acidity → sweet-ish perception; high acidity → dry
-    dryness: acidity / 10,
-    // Body maps to fullness
-    fullness: body / 10,
-    // Direct acidity mapping
-    acidity: acidity / 10,
-    // Tannin maps to tannic
-    tannin: tannin / 10,
-  };
 }
