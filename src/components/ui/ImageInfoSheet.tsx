@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -7,8 +7,8 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  Dimensions,
   ImageSourcePropType,
+  useWindowDimensions,
 } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
 
@@ -20,14 +20,11 @@ interface ImageInfoSheetProps {
   scrollHint?: string;
 }
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const FALLBACK_RATIO = 2200 / 1700;
+const FALLBACK_H_W_RATIO = 2200 / 1700;
 
 export function ImageInfoSheet({ visible, onClose, title, source, scrollHint }: ImageInfoSheetProps) {
-  const asset = Image.resolveAssetSource(source);
-  const imageHeight = asset && asset.width > 0
-    ? SCREEN_WIDTH * (asset.height / asset.width)
-    : SCREEN_WIDTH * FALLBACK_RATIO;
+  const { width: screenWidth } = useWindowDimensions();
+  const [hwRatio, setHwRatio] = useState(FALLBACK_H_W_RATIO);
 
   return (
     <Modal
@@ -59,8 +56,14 @@ export function ImageInfoSheet({ visible, onClose, title, source, scrollHint }: 
         >
           <Image
             source={source}
-            style={[styles.image, { height: imageHeight }]}
+            style={{ width: screenWidth, height: screenWidth * hwRatio }}
             resizeMode="contain"
+            onLoad={(e) => {
+              const { width, height } = e.nativeEvent.source;
+              if (width && height) {
+                setHwRatio(height / width);
+              }
+            }}
           />
         </ScrollView>
       </View>
@@ -127,8 +130,5 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: 'center',
     paddingVertical: Spacing.lg,
-  },
-  image: {
-    width: SCREEN_WIDTH,
   },
 });
