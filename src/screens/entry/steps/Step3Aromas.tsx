@@ -12,6 +12,7 @@ import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import {
   AROMA_CATEGORIES,
+  AROMA_GROUPS,
   WINE_SHORTCUTS,
   WineShortcut,
   getCategorySubcategories,
@@ -35,6 +36,9 @@ export function Step3Aromas() {
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState('');
 
+  const isSommelier =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+
   const addCustomTag = () => {
     const tag = customInput.trim();
     if (!tag || draft.custom_aromas.includes(tag) || draft.custom_aromas.length >= MAX_CUSTOM_TAGS) return;
@@ -46,22 +50,11 @@ export function Step3Aromas() {
     setCustomAromas(draft.custom_aromas.filter((t) => t !== tag));
   };
 
-  const isSommelier =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
-
-  // Categories visible to the current user
-  const visibleCategories = AROMA_CATEGORIES.filter(
-    (cat) => isSommelier || !cat.sommelier_only
-  );
-
   const toggleL1 = (id: string) => {
     const current = draft.aromas_l1;
     if (current.includes(id)) {
       const category = AROMA_CATEGORIES.find((c) => c.id === id);
-      // Remove all subcategories (shared + sommelier) when de-selecting a category
-      const allSubs = category
-        ? getCategorySubcategories(category, true)
-        : [];
+      const allSubs = category ? getCategorySubcategories(category, true) : [];
       const l2Next = draft.aromas_l2.filter((a) => !allSubs.includes(a));
       setAromas(current.filter((a) => a !== id), l2Next);
       if (expandedCategory === id) setExpandedCategory(null);
@@ -76,9 +69,7 @@ export function Step3Aromas() {
     const current = draft.aromas_l2;
     setAromas(
       draft.aromas_l1,
-      current.includes(aroma)
-        ? current.filter((a) => a !== aroma)
-        : [...current, aroma]
+      current.includes(aroma) ? current.filter((a) => a !== aroma) : [...current, aroma]
     );
     setActiveShortcutId(null);
   };
@@ -97,7 +88,7 @@ export function Step3Aromas() {
   const summaryPanel = (draft.aromas_l1.length > 0 || isWide) ? (
     <View style={[styles.summary, isWide && styles.summarySticky]}>
       <Text style={styles.summaryTitle}>
-        {draft.aromas_l1.length > 0 ? 'Selected' : 'No aromas selected yet'}
+        {draft.aromas_l1.length > 0 ? 'Selected Aromas' : 'No aromas selected yet'}
       </Text>
       {draft.aromas_l1.length > 0 && (
         <>
@@ -110,25 +101,19 @@ export function Step3Aromas() {
               .join(' · ')}
           </Text>
           {draft.aromas_l2.length > 0 && (
-            <Text style={styles.summaryL2}>
-              {draft.aromas_l2.join(' · ')}
-            </Text>
+            <Text style={styles.summaryL2}>{draft.aromas_l2.join(' · ')}</Text>
           )}
           {draft.aromas_other_note ? (
-            <Text style={styles.summaryL2}>
-              ✨ {draft.aromas_other_note}
-            </Text>
+            <Text style={styles.summaryL2}>✨ {draft.aromas_other_note}</Text>
           ) : null}
           {draft.custom_aromas.length > 0 && (
-            <Text style={styles.summaryL2}>
-              💭 {draft.custom_aromas.join(', ')}
-            </Text>
+            <Text style={styles.summaryL2}>💭 {draft.custom_aromas.join(', ')}</Text>
           )}
         </>
       )}
       {draft.aromas_l1.length === 0 && (
         <Text style={styles.summaryHint}>
-          Tap a category on the left to build your aroma profile.
+          Tap a category below to build your aroma profile.
         </Text>
       )}
     </View>
@@ -139,7 +124,7 @@ export function Step3Aromas() {
       {/* Style Shortcuts */}
       <Text style={styles.sectionLabel}>Style Shortcuts</Text>
       <Text style={styles.shortcutHint}>
-        Tap a style to auto-fill aromas and structure sliders — you can adjust anything after.
+        Tap a style to auto-fill aromas and structure — adjust anything after.
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.shortcutScroll}>
         <View style={styles.shortcutRow}>
@@ -164,9 +149,9 @@ export function Step3Aromas() {
         </View>
       </ScrollView>
 
-      {/* Layer 1 Categories */}
-      <View style={styles.categoriesHeader}>
-        <Text style={styles.sectionLabel}>Categories</Text>
+      {/* Groups */}
+      <View style={styles.groupsHeader}>
+        <Text style={styles.sectionLabel}>Aroma Categories</Text>
         {isSommelier && (
           <View style={styles.sommelierModeBadge}>
             <Text style={styles.sommelierModeBadgeText}>🎓 Expanded</Text>
@@ -174,93 +159,130 @@ export function Step3Aromas() {
         )}
       </View>
 
-      <View style={styles.categoriesGrid}>
-        {visibleCategories.map((cat) => {
-          const selected = draft.aromas_l1.includes(cat.id);
-          const isExpanded = expandedCategory === cat.id;
-          const subcategories = getCategorySubcategories(cat, isSommelier);
+      {AROMA_GROUPS.map((group) => {
+        const groupCats = AROMA_CATEGORIES.filter((c) => group.categoryIds.includes(c.id));
+        const groupHasSelection = groupCats.some((c) => draft.aromas_l1.includes(c.id));
 
-          return (
-            <View key={cat.id} style={styles.categoryBlock}>
-              <Pressable
-                style={[styles.catChip, selected && styles.catChipSelected]}
-                onPress={() => toggleL1(cat.id)}
-              >
-                <Text style={styles.catEmoji}>{cat.emoji}</Text>
-                <Text style={[styles.catLabel, selected && styles.catLabelSelected]}>
-                  {cat.label}
-                </Text>
-                {cat.sommelier_only && (
-                  <View style={styles.sommelierBadge}>
-                    <Text style={styles.sommelierBadgeText}>S</Text>
-                  </View>
-                )}
-              </Pressable>
-
-              {/* Layer 2 drill-down */}
-              {selected && isExpanded && (
-                <View>
-                  <View style={styles.l2Grid}>
-                    {subcategories.map((aroma) => {
-                      const isSommelierSub =
-                        isSommelier &&
-                        (cat.sommelierSubcategories ?? []).includes(aroma);
-                      return (
-                        <Pressable
-                          key={aroma}
-                          style={[
-                            styles.l2Chip,
-                            draft.aromas_l2.includes(aroma) && styles.l2ChipSelected,
-                            isSommelierSub && styles.l2ChipSommelier,
-                          ]}
-                          onPress={() => toggleL2(aroma)}
-                        >
-                          <Text
-                            style={[
-                              styles.l2Text,
-                              draft.aromas_l2.includes(aroma) && styles.l2TextSelected,
-                            ]}
-                          >
-                            {aroma}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-
-                  {cat.id === 'other' && (
-                    <View style={styles.otherNoteWrapper}>
-                      <Text style={styles.otherNoteLabel}>Describe other aromas</Text>
-                      <RNTextInput
-                        style={styles.otherNoteInput}
-                        value={draft.aromas_other_note ?? ''}
-                        onChangeText={setAromasOtherNote}
-                        placeholder="e.g. wet slate, incense, beeswax…"
-                        placeholderTextColor={Colors.inkFaint}
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                      />
-                    </View>
-                  )}
+        return (
+          <View key={group.id} style={styles.group}>
+            {/* Group Header */}
+            <View style={[styles.groupHeader, { borderLeftColor: group.color }]}>
+              <Text style={styles.groupEmoji}>{group.emoji}</Text>
+              <View style={styles.groupHeaderText}>
+                <Text style={[styles.groupLabel, { color: group.color }]}>{group.label}</Text>
+                <Text style={styles.groupDesc}>{group.description}</Text>
+              </View>
+              {groupHasSelection && (
+                <View style={[styles.groupBadge, { backgroundColor: group.color + '22', borderColor: group.color + '55' }]}>
+                  <Text style={[styles.groupBadgeText, { color: group.color }]}>
+                    {groupCats.filter((c) => draft.aromas_l1.includes(c.id)).length}
+                  </Text>
                 </View>
               )}
-
-              {selected && !isExpanded && (
-                <Pressable onPress={() => setExpandedCategory(cat.id)}>
-                  <Text style={styles.expandHint}>+ Specific notes</Text>
-                </Pressable>
-              )}
             </View>
-          );
-        })}
-      </View>
+
+            {/* Category chips inside group */}
+            <View style={styles.groupCats}>
+              {groupCats.map((cat) => {
+                const selected = draft.aromas_l1.includes(cat.id);
+                const isExpanded = expandedCategory === cat.id;
+                const subcategories = getCategorySubcategories(cat, isSommelier);
+
+                return (
+                  <View key={cat.id} style={styles.categoryBlock}>
+                    <Pressable
+                      style={[
+                        styles.catChip,
+                        selected && { backgroundColor: group.color + '1A', borderColor: group.color },
+                      ]}
+                      onPress={() => toggleL1(cat.id)}
+                    >
+                      <Text style={styles.catEmoji}>{cat.emoji}</Text>
+                      <Text style={[styles.catLabel, selected && { color: Colors.ink, fontFamily: Fonts.dmSansMedium }]}>
+                        {cat.label}
+                      </Text>
+                      {selected && (
+                        <Text style={[styles.catCheck, { color: group.color }]}>✓</Text>
+                      )}
+                    </Pressable>
+
+                    {/* L2 drill-down — inline below the chip when expanded */}
+                    {selected && isExpanded && (
+                      <View style={styles.l2Container}>
+                        <View style={[styles.l2Indent, { borderLeftColor: group.color + '55' }]}>
+                          <View style={styles.l2Grid}>
+                            {subcategories.map((aroma) => {
+                              const isSommelierSub =
+                                isSommelier && (cat.sommelierSubcategories ?? []).includes(aroma);
+                              const isSelected = draft.aromas_l2.includes(aroma);
+                              return (
+                                <Pressable
+                                  key={aroma}
+                                  style={[
+                                    styles.l2Chip,
+                                    isSelected && { backgroundColor: group.color + '28', borderColor: group.color },
+                                    isSommelierSub && !isSelected && styles.l2ChipSommelier,
+                                  ]}
+                                  onPress={() => toggleL2(aroma)}
+                                >
+                                  <Text style={[styles.l2Text, isSelected && { color: Colors.inkMid, fontFamily: Fonts.dmSansRegular }]}>
+                                    {aroma}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+
+                          {cat.id === 'other' && (
+                            <View style={styles.otherNoteWrapper}>
+                              <Text style={styles.otherNoteLabel}>Describe further</Text>
+                              <RNTextInput
+                                style={styles.otherNoteInput}
+                                value={draft.aromas_other_note ?? ''}
+                                onChangeText={setAromasOtherNote}
+                                placeholder="e.g. wet slate, incense, beeswax…"
+                                placeholderTextColor={Colors.inkFaint}
+                                multiline
+                                numberOfLines={2}
+                                textAlignVertical="top"
+                              />
+                            </View>
+                          )}
+                        </View>
+
+                        <Pressable onPress={() => setExpandedCategory(null)} style={styles.collapseBtn}>
+                          <Text style={[styles.collapseBtnText, { color: group.color }]}>Done ↑</Text>
+                        </Pressable>
+                      </View>
+                    )}
+
+                    {selected && !isExpanded && (
+                      <Pressable onPress={() => setExpandedCategory(cat.id)} style={styles.expandRow}>
+                        <Text style={[styles.expandHint, { color: group.color }]}>
+                          {draft.aromas_l2.filter((l2) =>
+                            getCategorySubcategories(cat, isSommelier).includes(l2)
+                          ).length > 0
+                            ? `${draft.aromas_l2.filter((l2) =>
+                                getCategorySubcategories(cat, isSommelier).includes(l2)
+                              ).length} note${draft.aromas_l2.filter((l2) =>
+                                getCategorySubcategories(cat, isSommelier).includes(l2)
+                              ).length > 1 ? 's' : ''} · Edit ↓`
+                            : '+ Add specific notes'}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        );
+      })}
     </>
   );
 
   const personalNotesPanel = (
-    <>
-      {/* Custom Aroma Tags */}
+    <View style={styles.personalNotesSection}>
       <Text style={styles.sectionLabel}>Personal Flavor Notes</Text>
       <Text style={styles.shortcutHint}>
         Add your own words — anything you taste that's not in the list above.
@@ -302,7 +324,7 @@ export function Step3Aromas() {
       {draft.custom_aromas.length >= MAX_CUSTOM_TAGS && (
         <Text style={styles.customTagLimit}>Maximum {MAX_CUSTOM_TAGS} custom tags reached.</Text>
       )}
-    </>
+    </View>
   );
 
   return (
@@ -312,7 +334,7 @@ export function Step3Aromas() {
     >
       <Text style={styles.stepTitle}>Aroma Profile</Text>
       <Text style={styles.intro}>
-        Select the aromas you detect. Tap a category for specific notes.
+        Select the aromas you detect. Tap a category then pick specific notes.
       </Text>
 
       {isWide ? (
@@ -363,20 +385,16 @@ const styles = StyleSheet.create({
     gap: Spacing.xxl,
     alignItems: 'flex-start',
   },
-  leftCol: {
-    flex: 3,
-  },
-  rightCol: {
-    flex: 2,
-    minWidth: 160,
-  },
+  leftCol: { flex: 3 },
+  rightCol: { flex: 2, minWidth: 160 },
+
   sectionLabel: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
     letterSpacing: 0.7,
     textTransform: 'uppercase',
     color: Colors.inkMuted,
-    marginBottom: 8,
+    marginBottom: 6,
     marginTop: Spacing.md,
   },
   shortcutHint: {
@@ -386,9 +404,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     lineHeight: 17,
   },
-  shortcutScroll: {
-    marginBottom: Spacing.md,
-  },
+  shortcutScroll: { marginBottom: Spacing.md },
   shortcutRow: {
     flexDirection: 'row',
     gap: 10,
@@ -422,10 +438,12 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     lineHeight: 13,
   },
-  categoriesHeader: {
+
+  groupsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop: Spacing.sm,
   },
   sommelierModeBadge: {
     backgroundColor: Colors.goldPale,
@@ -435,7 +453,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginTop: Spacing.md,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   sommelierModeBadgeText: {
     fontFamily: Fonts.dmSansMedium,
@@ -443,66 +461,98 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     letterSpacing: 0.2,
   },
-  categoriesGrid: { gap: 8 },
-  categoryBlock: { gap: 6 },
+
+  group: {
+    marginBottom: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    backgroundColor: Colors.surfaceAlt,
+    borderLeftWidth: 3,
+  },
+  groupEmoji: { fontSize: 18 },
+  groupHeaderText: { flex: 1 },
+  groupLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+  },
+  groupDesc: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkFaint,
+    lineHeight: 15,
+    marginTop: 1,
+  },
+  groupBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+  },
+
+  groupCats: {
+    padding: Spacing.md,
+    gap: 6,
+    backgroundColor: Colors.surface,
+  },
+  categoryBlock: { gap: 4 },
   catChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderRadius: Radius.md,
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surfaceAlt,
   },
-  catChipSelected: {
-    backgroundColor: Colors.goldPale,
-    borderColor: Colors.gold,
-  },
-  catEmoji: { fontSize: 16 },
+  catEmoji: { fontSize: 15 },
   catLabel: {
     fontFamily: Fonts.dmSansRegular,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.inkMid,
     flex: 1,
   },
-  catLabelSelected: {
+  catCheck: {
     fontFamily: Fonts.dmSansMedium,
-    color: Colors.inkMid,
+    fontSize: 13,
   },
-  sommelierBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: Colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sommelierBadgeText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 9,
-    color: Colors.surface,
-    lineHeight: 12,
+
+  l2Container: { gap: 4 },
+  l2Indent: {
+    marginLeft: Spacing.lg,
+    paddingLeft: Spacing.md,
+    borderLeftWidth: 2,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
   },
   l2Grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    paddingLeft: Spacing.xl,
-    paddingBottom: 4,
   },
   l2Chip: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: Radius.full,
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
-  },
-  l2ChipSelected: {
-    backgroundColor: Colors.gold + '33',
-    borderColor: Colors.gold,
   },
   l2ChipSommelier: {
     borderStyle: 'dashed',
@@ -512,19 +562,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.inkMuted,
   },
-  l2TextSelected: {
-    color: Colors.inkMid,
-    fontFamily: Fonts.dmSansRegular,
+
+  collapseBtn: {
+    alignSelf: 'flex-start',
+    marginLeft: Spacing.lg,
+    paddingVertical: 2,
   },
+  collapseBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+  },
+  expandRow: { paddingLeft: Spacing.lg },
   expandHint: {
     fontFamily: Fonts.dmSans,
     fontSize: 12,
-    color: Colors.gold,
-    paddingLeft: Spacing.xl,
+    paddingVertical: 2,
   },
+
   otherNoteWrapper: {
-    paddingLeft: Spacing.xl,
-    paddingTop: Spacing.sm,
+    marginTop: Spacing.sm,
     gap: 6,
   },
   otherNoteLabel: {
@@ -541,10 +597,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: Spacing.md,
     fontFamily: Fonts.dmSansRegular,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.ink,
-    minHeight: 80,
+    minHeight: 60,
   },
+
   summary: {
     padding: Spacing.md,
     backgroundColor: Colors.surfaceAlt,
@@ -553,9 +610,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 4,
   },
-  summarySticky: {
-    marginTop: 0,
-  },
+  summarySticky: { marginTop: 0 },
   summaryTitle: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
@@ -574,6 +629,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.inkMuted,
     fontStyle: 'italic',
+  },
+  summaryHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
+    lineHeight: 18,
+  },
+
+  personalNotesSection: {
+    marginTop: Spacing.xl,
   },
   customTagInputRow: {
     flexDirection: 'row',
@@ -641,12 +707,5 @@ const styles = StyleSheet.create({
     color: Colors.inkFaint,
     fontStyle: 'italic',
     marginBottom: Spacing.sm,
-  },
-  summaryHint: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkFaint,
-    fontStyle: 'italic',
-    lineHeight: 18,
   },
 });
