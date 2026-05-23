@@ -8,6 +8,13 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 
+export interface SliderZone {
+  label: string;
+  min: number;
+  max: number;
+  color: string;
+}
+
 interface ScoreSliderProps {
   label: string;
   value: number;
@@ -20,6 +27,7 @@ interface ScoreSliderProps {
   onChange: (value: number) => void;
   accentColor?: string;
   disabled?: boolean;
+  zones?: SliderZone[];
 }
 
 export function ScoreSlider({
@@ -34,6 +42,7 @@ export function ScoreSlider({
   onChange,
   accentColor = Colors.gold,
   disabled = false,
+  zones,
 }: ScoreSliderProps) {
   const trackWidth = useRef(0);
 
@@ -45,7 +54,6 @@ export function ScoreSlider({
     [min, max, step]
   );
 
-  // locationX is already relative to the track element — no need to subtract trackX
   const locationToValue = useCallback(
     (locationX: number) => {
       if (trackWidth.current === 0) return value;
@@ -67,25 +75,60 @@ export function ScoreSlider({
     },
   });
 
-  // Use layout.width directly — synchronous, works reliably on web and native
   const handleTrackLayout = (e: LayoutChangeEvent) => {
     trackWidth.current = e.nativeEvent.layout.width;
   };
 
   const fillRatio = (value - min) / (max - min);
-
-  const effectiveAccent = disabled ? Colors.inkFaint : accentColor;
+  const activeZone = zones?.find((z) => value >= z.min && value <= z.max);
+  const fillColor = disabled
+    ? Colors.inkFaint
+    : (activeZone?.color ?? accentColor);
 
   return (
     <View style={[styles.container, disabled && styles.containerDisabled]}>
       <View style={styles.header}>
         <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
-        <View style={[styles.valueBadge, { backgroundColor: effectiveAccent + '22', borderColor: effectiveAccent + '66' }]}>
-          <Text style={[styles.valueText, { color: effectiveAccent }]}>{value}</Text>
+        <View style={[styles.valueBadge, { backgroundColor: fillColor + '22', borderColor: fillColor + '66' }]}>
+          <Text style={[styles.valueText, { color: fillColor }]}>{value}</Text>
         </View>
       </View>
 
       {tip ? <Text style={styles.tip}>{tip}</Text> : null}
+
+      {zones && zones.length > 0 && (
+        <View style={styles.zoneRow}>
+          {zones.map((zone) => {
+            const isActive = activeZone?.label === zone.label;
+            const size = zone.max - zone.min + 1;
+            return (
+              <View key={zone.label} style={{ flex: size, alignItems: 'center' }}>
+                <View
+                  style={[
+                    styles.zoneBand,
+                    {
+                      backgroundColor: zone.color,
+                      opacity: isActive ? 1 : 0.28,
+                    },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.zoneLabel,
+                    {
+                      color: isActive ? zone.color : Colors.inkFaint,
+                      fontFamily: isActive ? Fonts.dmSansMedium : Fonts.dmSans,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {zone.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       <View style={styles.sliderRow}>
         {lowLabel ? <Text style={styles.anchor}>{lowLabel}</Text> : null}
@@ -98,7 +141,7 @@ export function ScoreSlider({
           <View
             style={[
               styles.fill,
-              { width: `${fillRatio * 100}%`, backgroundColor: effectiveAccent },
+              { width: `${fillRatio * 100}%`, backgroundColor: fillColor },
             ]}
           />
           {!disabled && (
@@ -107,7 +150,7 @@ export function ScoreSlider({
                 styles.thumb,
                 {
                   left: `${fillRatio * 100}%`,
-                  backgroundColor: effectiveAccent,
+                  backgroundColor: fillColor,
                   borderColor: Colors.surface,
                 },
               ]}
@@ -164,8 +207,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 12,
     color: Colors.inkMuted,
-    marginBottom: 10,
+    marginBottom: 8,
     fontStyle: 'italic',
+  },
+  zoneRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    gap: 2,
+  },
+  zoneBand: {
+    height: 5,
+    borderRadius: Radius.full,
+    width: '100%',
+    marginBottom: 3,
+  },
+  zoneLabel: {
+    fontSize: 9,
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
   sliderRow: {
     flexDirection: 'row',

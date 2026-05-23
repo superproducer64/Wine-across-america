@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
-import { ScoreSlider } from '@/components/ui/ScoreSlider';
+import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { SegmentedPicker, PickerOption } from '@/components/ui/SegmentedPicker';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
@@ -48,6 +48,38 @@ const INTENSITY_SOMMELIER: PickerOption[] = [
   { label: 'Medium +', value: 8,  hint: 'Pronounced, detectable slightly away from the glass' },
   { label: 'High',     value: 10, hint: 'Expressive, you can smell it at chin level or even lower' },
 ];
+
+// ─── Zone definitions for numeric sliders ───────────────────────────────────
+const SWEETNESS_ZONES: SliderZone[] = [
+  { label: 'Dry',       min: 1, max: 2,  color: '#7B8C56' },
+  { label: 'Off-Dry',   min: 3, max: 4,  color: '#B8A830' },
+  { label: 'Med Dry',   min: 5, max: 6,  color: '#D4844A' },
+  { label: 'Med Sweet', min: 7, max: 8,  color: '#CC5050' },
+  { label: 'Sweet',     min: 9, max: 10, color: '#C44A78' },
+];
+const ACIDITY_ZONES: SliderZone[] = [
+  { label: 'Low',    min: 1, max: 3,  color: '#A8C96A' },
+  { label: 'Medium', min: 4, max: 7,  color: '#5BA858' },
+  { label: 'High',   min: 8, max: 10, color: '#2E7D32' },
+];
+const TANNIN_ZONES: SliderZone[] = [
+  { label: 'Low',    min: 1, max: 3,  color: '#C5A8E0' },
+  { label: 'Medium', min: 4, max: 7,  color: '#8E44BC' },
+  { label: 'High',   min: 8, max: 10, color: '#4A1080' },
+];
+const FINISH_ZONES: SliderZone[] = [
+  { label: 'Short',  min: 1, max: 3,  color: '#C5A8E0' },
+  { label: 'Medium', min: 4, max: 7,  color: '#8E44BC' },
+  { label: 'Long',   min: 8, max: 10, color: '#4A1080' },
+];
+
+const getStructureZones = (key: string): SliderZone[] | undefined => {
+  if (key === 'sweetness')     return SWEETNESS_ZONES;
+  if (key === 'acidity')       return ACIDITY_ZONES;
+  if (key === 'tannin')        return TANNIN_ZONES;
+  if (key === 'finish_length') return FINISH_ZONES;
+  return undefined;
+};
 
 // Axes that use categorical pickers for both profiles
 const PICKER_KEYS = new Set(['body', 'alcohol', 'intensity']);
@@ -128,6 +160,7 @@ export function Step2StructureWheel() {
             tip={dim.tip}
             lowLabel={dim.lowAnchor}
             highLabel={dim.highAnchor}
+            zones={getStructureZones(dim.key)}
             onChange={(v) => setStructureWheel({ [dim.key]: v })}
           />
         );

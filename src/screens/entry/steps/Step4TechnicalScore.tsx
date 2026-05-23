@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
-import { ScoreSlider } from '@/components/ui/ScoreSlider';
+import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
@@ -14,6 +14,39 @@ export function Step4TechnicalScore() {
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+
+  // Zone definitions for score sliders (0–20 scale)
+  const SCORE_ZONES: Record<string, SliderZone[]> = {
+    score_balance: [
+      { label: 'Unbalanced', min: 0,  max: 5,  color: '#E57373' },
+      { label: 'Off-balance', min: 6,  max: 10, color: '#FFB74D' },
+      { label: 'Neutral',    min: 11, max: 14, color: '#FDD835' },
+      { label: 'Balanced',   min: 15, max: 17, color: '#AED581' },
+      { label: 'Perfect',    min: 18, max: 20, color: '#4CAF50' },
+    ],
+    score_intensity: [
+      { label: 'Low',    min: 0,  max: 6,  color: '#A8C96A' },
+      { label: 'Medium', min: 7,  max: 13, color: '#5BA858' },
+      { label: 'High',   min: 14, max: 20, color: '#2E7D32' },
+    ],
+    score_complexity: [
+      { label: 'Simple',    min: 0,  max: 7,  color: '#E1BEE7' },
+      { label: 'Moderate',  min: 8,  max: 13, color: '#AB47BC' },
+      { label: 'Complex',   min: 14, max: 17, color: '#7B1FA2' },
+      { label: 'Intricate', min: 18, max: 20, color: '#4A148C' },
+    ],
+    score_finish: [
+      { label: 'Short',  min: 0,  max: 6,  color: '#C5A8E0' },
+      { label: 'Medium', min: 7,  max: 13, color: '#8E44BC' },
+      { label: 'Long',   min: 14, max: 20, color: '#4A1080' },
+    ],
+    score_typicity: [
+      { label: 'Generic',       min: 0,  max: 7,  color: '#80CBC4' },
+      { label: 'Recognizable',  min: 8,  max: 13, color: '#26A69A' },
+      { label: 'Clear',         min: 14, max: 17, color: '#00796B' },
+      { label: 'Precise',       min: 18, max: 20, color: '#004D40' },
+    ],
+  };
 
   // Auto-fill Intensity from structure score × 2 on mount.
   // The user can override by moving the slider freely afterward.
@@ -89,6 +122,7 @@ export function Step4TechnicalScore() {
               max={20}
               step={1}
               disabled={intensityLocked}
+              zones={SCORE_ZONES[cat.key]}
               onChange={(v) => setTechnicalScore({ [cat.key]: v })}
             />
             {intensityLocked && (
