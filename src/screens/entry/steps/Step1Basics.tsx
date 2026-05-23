@@ -158,6 +158,26 @@ export function Step1Basics() {
         placeholder="e.g., 28.00"
         keyboardType="decimal-pad"
       />
+
+      {/* Would Buy Again */}
+      <Text style={styles.label}>Would Buy Again?</Text>
+      <View style={styles.buyAgainRow}>
+        {([true, false, null] as const).map((val) => {
+          const label = val === true ? 'Yes' : val === false ? 'No' : 'Skip';
+          const selected = draft.would_buy_again === val;
+          return (
+            <Pressable
+              key={String(val)}
+              style={[styles.buyChip, selected && (val === true ? styles.buyChipYes : val === false ? styles.buyChipNo : styles.buyChipSkip)]}
+              onPress={() => setField({ would_buy_again: val })}
+            >
+              <Text style={[styles.buyChipText, selected && styles.buyChipTextSelected]}>
+                {val === true ? '✓ ' : val === false ? '✕ ' : ''}{label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 }
@@ -258,5 +278,39 @@ const styles = StyleSheet.create({
     color: Colors.gold,
     marginBottom: Spacing.sm,
     marginTop: -Spacing.sm,
+  },
+  buyAgainRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: Spacing.md,
+  },
+  buyChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceAlt,
+    alignItems: 'center',
+  },
+  buyChipYes: {
+    backgroundColor: '#EAF5EC',
+    borderColor: '#2E6B45',
+  },
+  buyChipNo: {
+    backgroundColor: '#FAEAEA',
+    borderColor: '#8B2E2E',
+  },
+  buyChipSkip: {
+    backgroundColor: Colors.surfaceAlt,
+    borderColor: Colors.border,
+  },
+  buyChipText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  buyChipTextSelected: {
+    color: Colors.ink,
   },
 });

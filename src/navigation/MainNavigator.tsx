@@ -8,6 +8,7 @@ import { HomeScreen } from '@/screens/home/HomeScreen';
 import { SearchScreen } from '@/screens/search/SearchScreen';
 import { CheeseEntryScreen } from '@/screens/entry/CheeseEntryScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { AnalyticsScreen } from '@/screens/analytics/AnalyticsScreen';
 import { CheeseDetailScreen } from '@/screens/detail/CheeseDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -62,6 +63,15 @@ function TabNavigator() {
             </Pressable>
           ),
         })}
+      />
+      <Tab.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon emoji="📊" label="Insights" focused={focused} />
+          ),
+        }}
       />
       <Tab.Screen
         name="Settings"

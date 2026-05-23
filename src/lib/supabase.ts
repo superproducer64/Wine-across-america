@@ -154,3 +154,64 @@ export async function getUserProfile(userId: string) {
 export async function updateUserProfile(userId: string, updates: Record<string, unknown>) {
   return supabase.from('user_profiles').update(updates).eq('id', userId).select().single();
 }
+
+// ─── Search with Filters ──────────────────────────────────────────────────────
+
+export async function searchEntriesWithFilters(
+  userId: string,
+  params: {
+    query?: string;
+    milkTypes?: string[];
+    styles?: string[];
+    regions?: string[];
+    minScore?: number;
+    maxScore?: number;
+    minPrice?: number;
+    maxPrice?: number;
+  }
+) {
+  let q = supabase
+    .from('cheese_entries')
+    .select('*, cheese_scores(technical_score)')
+    .eq('user_id', userId);
+
+  if (params.query) {
+    const like = `%${params.query}%`;
+    q = q.or(
+      `name.ilike.${like},producer.ilike.${like},region.ilike.${like},notes.ilike.${like}`
+    );
+  }
+  if (params.milkTypes?.length) q = q.in('milk_type', params.milkTypes);
+  if (params.styles?.length)    q = q.in('style', params.styles);
+  if (params.regions?.length)   q = q.in('region', params.regions);
+  if (params.minPrice != null)  q = q.gte('price', params.minPrice);
+  if (params.maxPrice != null)  q = q.lte('price', params.maxPrice);
+
+  const { data, error } = await q.order('created_at', { ascending: false });
+
+  if (error || !data) return { data, error };
+
+  // Apply score range client-side (score lives in related cheese_scores row)
+  const minScore = params.minScore ?? 0;
+  const maxScore = params.maxScore ?? 100;
+  const hasScoreFilter = params.minScore != null || params.maxScore != null;
+
+  const filtered = hasScoreFilter
+    ? data.filter((e: any) => {
+        const score = e.cheese_scores?.[0]?.technical_score;
+        if (score == null) return params.minScore == null;
+        return score >= minScore && score <= maxScore;
+      })
+    : data;
+
+  return { data: filtered, error: null };
+}
+
+// ─── Analytics Data ───────────────────────────────────────────────────────────
+
+export async function fetchAnalyticsData(userId: string) {
+  return supabase
+    .from('cheese_entries')
+    .select('milk_type, style, region, price, would_buy_again, cheese_scores(technical_score)')
+    .eq('user_id', userId);
+}

@@ -12,6 +12,7 @@ function makeDefaultDraft(): CheeseEntryDraft {
     tasting_date: new Date().toISOString().split('T')[0],
     price: null,
     notes: '',
+    would_buy_again: null,
   };
 }
 

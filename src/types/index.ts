@@ -76,6 +76,7 @@ export interface CheeseEntry {
   tasting_date: string;
   price: number | null;
   notes: string;
+  would_buy_again: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -327,4 +328,30 @@ export interface UserProfile {
   is_creator: boolean;
   subscription_tier: 'free' | 'pro';
   created_at: string;
+}
+
+// ─── Search Filters ───────────────────────────────────────────────────────────
+
+export interface FilterParams {
+  query?: string;
+  milkTypes?: string[];
+  styles?: string[];
+  regions?: string[];
+  minScore?: number;
+  maxScore?: number;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export interface AnalyticsData {
+  total: number;
+  avgScore: number | null;
+  scoreBuckets: Array<{ label: string; count: number; minVal: number }>;
+  milkTypeCounts: Array<{ milk_type: string; count: number }>;
+  styleCounts: Array<{ style: string; count: number }>;
+  topRegions: Array<{ region: string; avg: number; count: number }>;
+  buyAgainRate: number | null;
+  buyAgainAnswered: number;
 }

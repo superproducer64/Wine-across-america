@@ -1,85 +1,139 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
+  View, Text, StyleSheet, SafeAreaView, FlatList, Pressable,
+  ActivityIndicator, Modal, Animated, ScrollView, Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
+import { ScoreSlider } from '@/components/ui/ScoreSlider';
 import { CheeseListItem } from '@/components/cheese/CheeseListItem';
 import { useAuthStore } from '@/stores/authStore';
 import { useCheeseStore } from '@/stores/cheeseStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
-import { CheeseEntry, CHEESE_STYLE_LABELS, CheeseStyle } from '@/types';
+import {
+  CheeseEntry, FilterParams,
+  MILK_TYPE_LABELS, CHEESE_STYLE_LABELS, US_REGIONS,
+  MilkType, CheeseStyle,
+} from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
-const SORT_OPTIONS = ['Recent', 'Name A–Z', 'Region A–Z'] as const;
-type SortOption = typeof SORT_OPTIONS[number];
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const STYLE_FILTER_OPTIONS: Array<{ key: CheeseStyle | ''; label: string }> = [
-  { key: '', label: 'All Styles' },
-  { key: 'bloomy', label: 'Bloomy' },
-  { key: 'washed', label: 'Washed' },
-  { key: 'alpine', label: 'Alpine' },
-  { key: 'blue', label: 'Blue' },
-  { key: 'fresh', label: 'Fresh' },
-  { key: 'pressed', label: 'Pressed' },
-  { key: 'hard', label: 'Hard' },
-];
+const MILK_TYPES: MilkType[] = ['cow', 'sheep', 'goat', 'buffalo', 'mixed'];
+const STYLE_OPTIONS: CheeseStyle[] = ['bloomy', 'washed', 'alpine', 'blue', 'fresh', 'pressed', 'hard'];
 
-function sortEntries(entries: CheeseEntry[], sort: SortOption): CheeseEntry[] {
-  return [...entries].sort((a, b) => {
-    switch (sort) {
-      case 'Name A–Z': return a.name.localeCompare(b.name);
-      case 'Region A–Z': return (a.region ?? '').localeCompare(b.region ?? '');
-      default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
-  });
+// Count active filters (excluding query which is shown in search bar)
+function countActiveFilters(params: FilterParams): number {
+  let n = 0;
+  if (params.milkTypes?.length) n++;
+  if (params.styles?.length) n++;
+  if (params.regions?.length) n++;
+  if (params.minScore != null && params.minScore > 0) n++;
+  if (params.maxScore != null && params.maxScore < 100) n++;
+  if (params.minPrice != null && params.minPrice > 0) n++;
+  if (params.maxPrice != null && params.maxPrice < 200) n++;
+  return n;
 }
 
 export function SearchScreen() {
   const navigation = useNavigation<NavProp>();
   const { user } = useAuthStore();
-  const { entries, searchResults, searching, search, clearSearch, loadEntries } = useCheeseStore();
+  const { entries, searchResults, searching, searchWithFilters, clearSearch, loadEntries } = useCheeseStore();
   const { isSubscribed } = useSubscriptionStore();
 
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('Recent');
-  const [filterStyle, setFilterStyle] = useState<CheeseStyle | ''>('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<FilterParams>({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Draft filter state inside drawer (only committed on Apply)
+  const [draftFilters, setDraftFilters] = useState<FilterParams>({});
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  // Slide animation for filter drawer
+  const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
   useEffect(() => {
     if (user) loadEntries(user.id, isSubscribed);
   }, [user]);
 
+  const openDrawer = () => {
+    setDraftFilters(filters);
+    setDrawerOpen(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 240,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_WIDTH,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setDrawerOpen(false));
+  };
+
+  const applyFilters = () => {
+    const newFilters = { ...draftFilters, query };
+    setFilters(newFilters);
+    closeDrawer();
+    if (user) searchWithFilters(user.id, newFilters);
+  };
+
+  const clearFilters = () => {
+    setDraftFilters({});
+    setFilters({});
+    clearSearch();
+  };
+
   const runSearch = useCallback(
-    (q: string, style: CheeseStyle | '') => {
+    (q: string, f: FilterParams) => {
       if (!user) return;
-      if (!q && !style) { clearSearch(); return; }
-      search(user.id, q, { style: style || undefined });
+      const params = { ...f, query: q };
+      if (!q && !countActiveFilters(f)) { clearSearch(); return; }
+      searchWithFilters(user.id, params);
     },
-    [user, search, clearSearch]
+    [user, searchWithFilters, clearSearch]
   );
 
   const handleQueryChange = (text: string) => {
     setQuery(text);
     if (debounceTimer) clearTimeout(debounceTimer);
-    const timer = setTimeout(() => runSearch(text, filterStyle), 400);
+    const timer = setTimeout(() => runSearch(text, filters), 400);
     setDebounceTimer(timer);
   };
 
-  const displayEntries = query || filterStyle
-    ? searchResults
-    : sortEntries(entries, sortBy);
+  const toggleMilkType = (mt: string) => {
+    const cur = draftFilters.milkTypes ?? [];
+    setDraftFilters({
+      ...draftFilters,
+      milkTypes: cur.includes(mt) ? cur.filter((x) => x !== mt) : [...cur, mt],
+    });
+  };
+
+  const toggleStyle = (s: string) => {
+    const cur = draftFilters.styles ?? [];
+    setDraftFilters({
+      ...draftFilters,
+      styles: cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s],
+    });
+  };
+
+  const toggleRegion = (r: string) => {
+    const cur = draftFilters.regions ?? [];
+    setDraftFilters({
+      ...draftFilters,
+      regions: cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r],
+    });
+  };
+
+  const activeFilterCount = countActiveFilters(filters);
+  const isFiltered = !!query || activeFilterCount > 0;
+  const displayEntries = isFiltered ? searchResults : entries;
 
   const handleCheesePress = (entry: CheeseEntry) => {
     navigation.navigate('CheeseDetail', { entryId: entry.id });
@@ -87,12 +141,13 @@ export function SearchScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Cheeses</Text>
         <Text style={styles.count}>{entries.length} entries</Text>
       </View>
 
-      {/* Search bar */}
+      {/* Search bar + filter button */}
       <View style={styles.searchWrap}>
         <TextInput
           value={query}
@@ -101,62 +156,27 @@ export function SearchScreen() {
           containerStyle={styles.searchInput}
         />
         <Pressable
-          onPress={() => setShowFilters((v) => !v)}
-          style={[styles.filterBtn, showFilters && styles.filterBtnActive]}
+          onPress={openDrawer}
+          style={[styles.filterBtn, activeFilterCount > 0 && styles.filterBtnActive]}
         >
-          <Text style={styles.filterBtnText}>⚡ Filter</Text>
+          <Text style={[styles.filterBtnText, activeFilterCount > 0 && styles.filterBtnTextActive]}>
+            {activeFilterCount > 0 ? `Filter (${activeFilterCount})` : 'Filter'}
+          </Text>
         </Pressable>
       </View>
 
-      {/* Filters */}
-      {showFilters && (
-        <View style={styles.filtersPanel}>
-          <Text style={styles.filtersTitle}>Style</Text>
-          <View style={styles.styleFilterRow}>
-            {STYLE_FILTER_OPTIONS.map(({ key, label }) => (
-              <Pressable
-                key={key}
-                style={[styles.filterChip, filterStyle === key && styles.filterChipActive]}
-                onPress={() => {
-                  setFilterStyle(key);
-                  runSearch(query, key);
-                }}
-              >
-                <Text style={[styles.filterChipText, filterStyle === key && styles.filterChipTextActive]}>
-                  {label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          {!isSubscribed && (
-            <View style={styles.paywallHint}>
-              <Text style={styles.paywallText}>
-                🔒 Upgrade to Pro for compound search (milk type, region, price range…)
-              </Text>
-            </View>
-          )}
+      {/* Active filter chips */}
+      {activeFilterCount > 0 && (
+        <View style={styles.activeFiltersRow}>
+          <Pressable onPress={clearFilters} style={styles.clearBtn}>
+            <Text style={styles.clearBtnText}>✕ Clear all</Text>
+          </Pressable>
         </View>
       )}
 
-      {/* Sort chips */}
-      {!query && !filterStyle && (
-        <View style={styles.sortRow}>
-          {SORT_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt}
-              style={[styles.sortChip, sortBy === opt && styles.sortChipActive]}
-              onPress={() => setSortBy(opt)}
-            >
-              <Text style={[styles.sortText, sortBy === opt && styles.sortTextActive]}>
-                {opt}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-
+      {/* Results */}
       {searching ? (
-        <View style={styles.searchingWrap}>
+        <View style={styles.loadingWrap}>
           <ActivityIndicator color={Colors.gold} />
         </View>
       ) : (
@@ -171,12 +191,142 @@ export function SearchScreen() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
-                {query || filterStyle ? 'No cheeses match your search' : 'No cheeses logged yet'}
+                {isFiltered ? 'No cheeses match your filters' : 'No cheeses logged yet'}
               </Text>
             </View>
           }
         />
       )}
+
+      {/* Filter Drawer Modal */}
+      <Modal
+        visible={drawerOpen}
+        transparent
+        animationType="none"
+        onRequestClose={closeDrawer}
+      >
+        <View style={styles.drawerContainer}>
+          <Pressable style={styles.drawerBackdrop} onPress={closeDrawer} />
+          <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
+            <SafeAreaView style={styles.drawerInner}>
+              {/* Drawer header */}
+              <View style={styles.drawerHeader}>
+                <Text style={styles.drawerTitle}>Filters</Text>
+                <Pressable onPress={closeDrawer} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.drawerClose}>✕</Text>
+                </Pressable>
+              </View>
+
+              <ScrollView style={styles.drawerScroll} showsVerticalScrollIndicator={false}>
+
+                {/* Milk Type */}
+                <Text style={styles.filterLabel}>Milk Type</Text>
+                <View style={styles.chipWrap}>
+                  {MILK_TYPES.map((mt) => {
+                    const active = draftFilters.milkTypes?.includes(mt);
+                    return (
+                      <Pressable
+                        key={mt}
+                        style={[styles.chip, active && styles.chipActive]}
+                        onPress={() => toggleMilkType(mt)}
+                      >
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                          {MILK_TYPE_LABELS[mt]}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Style */}
+                <Text style={styles.filterLabel}>Style</Text>
+                <View style={styles.chipWrap}>
+                  {STYLE_OPTIONS.map((s) => {
+                    const active = draftFilters.styles?.includes(s);
+                    return (
+                      <Pressable
+                        key={s}
+                        style={[styles.chip, active && styles.chipActive]}
+                        onPress={() => toggleStyle(s)}
+                      >
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                          {CHEESE_STYLE_LABELS[s]}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Region */}
+                <Text style={styles.filterLabel}>Region</Text>
+                <View style={styles.chipWrap}>
+                  {US_REGIONS.slice(0, 24).map((r) => {
+                    const active = draftFilters.regions?.includes(r);
+                    return (
+                      <Pressable
+                        key={r}
+                        style={[styles.chip, active && styles.chipActive]}
+                        onPress={() => toggleRegion(r)}
+                      >
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{r}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Score Range */}
+                <Text style={styles.filterLabel}>Score Range</Text>
+                <ScoreSlider
+                  label="Min Score"
+                  value={draftFilters.minScore ?? 0}
+                  min={0} max={100} step={5}
+                  onChange={(v) => setDraftFilters({ ...draftFilters, minScore: v })}
+                  accentColor={Colors.gold}
+                />
+                <ScoreSlider
+                  label="Max Score"
+                  value={draftFilters.maxScore ?? 100}
+                  min={0} max={100} step={5}
+                  onChange={(v) => setDraftFilters({ ...draftFilters, maxScore: v })}
+                  accentColor={Colors.gold}
+                />
+
+                {/* Price Range */}
+                <Text style={styles.filterLabel}>Price Range (per lb / unit)</Text>
+                <ScoreSlider
+                  label="Min Price"
+                  value={draftFilters.minPrice ?? 0}
+                  min={0} max={200} step={5}
+                  onChange={(v) => setDraftFilters({ ...draftFilters, minPrice: v })}
+                  accentColor={Colors.gold}
+                />
+                <ScoreSlider
+                  label="Max Price"
+                  value={draftFilters.maxPrice ?? 200}
+                  min={0} max={200} step={5}
+                  onChange={(v) => setDraftFilters({ ...draftFilters, maxPrice: v })}
+                  accentColor={Colors.gold}
+                />
+
+                <View style={{ height: Spacing.huge }} />
+              </ScrollView>
+
+              {/* Drawer footer */}
+              <View style={styles.drawerFooter}>
+                <Pressable
+                  style={styles.clearDrawerBtn}
+                  onPress={() => setDraftFilters({})}
+                >
+                  <Text style={styles.clearDrawerText}>Clear</Text>
+                </Pressable>
+                <Pressable style={styles.applyBtn} onPress={applyFilters}>
+                  <Text style={styles.applyBtnText}>Apply Filters</Text>
+                </Pressable>
+              </View>
+            </SafeAreaView>
+          </Animated.View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -191,16 +341,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'baseline',
   },
-  title: {
-    fontFamily: Fonts.playfair,
-    fontSize: 24,
-    color: Colors.ink,
-  },
-  count: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 13,
-    color: Colors.inkMuted,
-  },
+  title: { fontFamily: Fonts.playfair, fontSize: 24, color: Colors.ink },
+  count: { fontFamily: Fonts.dmSans, fontSize: 13, color: Colors.inkMuted },
   searchWrap: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -217,109 +359,110 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     backgroundColor: Colors.surfaceAlt,
   },
-  filterBtnActive: {
-    backgroundColor: Colors.goldPale,
-    borderColor: Colors.gold,
-  },
-  filterBtnText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 13,
-    color: Colors.inkMid,
-  },
-  filtersPanel: {
-    marginHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.md,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  filtersTitle: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 12,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: Colors.inkMuted,
-  },
-  styleFilterRow: {
+  filterBtnActive: { backgroundColor: Colors.goldPale, borderColor: Colors.gold },
+  filterBtnText: { fontFamily: Fonts.dmSansMedium, fontSize: 13, color: Colors.inkMid },
+  filterBtnTextActive: { color: Colors.gold },
+  activeFiltersRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: Radius.full,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  filterChipActive: {
-    backgroundColor: Colors.gold,
-    borderColor: Colors.gold,
-  },
-  filterChipText: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkMid,
-  },
-  filterChipTextActive: {
-    color: Colors.ink,
-    fontFamily: Fonts.dmSansMedium,
-  },
-  paywallHint: {
-    backgroundColor: Colors.blueLight,
-    borderRadius: Radius.sm,
-    padding: Spacing.sm,
-  },
-  paywallText: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.blue,
-    lineHeight: 17,
-  },
-  sortRow: {
-    flexDirection: 'row',
-    gap: 6,
     paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: 6,
+    alignItems: 'center',
   },
-  sortChip: {
+  clearBtn: {
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: Radius.full,
     borderWidth: 0.5,
     borderColor: Colors.border,
     backgroundColor: Colors.surfaceAlt,
   },
-  sortChipActive: {
-    backgroundColor: Colors.ink,
-    borderColor: Colors.ink,
-  },
-  sortText: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkMid,
-  },
-  sortTextActive: { color: Colors.gold },
-  listContent: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.huge,
-  },
-  searchingWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    paddingTop: Spacing.huge,
-    alignItems: 'center',
-  },
+  clearBtnText: { fontFamily: Fonts.dmSans, fontSize: 12, color: Colors.inkMuted },
+  loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { paddingHorizontal: Spacing.xl, paddingBottom: Spacing.huge },
+  emptyState: { paddingTop: Spacing.huge, alignItems: 'center' },
   emptyText: {
     fontFamily: Fonts.playfairItalic,
     fontSize: 15,
     color: Colors.inkMuted,
+    textAlign: 'center',
   },
+  // Drawer
+  drawerContainer: { flex: 1, flexDirection: 'row' },
+  drawerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(26,23,16,0.45)',
+  },
+  drawer: {
+    width: SCREEN_WIDTH * 0.82,
+    backgroundColor: Colors.surface,
+    borderLeftWidth: 0.5,
+    borderLeftColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 16,
+  },
+  drawerInner: { flex: 1 },
+  drawerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Colors.border,
+  },
+  drawerTitle: { fontFamily: Fonts.playfair, fontSize: 20, color: Colors.ink },
+  drawerClose: { fontFamily: Fonts.dmSans, fontSize: 18, color: Colors.inkMuted },
+  drawerScroll: { flex: 1, paddingHorizontal: Spacing.xl },
+  filterLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+    marginTop: Spacing.lg,
+    marginBottom: 8,
+  },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  chipActive: { backgroundColor: Colors.gold, borderColor: Colors.gold },
+  chipText: { fontFamily: Fonts.dmSans, fontSize: 12, color: Colors.inkMid },
+  chipTextActive: { fontFamily: Fonts.dmSansMedium, color: Colors.ink },
+  drawerFooter: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  clearDrawerBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearDrawerText: { fontFamily: Fonts.dmSansMedium, fontSize: 14, color: Colors.inkMid },
+  applyBtn: {
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyBtnText: { fontFamily: Fonts.dmSansMedium, fontSize: 14, color: Colors.gold },
 });

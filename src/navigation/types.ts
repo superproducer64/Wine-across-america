@@ -13,6 +13,7 @@ export type TabParamList = {
   Home: undefined;
   Search: undefined;
   AddEntry: undefined;
+  Analytics: undefined;
   Settings: undefined;
 };
 
