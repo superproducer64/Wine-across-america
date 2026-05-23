@@ -7,6 +7,7 @@ import {
   Pressable,
   TextInput as RNTextInput,
 } from 'react-native';
+import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -35,6 +36,7 @@ export function Step3Aromas() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState('');
+  const [showWheel, setShowWheel] = useState(false);
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -328,33 +330,47 @@ export function Step3Aromas() {
   );
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
-    >
-      <Text style={styles.stepTitle}>Aroma Profile</Text>
-      <Text style={styles.intro}>
-        Select the aromas you detect. Tap a category then pick specific notes.
-      </Text>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+      >
+        <View style={styles.titleRow}>
+          <Text style={styles.stepTitle}>Aroma Profile</Text>
+          <Pressable style={styles.wheelBtn} onPress={() => setShowWheel(true)} hitSlop={8}>
+            <Text style={styles.wheelBtnText}>🍷 Flavor Wheel</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.intro}>
+          Select the aromas you detect. Tap a category then pick specific notes.
+        </Text>
 
-      {isWide ? (
-        <View style={styles.twoColRow}>
-          <View style={styles.leftCol}>
+        {isWide ? (
+          <View style={styles.twoColRow}>
+            <View style={styles.leftCol}>
+              {categoriesPanel}
+              {personalNotesPanel}
+            </View>
+            <View style={styles.rightCol}>
+              {summaryPanel}
+            </View>
+          </View>
+        ) : (
+          <>
             {categoriesPanel}
             {personalNotesPanel}
-          </View>
-          <View style={styles.rightCol}>
             {summaryPanel}
-          </View>
-        </View>
-      ) : (
-        <>
-          {categoriesPanel}
-          {personalNotesPanel}
-          {summaryPanel}
-        </>
-      )}
-    </ScrollView>
+          </>
+        )}
+      </ScrollView>
+
+      <ImageInfoSheet
+        visible={showWheel}
+        onClose={() => setShowWheel(false)}
+        title="Wine Flavor Wheel"
+        source={require('../../../../assets/flavor-wheel.jpg')}
+      />
+    </>
   );
 }
 
@@ -367,11 +383,30 @@ const styles = StyleSheet.create({
   contentWide: {
     padding: Spacing.xxl,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
   stepTitle: {
     fontFamily: Fonts.playfair,
     fontSize: 22,
     color: Colors.ink,
-    marginBottom: 6,
+  },
+  wheelBtn: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  wheelBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: Colors.inkMid,
+    letterSpacing: 0.2,
   },
   intro: {
     fontFamily: Fonts.dmSans,
