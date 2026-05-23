@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CheeseEntry, CheeseEntryDraft, CheeseScoreDraft, CheeseScore, FilterParams, AnalyticsData } from '@/types';
+import { CheeseEntry, CheeseEntryDraft, CheeseScoreDraft, CheeseScore, FilterParams, AnalyticsData, CheeseTerroirDraft, CheeseTerroirRecord } from '@/types';
 import {
   listCheeseEntries,
   createCheeseEntry,
@@ -10,6 +10,8 @@ import {
   getCheeseScore,
   searchEntriesWithFilters,
   fetchAnalyticsData,
+  createCheeseTerroirRecord,
+  getCheeseTerroirRecord,
 } from '@/lib/supabase';
 
 const FREE_TIER_LIMIT = 30;
@@ -37,6 +39,8 @@ interface CheeseStore {
   loadAnalytics: (userId: string) => Promise<void>;
   addScore: (userId: string, entryId: string, draft: CheeseScoreDraft) => Promise<CheeseScore | null>;
   fetchScore: (entryId: string) => Promise<CheeseScore | null>;
+  saveTerroirRecord: (userId: string, entryId: string, draft: CheeseTerroirDraft) => Promise<CheeseTerroirRecord | null>;
+  fetchTerroirRecord: (entryId: string) => Promise<CheeseTerroirRecord | null>;
 }
 
 export const useCheeseStore = create<CheeseStore>((set) => ({
@@ -189,5 +193,17 @@ export const useCheeseStore = create<CheeseStore>((set) => ({
     const { data, error } = await getCheeseScore(entryId);
     if (error || !data) return null;
     return data as CheeseScore;
+  },
+
+  saveTerroirRecord: async (userId, entryId, draft) => {
+    const { data, error } = await createCheeseTerroirRecord({ ...draft, entry_id: entryId, user_id: userId });
+    if (error || !data) return null;
+    return data as CheeseTerroirRecord;
+  },
+
+  fetchTerroirRecord: async (entryId) => {
+    const { data, error } = await getCheeseTerroirRecord(entryId);
+    if (error || !data) return null;
+    return data as CheeseTerroirRecord;
   },
 }));

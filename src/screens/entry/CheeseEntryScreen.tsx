@@ -32,9 +32,9 @@ export function CheeseEntryScreen() {
   const navigation = useNavigation<NavProp>();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const { draft, scores, reset } = useEntryDraftStore();
+  const { draft, scores, terroir, terroirEnabled, reset } = useEntryDraftStore();
   const { user } = useAuthStore();
-  const { addEntry, addScore } = useCheeseStore();
+  const { addEntry, addScore, saveTerroirRecord } = useCheeseStore();
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
@@ -76,6 +76,11 @@ export function CheeseEntryScreen() {
 
     // Step 2: save scores linked to the entry
     await addScore(user.id, entry.id, scores);
+
+    // Step 3: save terroir if enabled
+    if (terroirEnabled && (terroir.pasture_soil || terroir.climate || terroir.milk_season)) {
+      await saveTerroirRecord(user.id, entry.id, terroir);
+    }
 
     setSubmitting(false);
     reset();

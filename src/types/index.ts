@@ -355,3 +355,63 @@ export interface AnalyticsData {
   buyAgainRate: number | null;
   buyAgainAnswered: number;
 }
+
+// ─── Terroir ──────────────────────────────────────────────────────────────────
+
+export type PastureSoil = 'limestone' | 'volcanic' | 'granite' | 'clay_loam' | 'sandy_coastal';
+export type Climate     = 'alpine' | 'temperate' | 'maritime' | 'arid';
+export type MilkSeason  = 'spring' | 'summer' | 'fall' | 'winter';
+
+export const PASTURE_SOIL_OPTIONS: PastureSoil[] = ['limestone','volcanic','granite','clay_loam','sandy_coastal'];
+export const CLIMATE_OPTIONS:      Climate[]     = ['alpine','temperate','maritime','arid'];
+export const MILK_SEASON_OPTIONS:  MilkSeason[]  = ['spring','summer','fall','winter'];
+
+export const PASTURE_SOIL_LABELS: Record<PastureSoil, string> = {
+  limestone:    'Limestone',
+  volcanic:     'Volcanic',
+  granite:      'Granite',
+  clay_loam:    'Clay / Loam',
+  sandy_coastal:'Sandy Coastal',
+};
+export const PASTURE_SOIL_ICONS: Record<PastureSoil, string> = {
+  limestone:    '🪨',
+  volcanic:     '🌋',
+  granite:      '⛰️',
+  clay_loam:    '🌿',
+  sandy_coastal:'🏖️',
+};
+export const CLIMATE_LABELS: Record<Climate, string> = {
+  alpine:    'Alpine / High Elev.',
+  temperate: 'Temperate',
+  maritime:  'Maritime / Coastal',
+  arid:      'Arid',
+};
+export const CLIMATE_ICONS: Record<Climate, string> = {
+  alpine:    '🏔️',
+  temperate: '🌤️',
+  maritime:  '🌊',
+  arid:      '☀️',
+};
+export const MILK_SEASON_LABELS: Record<MilkSeason, string> = {
+  spring: 'Spring', summer: 'Summer', fall: 'Fall', winter: 'Winter',
+};
+export const MILK_SEASON_ICONS: Record<MilkSeason, string> = {
+  spring: '🌸', summer: '☀️', fall: '🍂', winter: '❄️',
+};
+
+export interface CheeseTerroirDraft {
+  pasture_soil: PastureSoil | null;
+  climate:      Climate     | null;
+  milk_season:  MilkSeason  | null;
+}
+
+export interface CheeseTerroirRecord extends CheeseTerroirDraft {
+  id:         string;
+  entry_id:   string;
+  user_id:    string;
+  created_at: string;
+}
+
+export function makeDefaultTerroirDraft(): CheeseTerroirDraft {
+  return { pasture_soil: null, climate: null, milk_season: null };
+}

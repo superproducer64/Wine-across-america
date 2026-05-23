@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,14 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { CheeseIdentityCard } from '@/components/cheese/CheeseIdentityCard';
+import { CheeseShareCard } from '@/components/cheese/CheeseShareCard';
 import { Button } from '@/components/ui/Button';
 import { getCheeseEntry } from '@/lib/supabase';
 import { useCheeseStore } from '@/stores/cheeseStore';
-import { CheeseEntry, PASTEURIZATION_LABELS } from '@/types';
+import { CheeseEntry, CheeseScore, CheeseTerroirRecord, PASTEURIZATION_LABELS } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
+import { captureRef } from 'expo-view-shot';
+import * as Sharing from 'expo-sharing';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'CheeseDetail'>;
 
@@ -24,15 +27,45 @@ export function CheeseDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const [entry, setEntry] = useState<CheeseEntry | null>(null);
   const [loading, setLoading] = useState(true);
-  const { removeEntry } = useCheeseStore();
+  const [scores, setScores] = useState<CheeseScore | null>(null);
+  const [terroir, setTerroir] = useState<CheeseTerroirRecord | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const cardRef = useRef<View>(null);
+  const { removeEntry, fetchScore, fetchTerroirRecord } = useCheeseStore();
 
   useEffect(() => {
     (async () => {
       const { data, error } = await getCheeseEntry(entryId);
       if (!error && data) setEntry(data as CheeseEntry);
+        const [scoreRes, terroirRes] = await Promise.all([
+          fetchScore(entryId),
+          fetchTerroirRecord(entryId),
+        ]);
+        setScores(scoreRes);
+        setTerroir(terroirRes);
       setLoading(false);
     })();
   }, [entryId]);
+
+  const handleShare = async () => {
+    if (!cardRef.current || !entry) return;
+    setSharing(true);
+    try {
+      const uri = await captureRef(cardRef, {
+        format: 'png',
+        quality: 1,
+        result: 'tmpfile',
+      });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: `${entry.name} — Cheese Across America`,
+      });
+    } catch {
+      Alert.alert('Share failed', 'Could not generate card image.');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const handleDelete = () => {
     Alert.alert('Delete this cheese?', 'This action cannot be undone.', [
@@ -99,7 +132,18 @@ export function CheeseDetailScreen({ route, navigation }: Props) {
         </View>
 
         {/* Identity card */}
-        <CheeseIdentityCard entry={entry} />
+        <CheeseIdentityCard entry={entry} scores={scores} terroir={terroir} />
+
+        {/* Share button */}
+        <Pressable
+          style={[styles.shareBtn, sharing && styles.shareBtnDisabled]}
+          onPress={handleShare}
+          disabled={sharing}
+        >
+          <Text style={styles.shareBtnText}>
+            {sharing ? 'Generating…' : '↑ Share Card'}
+          </Text>
+        </Pressable>
 
         {/* Price */}
         {entry.price != null && (
@@ -119,6 +163,18 @@ export function CheeseDetailScreen({ route, navigation }: Props) {
 
         <View style={{ height: Spacing.huge }} />
       </ScrollView>
+
+      {/* Off-screen card for high-res capture */}
+      {entry && (
+        <View
+          ref={cardRef}
+          collapsable={false}
+          pointerEvents="none"
+          style={styles.offScreen}
+        >
+          <CheeseShareCard entry={entry} scores={scores} terroir={terroir} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -218,5 +274,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.inkMid,
     lineHeight: 21,
+  },
+  shareBtn: {
+    backgroundColor: '#1A1710',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 0.5,
+    borderColor: 'rgba(201,168,76,0.4)',
+  },
+  shareBtnDisabled: { opacity: 0.5 },
+  shareBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 15,
+    color: '#C9A84C',
+    letterSpacing: 0.3,
+  },
+  offScreen: {
+    position: 'absolute',
+    left: -1200,
+    top: 0,
   },
 });

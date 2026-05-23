@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { CheeseEntryDraft, CheeseScoreDraft, computeTechnicalScore } from '@/types';
+import { CheeseEntryDraft, CheeseScoreDraft, computeTechnicalScore, CheeseTerroirDraft } from '@/types';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
 
@@ -214,4 +214,32 @@ export async function fetchAnalyticsData(userId: string) {
     .from('cheese_entries')
     .select('milk_type, style, region, price, would_buy_again, cheese_scores(technical_score)')
     .eq('user_id', userId);
+}
+
+// ─── Cheese Terroir ───────────────────────────────────────────────────────────
+
+export async function createCheeseTerroirRecord(
+  record: CheeseTerroirDraft & { entry_id: string; user_id: string }
+) {
+  return supabase.from('cheese_terroir').insert(record).select().single();
+}
+
+export async function getCheeseTerroirRecord(entryId: string) {
+  return supabase
+    .from('cheese_terroir')
+    .select('*')
+    .eq('entry_id', entryId)
+    .maybeSingle();
+}
+
+export async function updateCheeseTerroirRecord(
+  entryId: string,
+  updates: Partial<CheeseTerroirDraft>
+) {
+  return supabase
+    .from('cheese_terroir')
+    .update(updates)
+    .eq('entry_id', entryId)
+    .select()
+    .single();
 }
