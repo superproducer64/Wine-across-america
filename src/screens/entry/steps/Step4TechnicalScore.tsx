@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
-import { InfoSheet } from '@/components/ui/InfoSheet';
+import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
+import { PARAMETER_IMAGES } from '@/data/parameterImages';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
@@ -168,11 +169,12 @@ export function Step4TechnicalScore() {
       )}
     </ScrollView>
 
-      {openInfo && PARAMETER_INFO[openInfo] && (
-        <InfoSheet
+      {openInfo && PARAMETER_IMAGES[openInfo] && (
+        <ImageInfoSheet
           visible
           onClose={() => setOpenInfo(null)}
-          info={PARAMETER_INFO[openInfo]}
+          title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
+          source={PARAMETER_IMAGES[openInfo]}
         />
       )}
     </>

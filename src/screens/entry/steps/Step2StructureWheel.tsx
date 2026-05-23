@@ -3,8 +3,9 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { SegmentedPicker, PickerOption } from '@/components/ui/SegmentedPicker';
-import { InfoSheet } from '@/components/ui/InfoSheet';
+import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
+import { PARAMETER_IMAGES } from '@/data/parameterImages';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -198,11 +199,12 @@ export function Step2StructureWheel() {
       )}
     </ScrollView>
 
-      {openInfo && PARAMETER_INFO[openInfo] && (
-        <InfoSheet
+      {openInfo && PARAMETER_IMAGES[openInfo] && (
+        <ImageInfoSheet
           visible
           onClose={() => setOpenInfo(null)}
-          info={PARAMETER_INFO[openInfo]}
+          title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
+          source={PARAMETER_IMAGES[openInfo]}
         />
       )}
     </>
