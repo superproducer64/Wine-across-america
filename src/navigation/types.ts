@@ -3,6 +3,8 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 // ─── Auth Stack ───────────────────────────────────────────────────────────────
 
 export type AuthStackParamList = {
+  Welcome: undefined;
+  Onboarding: undefined;
   Login: undefined;
   Signup: undefined;
 };
@@ -22,6 +24,9 @@ export type TabParamList = {
 export type MainStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   CheeseDetail: { entryId: string };
+  Paywall: undefined;
+  CreatorDashboard: undefined;
+  CreatorScore: { scoreId?: string };
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

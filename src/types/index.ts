@@ -252,7 +252,7 @@ export const TECHNICAL_CATEGORIES: TechnicalCategory[] = [
     key: 'tech_typicity',
     label: 'Typicity / Precision',
     description:
-      'How precisely does this cheese represent its intended style, milk type, and maker's vision?',
+      "How precisely does this cheese represent its intended style, milk type, and maker's vision?",
   },
 ];
 
@@ -415,3 +415,85 @@ export interface CheeseTerroirRecord extends CheeseTerroirDraft {
 export function makeDefaultTerroirDraft(): CheeseTerroirDraft {
   return { pasture_soil: null, climate: null, milk_season: null };
 }
+
+// ─── Creator Layer ────────────────────────────────────────────────────────────
+
+export interface CreatorScore {
+  id: string;
+  entry_name: string;
+  producer: string;
+  style: string;
+  region: string;
+  sense_of_place: number;
+  story_authenticity: number;
+  farming_practices: number;
+  structure_balance: number;
+  overall_enjoyment: number;
+  signature_score: number;
+  editorial_note: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatorScoreDraft {
+  entry_name: string;
+  producer: string;
+  style: string;
+  region: string;
+  sense_of_place: number;
+  story_authenticity: number;
+  farming_practices: number;
+  structure_balance: number;
+  overall_enjoyment: number;
+  editorial_note: string;
+  is_published: boolean;
+}
+
+export function makeDefaultCreatorScoreDraft(): CreatorScoreDraft {
+  return {
+    entry_name: '',
+    producer: '',
+    style: 'fresh',
+    region: '',
+    sense_of_place: 10,
+    story_authenticity: 10,
+    farming_practices: 10,
+    structure_balance: 10,
+    overall_enjoyment: 10,
+    editorial_note: '',
+    is_published: false,
+  };
+}
+
+export const CREATOR_CATEGORIES: Array<{
+  key: keyof Pick<CreatorScoreDraft, 'sense_of_place' | 'story_authenticity' | 'farming_practices' | 'structure_balance' | 'overall_enjoyment'>;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: 'sense_of_place',
+    label: 'Sense of Place',
+    description: 'How distinctly does this cheese express its geographic origin?',
+  },
+  {
+    key: 'story_authenticity',
+    label: 'Story & Authenticity',
+    description: 'How genuine and compelling is the creamery\'s narrative and heritage?',
+  },
+  {
+    key: 'farming_practices',
+    label: 'Farming Practices',
+    description: 'Animal welfare, land stewardship, and sustainable production methods.',
+  },
+  {
+    key: 'structure_balance',
+    label: 'Structure & Balance',
+    description: 'Technical execution: texture, moisture, rind development, and flavor harmony.',
+  },
+  {
+    key: 'overall_enjoyment',
+    label: 'Overall Enjoyment',
+    description: 'Pure hedonistic pleasure — would you seek this cheese out again?',
+  },
+];

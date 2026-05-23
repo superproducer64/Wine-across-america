@@ -8,14 +8,18 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { MainStackParamList } from '@/navigation/types';
 
 export function SettingsScreen() {
   const { user, profile, signOut } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const handleSignOut = () => {
     Alert.alert('Sign out?', 'You will need to sign in again to access your cheeses.', [
@@ -24,29 +28,12 @@ export function SettingsScreen() {
     ]);
   };
 
-  const handleUpgrade = () => {
-    Alert.alert(
-      'Upgrade to Pro',
-      'Cheese Across America Pro — $9.99/month or $79/year.\n\nUnlock: full history, taste fingerprint, style radar, compound search, and more.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Upgrade',
-          onPress: () => {
-            // TODO: integrate RevenueCat purchase flow
-            Alert.alert('Coming soon', 'Subscription purchase will be enabled after App Store review.');
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Account</Text>
 
-        {/* Profile */}
+        {/* Profile card */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -61,7 +48,7 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* Subscription */}
+        {/* Subscription card */}
         <View style={styles.subsCard}>
           <View style={styles.subsHeader}>
             <View>
@@ -81,12 +68,12 @@ export function SettingsScreen() {
             <View style={styles.upgradeBlock}>
               <Text style={styles.upgradeTitle}>Upgrade to Intelligence</Text>
               <Text style={styles.upgradeDesc}>
-                Full history • Taste fingerprint • Score vs. price chart{'\n'}
-                Compound search • Creator database • Recommendations
+                Unlimited entries • Taste fingerprint • Score vs. price{'\n'}
+                Advanced search • Creator database • Monthly picks
               </Text>
               <Button
                 label="Upgrade — $9.99/mo"
-                onPress={handleUpgrade}
+                onPress={() => navigation.navigate('Paywall')}
                 style={styles.upgradeBtn}
                 size="md"
               />
@@ -101,16 +88,16 @@ export function SettingsScreen() {
           )}
         </View>
 
-        {/* Free tier details */}
+        {/* Free tier details for non-pro */}
         {!isSubscribed && (
           <View style={styles.freeDetails}>
             <Text style={styles.freeDetailsTitle}>Free tier includes:</Text>
             {[
               'Up to 30 cheese entries',
-              'Full cheese details (style, milk type, region, pasteurization)',
+              'Full cheese details (style, milk type, region)',
               'Basic search (keyword + style filter)',
+              'Technical score radar & terroir',
               'Date and price tracking',
-              'Tasting notes',
             ].map((item) => (
               <View key={item} style={styles.freeItem}>
                 <Text style={styles.freeItemDot}>·</Text>
@@ -120,12 +107,35 @@ export function SettingsScreen() {
           </View>
         )}
 
+        {/* Creator section */}
+        {profile?.is_creator && (
+          <View style={styles.creatorSection}>
+            <Text style={styles.sectionLabel}>Creator Studio</Text>
+            <Pressable
+              style={styles.creatorCard}
+              onPress={() => navigation.navigate('CreatorDashboard')}
+            >
+              <View style={styles.creatorCardLeft}>
+                <Text style={styles.creatorCardTitle}>Signature Scores</Text>
+                <Text style={styles.creatorCardSub}>
+                  Manage creator scores, curated lists, and monthly picks
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* App info */}
         <View style={styles.infoSection}>
           <Text style={styles.infoSectionTitle}>App Info</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoKey}>Version</Text>
             <Text style={styles.infoVal}>1.0.0</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoKey}>App</Text>
+            <Text style={styles.infoVal}>Cheese Across America</Text>
           </View>
         </View>
 
@@ -227,9 +237,7 @@ const styles = StyleSheet.create({
     color: Colors.gold,
     letterSpacing: 0.5,
   },
-  upgradeBlock: {
-    gap: Spacing.sm,
-  },
+  upgradeBlock: { gap: Spacing.sm },
   upgradeTitle: {
     fontFamily: Fonts.playfair,
     fontSize: 16,
@@ -241,9 +249,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.45)',
     lineHeight: 18,
   },
-  upgradeBtn: {
-    width: '100%',
-  },
+  upgradeBtn: { width: '100%' },
   upgradeAlt: {
     fontFamily: Fonts.dmSans,
     fontSize: 12,
@@ -287,9 +293,43 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  infoSection: {
-    gap: Spacing.sm,
+  sectionLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+    marginBottom: 8,
   },
+  creatorSection: { gap: 4 },
+  creatorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    gap: Spacing.md,
+  },
+  creatorCardLeft: { flex: 1, gap: 3 },
+  creatorCardTitle: {
+    fontFamily: Fonts.playfair,
+    fontSize: 16,
+    color: Colors.ink,
+  },
+  creatorCardSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    lineHeight: 17,
+  },
+  chevron: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 22,
+    color: Colors.gold,
+  },
+  infoSection: { gap: Spacing.sm },
   infoSectionTitle: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 12,
@@ -314,7 +354,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.inkMuted,
   },
-  signOutBtn: {
-    marginTop: Spacing.md,
-  },
+  signOutBtn: { marginTop: Spacing.md },
 });

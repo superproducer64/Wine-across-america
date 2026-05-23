@@ -64,11 +64,9 @@ export function SignupScreen({ navigation }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.trophy}>🏆</Text>
+          <Text style={styles.emoji}>🧀</Text>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>
-            Start your wine intelligence journal
-          </Text>
+          <Text style={styles.subtitle}>Start your artisan cheese journal</Text>
         </View>
 
         <View style={styles.form}>
@@ -136,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  trophy: {
+  emoji: {
     fontSize: 40,
     marginBottom: 4,
   },

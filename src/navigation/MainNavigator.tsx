@@ -10,6 +10,9 @@ import { CheeseEntryScreen } from '@/screens/entry/CheeseEntryScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { AnalyticsScreen } from '@/screens/analytics/AnalyticsScreen';
 import { CheeseDetailScreen } from '@/screens/detail/CheeseDetailScreen';
+import { PaywallScreen } from '@/screens/paywall/PaywallScreen';
+import { CreatorDashboard } from '@/screens/creator/CreatorDashboard';
+import { CreatorScoreScreen } from '@/screens/creator/CreatorScoreScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -93,6 +96,21 @@ export function MainNavigator() {
       <Stack.Screen
         name="CheeseDetail"
         component={CheeseDetailScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="Paywall"
+        component={PaywallScreen}
+        options={{ animation: 'slide_from_bottom', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="CreatorDashboard"
+        component={CreatorDashboard}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="CreatorScore"
+        component={CreatorScoreScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

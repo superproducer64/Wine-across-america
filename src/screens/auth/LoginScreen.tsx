@@ -8,12 +8,14 @@ import {
   Platform,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { signInWithEmail } from '@/lib/supabase';
+import { signInWithEmail, signInWithGoogle, supabase } from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -22,6 +24,7 @@ export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -31,10 +34,45 @@ export function LoginScreen({ navigation }: Props) {
     setLoading(true);
     const { error } = await signInWithEmail(email.trim(), password);
     setLoading(false);
-    if (error) {
-      Alert.alert('Sign in failed', error.message);
+    if (error) Alert.alert('Sign in failed', error.message);
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      const available = await AppleAuthentication.isAvailableAsync();
+      if (!available) {
+        Alert.alert('Not available', 'Apple Sign-In requires iOS 13 or later.');
+        return;
+      }
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken!,
+      });
+      if (error) Alert.alert('Apple Sign-In failed', error.message);
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      if (err.code !== 'ERR_REQUEST_CANCELED') {
+        Alert.alert('Error', err.message ?? 'Apple Sign-In failed.');
+      }
     }
-    // On success, auth listener in RootNavigator will redirect automatically
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      Alert.alert('Google Sign-In failed', err.message ?? 'Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -48,12 +86,12 @@ export function LoginScreen({ navigation }: Props) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.trophy}>🏆</Text>
-          <Text style={styles.title}>Pour Across{'\n'}America</Text>
-          <Text style={styles.subtitle}>Wine Intelligence App</Text>
+          <Text style={styles.emoji}>🧀</Text>
+          <Text style={styles.title}>Cheese Across{'\n'}America</Text>
+          <Text style={styles.subtitle}>Artisan Cheese Journal</Text>
         </View>
 
-        {/* Form */}
+        {/* Email / Password form */}
         <View style={styles.form}>
           <Text style={styles.formTitle}>Sign In</Text>
 
@@ -84,15 +122,32 @@ export function LoginScreen({ navigation }: Props) {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>or continue with</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          <View style={styles.socialHint}>
-            <Text style={styles.socialText}>
-              Apple & Google sign-in available on device
-            </Text>
-          </View>
+          {/* Apple Sign-In */}
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={Radius.lg}
+              style={styles.appleBtn}
+              onPress={handleAppleSignIn}
+            />
+          )}
+
+          {/* Google Sign-In */}
+          <Pressable style={styles.googleBtn} onPress={handleGoogleSignIn} disabled={googleLoading}>
+            {googleLoading ? (
+              <ActivityIndicator color={Colors.inkMid} size="small" />
+            ) : (
+              <>
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={styles.googleText}>Continue with Google</Text>
+              </>
+            )}
+          </Pressable>
         </View>
 
         {/* Footer */}
@@ -121,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  trophy: {
+  emoji: {
     fontSize: 44,
     marginBottom: 4,
   },
@@ -159,7 +214,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
     marginVertical: Spacing.md,
   },
   dividerLine: {
@@ -169,20 +224,34 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontFamily: Fonts.dmSans,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.inkFaint,
   },
-  socialHint: {
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
+  appleBtn: {
+    height: 48,
+    marginBottom: 8,
   },
-  socialText: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkMuted,
-    textAlign: 'center',
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 48,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  googleIcon: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 18,
+    color: '#4285F4',
+    lineHeight: 22,
+  },
+  googleText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 15,
+    color: Colors.inkMid,
   },
   footerText: {
     fontFamily: Fonts.dmSans,

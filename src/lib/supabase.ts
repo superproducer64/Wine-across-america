@@ -1,8 +1,10 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
-import { CheeseEntryDraft, CheeseScoreDraft, computeTechnicalScore, CheeseTerroirDraft } from '@/types';
+import { CheeseEntryDraft, CheeseScoreDraft, computeTechnicalScore, CheeseTerroirDraft, CreatorScoreDraft } from '@/types';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
 
@@ -53,6 +55,26 @@ export async function signUpWithEmail(email: string, password: string, displayNa
 
 export async function signOut() {
   return supabase.auth.signOut();
+}
+
+export async function signInWithGoogle() {
+  const redirectUrl = Linking.createURL('auth/callback');
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (data?.url) {
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    if (result.type === 'success') {
+      const codeMatch = result.url.match(/[?&]code=([^&]+)/);
+      const code = codeMatch ? decodeURIComponent(codeMatch[1]) : null;
+      if (code) {
+        const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+        if (sessionError) throw sessionError;
+      }
+    }
+  }
 }
 
 // ─── Cheese Entry CRUD ────────────────────────────────────────────────────────
@@ -242,4 +264,34 @@ export async function updateCheeseTerroirRecord(
     .eq('entry_id', entryId)
     .select()
     .single();
+}
+
+// ─── Creator Scores ───────────────────────────────────────────────────────────
+
+export async function listMyCreatorScores() {
+  return supabase
+    .from('creator_cheese_scores')
+    .select('*')
+    .order('updated_at', { ascending: false });
+}
+
+export async function createCreatorScore(draft: CreatorScoreDraft) {
+  return supabase.from('creator_cheese_scores').insert(draft).select().single();
+}
+
+export async function updateCreatorScore(id: string, updates: Partial<CreatorScoreDraft>) {
+  return supabase
+    .from('creator_cheese_scores')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+}
+
+export async function deleteCreatorScore(id: string) {
+  return supabase.from('creator_cheese_scores').delete().eq('id', id);
+}
+
+export async function getCreatorScore(id: string) {
+  return supabase.from('creator_cheese_scores').select('*').eq('id', id).single();
 }
