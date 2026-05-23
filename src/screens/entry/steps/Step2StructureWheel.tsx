@@ -9,57 +9,77 @@ import { useAuthStore } from '@/stores/authStore';
 import { STRUCTURE_DIMENSIONS } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
 
-// ─── Simplified picker options for Wine Explorer ───────────────────────────
-// Maps to the same 1-10 numeric storage, so Sommelier's slider reads them fine.
-
-const BODY_OPTIONS: PickerOption[] = [
-  { label: 'Light', sublabel: '💧 watery', value: 2 },
-  { label: 'Medium', sublabel: '🍵 tea-like', value: 5 },
-  { label: 'Full', sublabel: '🍷 silky', value: 8 },
-  { label: 'Bold', sublabel: '🥛 creamy', value: 10 },
+// ─── Enthusiast pickers (3 options) ────────────────────────────────────────
+const BODY_ENTHUSIAST: PickerOption[] = [
+  { label: 'Light',  sublabel: 'like water / skim milk', value: 3 },
+  { label: 'Medium', sublabel: 'like whole milk',         value: 6 },
+  { label: 'Full',   sublabel: 'like cream',              value: 9 },
+];
+const ALCOHOL_ENTHUSIAST: PickerOption[] = [
+  { label: 'Low',    sublabel: 'light, no warmth felt',   value: 3 },
+  { label: 'Medium', sublabel: 'gentle warmth',            value: 6 },
+  { label: 'High',   sublabel: 'noticeable heat',          value: 9 },
+];
+const INTENSITY_ENTHUSIAST: PickerOption[] = [
+  { label: 'Low',    sublabel: 'nose in the glass',        value: 3 },
+  { label: 'Medium', sublabel: 'at nose / chin level',     value: 6 },
+  { label: 'High',   sublabel: 'expressive from a distance', value: 9 },
 ];
 
-const ALCOHOL_OPTIONS: PickerOption[] = [
-  { label: 'Low', sublabel: '< 11%', value: 2 },
-  { label: 'Medium', sublabel: '11–13%', value: 5 },
-  { label: 'High', sublabel: '13–15%', value: 8 },
-  { label: 'Warm', sublabel: '15%+', value: 10 },
+// ─── Sommelier pickers (5 options) ─────────────────────────────────────────
+const BODY_SOMMELIER: PickerOption[] = [
+  { label: 'Light',    sublabel: 'like water / skim milk', value: 2 },
+  { label: 'Medium −', sublabel: '',                        value: 4 },
+  { label: 'Medium',   sublabel: 'like whole milk',         value: 6 },
+  { label: 'Medium +', sublabel: '',                        value: 8 },
+  { label: 'Full',     sublabel: 'like cream',              value: 10 },
+];
+const ALCOHOL_SOMMELIER: PickerOption[] = [
+  { label: 'Low',      sublabel: 'light, no warmth felt',   value: 2 },
+  { label: 'Medium −', sublabel: '',                         value: 4 },
+  { label: 'Medium',   sublabel: 'gentle warmth',            value: 6 },
+  { label: 'Medium +', sublabel: '',                         value: 8 },
+  { label: 'High',     sublabel: 'noticeable heat',          value: 10 },
+];
+const INTENSITY_SOMMELIER: PickerOption[] = [
+  { label: 'Low',      sublabel: 'nose in the glass',          value: 2 },
+  { label: 'Medium −', sublabel: '',                            value: 4 },
+  { label: 'Medium',   sublabel: 'at nose / chin level',        value: 6 },
+  { label: 'Medium +', sublabel: '',                            value: 8 },
+  { label: 'High',     sublabel: 'expressive from a distance',  value: 10 },
 ];
 
-const INTENSITY_OPTIONS: PickerOption[] = [
-  { label: 'Delicate', sublabel: 'subtle', value: 2 },
-  { label: 'Medium', sublabel: 'moderate', value: 5 },
-  { label: 'Pronounced', sublabel: 'expressive', value: 8 },
-  { label: 'Powerful', sublabel: 'intense', value: 10 },
-];
-
-// The three axes that get simplified pickers for Wine Explorer
+// Axes that use categorical pickers for both profiles
 const PICKER_KEYS = new Set(['body', 'alcohol', 'intensity']);
-
-// Map each dimension key to its picker options
-const PICKER_OPTIONS: Record<string, PickerOption[]> = {
-  body: BODY_OPTIONS,
-  alcohol: ALCOHOL_OPTIONS,
-  intensity: INTENSITY_OPTIONS,
-};
 
 export function Step2StructureWheel() {
   const { draft, setStructureWheel } = useEntryDraftStore();
   const { profile } = useAuthStore();
 
-  // Sommelier-approved users get the full 1-10 slider for all axes
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
   const { isWide } = useResponsive();
 
   const scores = {
-    sweetness: draft.sweetness,
-    acidity: draft.acidity,
-    tannin: draft.tannin,
-    body: draft.body,
-    alcohol: draft.alcohol,
-    intensity: draft.intensity,
+    sweetness:     draft.sweetness,
+    acidity:       draft.acidity,
+    tannin:        draft.tannin,
+    body:          draft.body,
+    alcohol:       draft.alcohol,
+    intensity:     draft.intensity,
     finish_length: draft.finish_length,
+  };
+
+  const getPickerOptions = (key: string): PickerOption[] => {
+    if (isSommelier) {
+      if (key === 'body')      return BODY_SOMMELIER;
+      if (key === 'alcohol')   return ALCOHOL_SOMMELIER;
+      if (key === 'intensity') return INTENSITY_SOMMELIER;
+    }
+    if (key === 'body')      return BODY_ENTHUSIAST;
+    if (key === 'alcohol')   return ALCOHOL_ENTHUSIAST;
+    if (key === 'intensity') return INTENSITY_ENTHUSIAST;
+    return [];
   };
 
   const radarSize = isWide ? 260 : 200;
@@ -69,7 +89,7 @@ export function Step2StructureWheel() {
       <RadarChart scores={scores} size={radarSize} />
       {isWide && (
         <Text style={styles.radarHint}>
-          Chart updates live as you adjust each slider.
+          Chart updates live as you adjust each control.
         </Text>
       )}
     </View>
@@ -78,24 +98,21 @@ export function Step2StructureWheel() {
   const slidersPanel = (
     <View style={isWide && styles.slidersCol}>
       {/* Profile badge */}
-      {!isSommelier && (
-        <View style={styles.modeBadge}>
-          <Text style={styles.modeBadgeText}>Wine Explorer mode — tap to select</Text>
-        </View>
-      )}
+      <View style={styles.modeBadge}>
+        <Text style={styles.modeBadgeText}>
+          {isSommelier ? '🎓 Sommelier profile' : 'Wine Explorer profile — tap to select'}
+        </Text>
+      </View>
 
-      {/* Controls — slider for all on Sommelier, picker for body/alcohol/intensity on Explorer */}
       {STRUCTURE_DIMENSIONS.map((dim) => {
-        const useSimplePicker = !isSommelier && PICKER_KEYS.has(dim.key);
-
-        if (useSimplePicker) {
+        if (PICKER_KEYS.has(dim.key)) {
           return (
             <SegmentedPicker
               key={dim.key}
               label={dim.displayLabel}
               tip={dim.tip}
-              options={PICKER_OPTIONS[dim.key]}
-              value={scores[dim.key]}
+              options={getPickerOptions(dim.key)}
+              value={scores[dim.key as keyof typeof scores]}
               onChange={(v) => setStructureWheel({ [dim.key]: v })}
             />
           );
@@ -105,7 +122,7 @@ export function Step2StructureWheel() {
           <ScoreSlider
             key={dim.key}
             label={dim.displayLabel}
-            value={scores[dim.key]}
+            value={scores[dim.key as keyof typeof scores]}
             min={1}
             max={10}
             tip={dim.tip}
@@ -123,21 +140,16 @@ export function Step2StructureWheel() {
       style={styles.container}
       contentContainerStyle={[styles.content, isWide && styles.contentWide]}
     >
-      <Text style={styles.stepTitle}>Structure Wheel</Text>
+      <Text style={styles.stepTitle}>Structure</Text>
       <Text style={styles.intro}>
-        {isSommelier
-          ? 'Rate each dimension from 1–10. The radar chart updates live as you score.'
-          : 'Select a level for each dimension. The radar chart updates live as you choose.'}
+        Rate Sweetness, Acidity, Tannin and Finish on a 1–10 scale.
+        Select a level for Body, Alcohol and Intensity.
       </Text>
 
       {isWide ? (
         <View style={styles.twoColRow}>
-          <View style={styles.leftCol}>
-            {radarPanel}
-          </View>
-          <View style={styles.rightCol}>
-            {slidersPanel}
-          </View>
+          <View style={styles.leftCol}>{radarPanel}</View>
+          <View style={styles.rightCol}>{slidersPanel}</View>
         </View>
       ) : (
         <>
@@ -177,13 +189,8 @@ const styles = StyleSheet.create({
     gap: Spacing.xxl,
     alignItems: 'flex-start',
   },
-  leftCol: {
-    flex: 5,
-    minWidth: 200,
-  },
-  rightCol: {
-    flex: 7,
-  },
+  leftCol:  { flex: 5, minWidth: 200 },
+  rightCol: { flex: 7 },
   radarWrap: {
     alignItems: 'center',
     marginBottom: Spacing.xl,
@@ -192,6 +199,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 0.5,
     borderColor: Colors.border,
+  },
+  radarWrapWide: { marginBottom: 0 },
+  radarHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+    fontStyle: 'italic',
   },
   modeBadge: {
     alignSelf: 'flex-start',
@@ -209,18 +225,5 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     letterSpacing: 0.2,
   },
-  radarWrapWide: {
-    marginBottom: 0,
-  },
-  radarHint: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 11,
-    color: Colors.inkMuted,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-    fontStyle: 'italic',
-  },
-  slidersCol: {
-    gap: 4,
-  },
+  slidersCol: { gap: 4 },
 });

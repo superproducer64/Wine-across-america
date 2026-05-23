@@ -42,102 +42,117 @@ export function getCategorySubcategories(
 }
 
 export const AROMA_CATEGORIES: AromaCategory[] = [
+  // 1 ── Citrus
   {
     id: 'citrus',
     label: 'Citrus',
     emoji: '🍋',
-    subcategories: ['Lemon', 'Lime', 'Grapefruit'],
-    sommelierSubcategories: ['Orange peel', 'Yuzu'],
+    subcategories: ['Lemon', 'Lime', 'Grapefruit', 'Orange'],
+    sommelierSubcategories: ['Mandarin', 'Lemon zest', 'Orange peel'],
   },
+  // 2 ── Orchard Fruit
   {
-    id: 'tree-fruit',
-    label: 'Tree Fruit',
+    id: 'orchard-fruit',
+    label: 'Orchard Fruit',
     emoji: '🍎',
-    subcategories: ['Apple', 'Pear', 'Peach'],
-    sommelierSubcategories: ['Apricot', 'Quince'],
+    subcategories: ['Green apple', 'Red apple', 'Pear', 'Quince'],
+    sommelierSubcategories: ['Baked apple', 'Apple skin', 'Gooseberry'],
   },
+  // 3 ── Stone Fruit
   {
-    id: 'tropical',
+    id: 'stone-fruit',
+    label: 'Stone Fruit',
+    emoji: '🍑',
+    subcategories: ['Peach', 'Apricot', 'Nectarine'],
+    sommelierSubcategories: ['White peach', 'Peach skin', 'Yellow plum'],
+  },
+  // 4 ── Tropical Fruit
+  {
+    id: 'tropical-fruit',
     label: 'Tropical',
     emoji: '🍍',
-    subcategories: ['Pineapple', 'Mango'],
-    sommelierSubcategories: ['Passion fruit', 'Guava', 'Lychee'],
+    subcategories: ['Pineapple', 'Mango', 'Passion fruit', 'Melon', 'Banana', 'Lychee'],
+    sommelierSubcategories: ['Papaya', 'Guava', 'Cantaloupe', 'Honeydew', 'Dragon fruit', 'Starfruit'],
   },
+  // 5 ── Red Fruit
   {
     id: 'red-fruit',
     label: 'Red Fruit',
     emoji: '🍓',
-    subcategories: ['Strawberry', 'Raspberry'],
-    sommelierSubcategories: ['Cranberry', 'Red cherry', 'Red plum'],
+    subcategories: ['Strawberry', 'Raspberry', 'Red cherry', 'Red currant'],
+    sommelierSubcategories: ['Ripe strawberry', 'Sour cherry', 'Cranberry', 'Pomegranate', 'Red plum', 'Mulberry'],
   },
+  // 6 ── Black Fruit
   {
-    id: 'dark-fruit',
-    label: 'Dark Fruit',
+    id: 'black-fruit',
+    label: 'Black Fruit',
     emoji: '🫐',
-    subcategories: ['Blackberry', 'Blueberry'],
-    sommelierSubcategories: ['Black cherry', 'Black plum', 'Cassis'],
+    subcategories: ['Blackberry', 'Blackcurrant', 'Black cherry', 'Plum'],
+    sommelierSubcategories: ['Ripe plum'],
   },
-  {
-    id: 'dried-fruit',
-    label: 'Dried Fruit',
-    emoji: '🍇',
-    subcategories: ['Raisin', 'Fig'],
-    sommelierSubcategories: ['Prune', 'Date', 'Dried apricot'],
-  },
+  // 7 ── Floral
   {
     id: 'floral',
     label: 'Floral',
     emoji: '🌸',
-    subcategories: ['Rose', 'Violet'],
-    sommelierSubcategories: ['Jasmine', 'Orange blossom', 'Lavender'],
+    subcategories: ['Rose', 'Violet', 'Jasmine', 'White flowers'],
+    sommelierSubcategories: ['Orange blossom', 'Lavender'],
   },
+  // 8 ── Herbal / Green
   {
-    id: 'herbaceous',
-    label: 'Herbaceous',
+    id: 'herbal-green',
+    label: 'Herbal / Green',
     emoji: '🌿',
-    subcategories: ['Grass', 'Bell pepper'],
-    sommelierSubcategories: ['Asparagus', 'Tomato leaf', 'Sage'],
+    subcategories: ['Grass', 'Bell pepper', 'Mint', 'Fresh herbs'],
+    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Green pepper', 'Thyme', 'Tomato leaf'],
   },
+  // 9 ── Spice
+  {
+    id: 'spice',
+    label: 'Spice',
+    emoji: '🌶️',
+    subcategories: ['Black pepper', 'White pepper', 'Clove', 'Cinnamon'],
+    sommelierSubcategories: ['Pink pepper', 'Baking spice', 'Nutmeg', 'Anise', 'Licorice'],
+  },
+  // 10 ── Oak / Toast
+  {
+    id: 'oak-toast',
+    label: 'Oak / Toast',
+    emoji: '🌰',
+    subcategories: ['Vanilla', 'Toast', 'Smoke', 'Cedar', 'Chocolate'],
+    sommelierSubcategories: ['Coffee', 'Espresso', 'Mocha', 'Caramelized wood', 'Charred wood'],
+  },
+  // 11 ── Earthy
   {
     id: 'earthy',
     label: 'Earthy',
     emoji: '🌍',
-    subcategories: ['Mushroom', 'Forest floor'],
-    sommelierSubcategories: ['Truffle', 'Wet earth', 'Clay'],
+    subcategories: ['Mushroom', 'Wet leaves', 'Leather', 'Tobacco'],
+    sommelierSubcategories: ['Forest floor', 'Truffle', 'Tobacco leaf', 'Dusty earth', 'Game'],
   },
+  // 12 ── Mineral (visible to both; sommelier sees expanded list)
   {
     id: 'mineral',
     label: 'Mineral',
     emoji: '🪨',
-    sommelier_only: true,
-    subcategories: ['Chalk', 'Flint', 'Slate', 'Wet stone', 'Graphite'],
+    subcategories: ['Chalk', 'Wet stone', 'Saline'],
+    sommelierSubcategories: ['Flint', 'Slate', 'Oyster shell', 'Iron', 'Graphite'],
   },
+  // 13 ── Sweet / Ripe
   {
-    id: 'oak-spice',
-    label: 'Oak & Spice',
-    emoji: '🌰',
-    subcategories: ['Vanilla', 'Cedar'],
-    sommelierSubcategories: ['Clove', 'Cinnamon', 'Toast'],
+    id: 'sweet-ripe',
+    label: 'Sweet / Ripe',
+    emoji: '🍯',
+    subcategories: ['Honey', 'Jam', 'Dried fruit', 'Raisin', 'Prune'],
+    sommelierSubcategories: ['Fig', 'Caramel', 'Toffee', 'Molasses', 'Date'],
   },
-  {
-    id: 'savory',
-    label: 'Savory',
-    emoji: '🫙',
-    sommelier_only: true,
-    subcategories: ['Olive', 'Leather', 'Game', 'Meat', 'Tobacco'],
-  },
-  {
-    id: 'sweet-baking',
-    label: 'Sweet & Baking',
-    emoji: '🍫',
-    subcategories: ['Chocolate', 'Coffee', 'Caramel'],
-    sommelierSubcategories: ['Mocha', 'Honey'],
-  },
+  // 14 ── Other
   {
     id: 'other',
     label: 'Other',
     emoji: '✨',
-    subcategories: ['Petrol', 'Rubber', 'Smoke', 'Butter', 'Cream'],
+    subcategories: ['Butter', 'Cream', 'Yeast', 'Brioche', 'Bread', 'Petrol'],
+    sommelierSubcategories: ['Yogurt', 'Wax', 'Rubber', 'Almond', 'Hazelnut', 'Walnut', 'Lees'],
   },
 ];
 
@@ -169,9 +184,9 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🍋',
     styleLabel: 'Light · Refreshing · Zesty',
     forWines: 'Sauvignon Blanc, Albariño, Pinot Grigio, Txakoli',
-    aromas_l1: ['citrus', 'herbaceous', 'mineral'],
-    aromas_l2: ['Lemon', 'Lime', 'Grass', 'Flint'],
-    structure: { sweetness: 2, acidity: 8, tannin: 1, body: 3, alcohol: 4, intensity: 6, finish_length: 5 },
+    aromas_l1: ['citrus', 'herbal-green', 'mineral'],
+    aromas_l2: ['Lemon', 'Lime', 'Grass', 'Saline'],
+    structure: { sweetness: 2, acidity: 8, tannin: 1, body: 3, alcohol: 3, intensity: 6, finish_length: 5 },
   },
   {
     id: 'ripe-round-white',
@@ -179,7 +194,7 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🍑',
     styleLabel: 'Smooth · Fruity · Round',
     forWines: 'Unoaked Chardonnay, Viognier, Chenin Blanc',
-    aromas_l1: ['tree-fruit', 'tropical'],
+    aromas_l1: ['stone-fruit', 'tropical-fruit'],
     aromas_l2: ['Peach', 'Apricot', 'Mango'],
     structure: { sweetness: 3, acidity: 5, tannin: 1, body: 6, alcohol: 6, intensity: 6, finish_length: 6 },
   },
@@ -189,7 +204,7 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🌰',
     styleLabel: 'Rich · Creamy · Oak-Driven',
     forWines: 'Oaked Chardonnay, Napa Chardonnay, White Burgundy',
-    aromas_l1: ['oak-spice', 'tree-fruit', 'other'],
+    aromas_l1: ['oak-toast', 'stone-fruit', 'other'],
     aromas_l2: ['Vanilla', 'Toast', 'Peach', 'Butter', 'Cream'],
     structure: { sweetness: 2, acidity: 5, tannin: 1, body: 7, alcohol: 7, intensity: 7, finish_length: 7 },
   },
@@ -199,9 +214,9 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🍓',
     styleLabel: 'Fresh · Vibrant · Easy Drinking',
     forWines: 'Pinot Noir, Gamay, Light Reds',
-    aromas_l1: ['red-fruit', 'floral', 'herbaceous'],
-    aromas_l2: ['Strawberry', 'Raspberry', 'Violet'],
-    structure: { sweetness: 2, acidity: 7, tannin: 3, body: 4, alcohol: 4, intensity: 5, finish_length: 5 },
+    aromas_l1: ['red-fruit', 'floral', 'herbal-green'],
+    aromas_l2: ['Strawberry', 'Raspberry', 'Violet', 'Fresh herbs'],
+    structure: { sweetness: 2, acidity: 7, tannin: 3, body: 3, alcohol: 3, intensity: 6, finish_length: 5 },
   },
   {
     id: 'ripe-smooth-red',
@@ -209,9 +224,9 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🫐',
     styleLabel: 'Soft · Fruit-Forward · Smooth',
     forWines: 'Merlot, Zinfandel, Grenache',
-    aromas_l1: ['dark-fruit', 'oak-spice', 'sweet-baking'],
-    aromas_l2: ['Blackberry', 'Black plum', 'Clove'],
-    structure: { sweetness: 3, acidity: 5, tannin: 5, body: 6, alcohol: 7, intensity: 6, finish_length: 6 },
+    aromas_l1: ['black-fruit', 'spice', 'sweet-ripe'],
+    aromas_l2: ['Blackberry', 'Plum', 'Clove', 'Jam'],
+    structure: { sweetness: 3, acidity: 5, tannin: 5, body: 6, alcohol: 6, intensity: 6, finish_length: 6 },
   },
   {
     id: 'bold-structured-red',
@@ -219,9 +234,9 @@ export const WINE_SHORTCUTS: WineShortcut[] = [
     emoji: '🍷',
     styleLabel: 'Powerful · Structured · Intense',
     forWines: 'Cabernet Sauvignon, Syrah, Malbec',
-    aromas_l1: ['dark-fruit', 'oak-spice', 'savory'],
-    aromas_l2: ['Cassis', 'Cedar', 'Tobacco'],
-    structure: { sweetness: 2, acidity: 5, tannin: 8, body: 8, alcohol: 8, intensity: 8, finish_length: 7 },
+    aromas_l1: ['black-fruit', 'oak-toast', 'earthy'],
+    aromas_l2: ['Blackcurrant', 'Cedar', 'Smoke', 'Tobacco'],
+    structure: { sweetness: 2, acidity: 5, tannin: 8, body: 9, alcohol: 9, intensity: 9, finish_length: 7 },
   },
 ];
 
