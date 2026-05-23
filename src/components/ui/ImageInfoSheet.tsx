@@ -17,12 +17,18 @@ interface ImageInfoSheetProps {
   onClose: () => void;
   title: string;
   source: ImageSourcePropType;
+  scrollHint?: string;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const IMAGE_HEIGHT = SCREEN_WIDTH * 1.415;
+const FALLBACK_RATIO = 2200 / 1700;
 
-export function ImageInfoSheet({ visible, onClose, title, source }: ImageInfoSheetProps) {
+export function ImageInfoSheet({ visible, onClose, title, source, scrollHint }: ImageInfoSheetProps) {
+  const asset = Image.resolveAssetSource(source);
+  const imageHeight = asset && asset.width > 0
+    ? SCREEN_WIDTH * (asset.height / asset.width)
+    : SCREEN_WIDTH * FALLBACK_RATIO;
+
   return (
     <Modal
       visible={visible}
@@ -32,7 +38,14 @@ export function ImageInfoSheet({ visible, onClose, title, source }: ImageInfoShe
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.title} numberOfLines={1}>{title}</Text>
+            {scrollHint ? (
+              <View style={styles.scrollHintPill}>
+                <Text style={styles.scrollHintText}>{scrollHint}</Text>
+              </View>
+            ) : null}
+          </View>
           <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={16}>
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
@@ -46,7 +59,7 @@ export function ImageInfoSheet({ visible, onClose, title, source }: ImageInfoShe
         >
           <Image
             source={source}
-            style={styles.image}
+            style={[styles.image, { height: imageHeight }]}
             resizeMode="contain"
           />
         </ScrollView>
@@ -62,7 +75,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
     paddingTop: 52,
@@ -70,12 +83,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
+  headerText: {
+    flex: 1,
+    paddingRight: 12,
+    gap: 6,
+  },
   title: {
     fontFamily: Fonts.playfair,
     fontSize: 18,
     color: Colors.gold,
-    flex: 1,
-    paddingRight: 12,
+  },
+  scrollHintPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(196,132,122,0.18)',
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: '#C4847A',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  scrollHintText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: '#C4847A',
+    letterSpacing: 0.2,
   },
   closeBtn: {
     width: 32,
@@ -99,6 +130,5 @@ const styles = StyleSheet.create({
   },
   image: {
     width: SCREEN_WIDTH,
-    height: IMAGE_HEIGHT,
   },
 });

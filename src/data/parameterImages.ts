@@ -14,3 +14,10 @@ export const PARAMETER_IMAGES: Record<string, ImageSourcePropType> = {
   score_finish:     require('../../assets/spec/spec_p13.png'),
   score_typicity:   require('../../assets/spec/spec_p14.png'),
 };
+
+export const PARAMETER_SCROLL_HINTS: Record<string, string> = {
+  acidity:      'Scroll down for Acidity ↓',
+  body:         'Scroll down for Body ↓',
+  finish_length:'Scroll down for Finish Length ↓',
+  score_finish: 'Scroll down for Score Finish ↓',
+};

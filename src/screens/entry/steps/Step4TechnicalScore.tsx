@@ -4,7 +4,7 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
-import { PARAMETER_IMAGES } from '@/data/parameterImages';
+import { PARAMETER_IMAGES, PARAMETER_SCROLL_HINTS } from '@/data/parameterImages';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
@@ -175,6 +175,7 @@ export function Step4TechnicalScore() {
           onClose={() => setOpenInfo(null)}
           title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
           source={PARAMETER_IMAGES[openInfo]}
+          scrollHint={PARAMETER_SCROLL_HINTS[openInfo]}
         />
       )}
     </>
