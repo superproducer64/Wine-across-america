@@ -7,7 +7,7 @@ import {
   Pressable,
   TextInput as RNTextInput,
 } from 'react-native';
-import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
+import { FlavorWheelSheet } from '@/components/ui/FlavorWheelSheet';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -364,11 +364,9 @@ export function Step3Aromas() {
         )}
       </ScrollView>
 
-      <ImageInfoSheet
+      <FlavorWheelSheet
         visible={showWheel}
         onClose={() => setShowWheel(false)}
-        title="Wine Flavor Wheel"
-        source={require('../../../../assets/flavor-wheel.jpg')}
       />
     </>
   );
