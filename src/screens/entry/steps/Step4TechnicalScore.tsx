@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
+import { InfoSheet } from '@/components/ui/InfoSheet';
+import { PARAMETER_INFO } from '@/data/parameterInfo';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
@@ -11,6 +13,7 @@ export function Step4TechnicalScore() {
   const { draft, setTechnicalScore } = useEntryDraftStore();
   const { profile } = useAuthStore();
   const { isWide } = useResponsive();
+  const [openInfo, setOpenInfo] = useState<string | null>(null);
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -124,6 +127,7 @@ export function Step4TechnicalScore() {
               disabled={intensityLocked}
               zones={SCORE_ZONES[cat.key]}
               onChange={(v) => setTechnicalScore({ [cat.key]: v })}
+              onInfo={PARAMETER_INFO[cat.key] ? () => setOpenInfo(cat.key) : undefined}
             />
             {intensityLocked && (
               <Text style={styles.lockedHint}>
@@ -137,6 +141,7 @@ export function Step4TechnicalScore() {
   );
 
   return (
+    <>
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, isWide && styles.contentWide]}
@@ -162,6 +167,15 @@ export function Step4TechnicalScore() {
         </>
       )}
     </ScrollView>
+
+      {openInfo && PARAMETER_INFO[openInfo] && (
+        <InfoSheet
+          visible
+          onClose={() => setOpenInfo(null)}
+          info={PARAMETER_INFO[openInfo]}
+        />
+      )}
+    </>
   );
 }
 

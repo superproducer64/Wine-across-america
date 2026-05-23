@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 
+
 export interface PickerOption {
   label: string;
   sublabel?: string;
@@ -16,6 +17,7 @@ interface SegmentedPickerProps {
   value: number;
   onChange: (value: number) => void;
   accentColor?: string;
+  onInfo?: () => void;
 }
 
 /** Finds the option whose value is closest to `current`. */
@@ -32,13 +34,21 @@ export function SegmentedPicker({
   value,
   onChange,
   accentColor = Colors.gold,
+  onInfo,
 }: SegmentedPickerProps) {
   const activeValue = closestOption(options, value);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>{label}</Text>
+        <View style={styles.labelRow}>
+          <Text style={styles.label}>{label}</Text>
+          {onInfo && (
+            <Pressable onPress={onInfo} hitSlop={10} style={styles.infoBtn}>
+              <Text style={styles.infoBtnText}>ⓘ</Text>
+            </Pressable>
+          )}
+        </View>
         <View style={[styles.valueBadge, { backgroundColor: accentColor + '22', borderColor: accentColor + '66' }]}>
           <Text style={[styles.valueText, { color: accentColor }]}>{activeValue}</Text>
         </View>
@@ -91,10 +101,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   label: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 14,
     color: Colors.ink,
+  },
+  infoBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoBtnText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkFaint,
   },
   valueBadge: {
     paddingHorizontal: 10,

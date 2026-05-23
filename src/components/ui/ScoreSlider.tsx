@@ -28,6 +28,7 @@ interface ScoreSliderProps {
   accentColor?: string;
   disabled?: boolean;
   zones?: SliderZone[];
+  onInfo?: () => void;
 }
 
 export function ScoreSlider({
@@ -43,6 +44,7 @@ export function ScoreSlider({
   accentColor = Colors.gold,
   disabled = false,
   zones,
+  onInfo,
 }: ScoreSliderProps) {
   const trackWidth = useRef(0);
 
@@ -88,7 +90,14 @@ export function ScoreSlider({
   return (
     <View style={[styles.container, disabled && styles.containerDisabled]}>
       <View style={styles.header}>
-        <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
+        <View style={styles.labelRow}>
+          <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
+          {onInfo && (
+            <Pressable onPress={onInfo} hitSlop={10} style={styles.infoBtn}>
+              <Text style={styles.infoBtnText}>ⓘ</Text>
+            </Pressable>
+          )}
+        </View>
         <View style={[styles.valueBadge, { backgroundColor: fillColor + '22', borderColor: fillColor + '66' }]}>
           <Text style={[styles.valueText, { color: fillColor }]}>{value}</Text>
         </View>
@@ -184,6 +193,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   label: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 14,
@@ -191,6 +205,15 @@ const styles = StyleSheet.create({
   },
   labelDisabled: {
     color: Colors.inkMuted,
+  },
+  infoBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoBtnText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkFaint,
   },
   valueBadge: {
     paddingHorizontal: 10,

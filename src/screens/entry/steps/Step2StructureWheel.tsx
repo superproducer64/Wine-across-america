@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { SegmentedPicker, PickerOption } from '@/components/ui/SegmentedPicker';
+import { InfoSheet } from '@/components/ui/InfoSheet';
+import { PARAMETER_INFO } from '@/data/parameterInfo';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -87,6 +89,7 @@ const PICKER_KEYS = new Set(['body', 'alcohol', 'intensity']);
 export function Step2StructureWheel() {
   const { draft, setStructureWheel } = useEntryDraftStore();
   const { profile } = useAuthStore();
+  const [openInfo, setOpenInfo] = useState<string | null>(null);
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -146,6 +149,7 @@ export function Step2StructureWheel() {
               options={getPickerOptions(dim.key)}
               value={scores[dim.key as keyof typeof scores]}
               onChange={(v) => setStructureWheel({ [dim.key]: v })}
+              onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
             />
           );
         }
@@ -162,6 +166,7 @@ export function Step2StructureWheel() {
             highLabel={dim.highAnchor}
             zones={getStructureZones(dim.key)}
             onChange={(v) => setStructureWheel({ [dim.key]: v })}
+            onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
           />
         );
       })}
@@ -169,6 +174,7 @@ export function Step2StructureWheel() {
   );
 
   return (
+    <>
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, isWide && styles.contentWide]}
@@ -191,6 +197,15 @@ export function Step2StructureWheel() {
         </>
       )}
     </ScrollView>
+
+      {openInfo && PARAMETER_INFO[openInfo] && (
+        <InfoSheet
+          visible
+          onClose={() => setOpenInfo(null)}
+          info={PARAMETER_INFO[openInfo]}
+        />
+      )}
+    </>
   );
 }
 
