@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   PanResponder,
+  Pressable,
   LayoutChangeEvent,
 } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
