@@ -13,6 +13,7 @@ import { CheeseDetailScreen } from '@/screens/detail/CheeseDetailScreen';
 import { PaywallScreen } from '@/screens/paywall/PaywallScreen';
 import { CreatorDashboard } from '@/screens/creator/CreatorDashboard';
 import { CreatorScoreScreen } from '@/screens/creator/CreatorScoreScreen';
+import { TasteFingerprintScreen } from '@/screens/analytics/TasteFingerprintScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -111,6 +112,11 @@ export function MainNavigator() {
       <Stack.Screen
         name="CreatorScore"
         component={CreatorScoreScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="TasteFingerprint"
+        component={TasteFingerprintScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

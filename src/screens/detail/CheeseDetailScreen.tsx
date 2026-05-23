@@ -153,6 +153,34 @@ export function CheeseDetailScreen({ route, navigation }: Props) {
           </View>
         )}
 
+        {/* Typicity description (AI-generated) */}
+        {entry.typicity_description ? (
+          <View style={styles.typlicityBlock}>
+            <View style={styles.aiBadgeRow}>
+              <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>AI</Text></View>
+              <Text style={styles.aiBadgeLabel}>Character</Text>
+            </View>
+            <Text style={styles.typlicityText}>"{entry.typicity_description}"</Text>
+          </View>
+        ) : null}
+
+        {/* AI-generated tags */}
+        {entry.ai_tags && entry.ai_tags.length > 0 ? (
+          <View style={styles.tagsBlock}>
+            <View style={styles.aiBadgeRow}>
+              <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>AI</Text></View>
+              <Text style={styles.aiBadgeLabel}>Descriptors</Text>
+            </View>
+            <View style={styles.tagRow}>
+              {entry.ai_tags.map((tag) => (
+                <View key={tag} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {/* Notes */}
         {entry.notes ? (
           <View style={styles.notesBlock}>
@@ -294,5 +322,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -1200,
     top: 0,
+  },
+  aiBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  aiBadge: {
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  aiBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 9,
+    color: Colors.ink,
+    letterSpacing: 0.5,
+  },
+  aiBadgeLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+  },
+  typlicityBlock: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  typlicityText: {
+    fontFamily: Fonts.playfairItalic,
+    fontSize: 15,
+    color: Colors.inkMid,
+    lineHeight: 23,
+  },
+  tagsBlock: {
+    gap: 8,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.goldPale,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+  },
+  tagText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMid,
   },
 });

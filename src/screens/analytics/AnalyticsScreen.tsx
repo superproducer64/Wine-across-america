@@ -6,12 +6,19 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { VictoryBar, VictoryChart, VictoryPie, VictoryAxis } from 'victory-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useAuthStore } from '@/stores/authStore';
 import { useCheeseStore } from '@/stores/cheeseStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { MILK_TYPE_LABELS, CHEESE_STYLE_LABELS, technicalScoreTier } from '@/types';
+import { MainStackParamList } from '@/navigation/types';
+
+type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
 const MILK_COLORS = {
   cow: '#C9A84C',
@@ -22,8 +29,10 @@ const MILK_COLORS = {
 };
 
 export function AnalyticsScreen() {
+  const navigation = useNavigation<NavProp>();
   const { user } = useAuthStore();
   const { analytics, analyticsLoading, loadAnalytics } = useCheeseStore();
+  const { isSubscribed } = useSubscriptionStore();
 
   useEffect(() => {
     if (user) loadAnalytics(user.id);
@@ -64,6 +73,22 @@ export function AnalyticsScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.screenTitle}>Analytics</Text>
+
+        {/* Taste Fingerprint promo card */}
+        <Pressable
+          style={styles.fingerprintCard}
+          onPress={() => navigation.navigate('TasteFingerprint')}
+        >
+          <View style={styles.fingerprintLeft}>
+            <Text style={styles.fingerprintTitle}>Your Taste Fingerprint</Text>
+            <Text style={styles.fingerprintSub}>
+              {isSubscribed
+                ? 'See your palate profile, recommendations & blind spot'
+                : 'Pro · AI-powered palate analysis'}
+            </Text>
+          </View>
+          <Text style={styles.fingerprintChevron}>›</Text>
+        </Pressable>
 
         {/* Hero stats */}
         <View style={styles.heroRow}>
@@ -255,6 +280,34 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.ink,
     marginBottom: Spacing.xl,
+  },
+  fingerprintCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+    marginBottom: Spacing.xl,
+    gap: Spacing.md,
+  },
+  fingerprintLeft: { flex: 1, gap: 3 },
+  fingerprintTitle: {
+    fontFamily: Fonts.playfair,
+    fontSize: 16,
+    color: Colors.ink,
+  },
+  fingerprintSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    lineHeight: 17,
+  },
+  fingerprintChevron: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 22,
+    color: Colors.gold,
   },
   heroRow: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.xl },
   heroCard: {

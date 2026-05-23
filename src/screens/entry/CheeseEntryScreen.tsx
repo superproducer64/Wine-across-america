@@ -19,6 +19,7 @@ import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useCheeseStore } from '@/stores/cheeseStore';
 import { MainStackParamList } from '@/navigation/types';
+import { generateTags, generateTypicity } from '@/lib/aiService';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -34,7 +35,7 @@ export function CheeseEntryScreen() {
   const [submitting, setSubmitting] = useState(false);
   const { draft, scores, terroir, terroirEnabled, reset } = useEntryDraftStore();
   const { user } = useAuthStore();
-  const { addEntry, addScore, saveTerroirRecord } = useCheeseStore();
+  const { addEntry, addScore, saveTerroirRecord, fetchScore } = useCheeseStore();
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
@@ -81,6 +82,11 @@ export function CheeseEntryScreen() {
     if (terroirEnabled && (terroir.pasture_soil || terroir.climate || terroir.milk_season)) {
       await saveTerroirRecord(user.id, entry.id, terroir);
     }
+
+    // Step 4: fire AI tag + typicity generation in background (non-blocking)
+    const savedScore = await fetchScore(entry.id);
+    generateTags(entry, savedScore).catch(() => {});
+    generateTypicity(entry, savedScore).catch(() => {});
 
     setSubmitting(false);
     reset();

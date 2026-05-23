@@ -27,6 +27,7 @@ export type MainStackParamList = {
   Paywall: undefined;
   CreatorDashboard: undefined;
   CreatorScore: { scoreId?: string };
+  TasteFingerprint: undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

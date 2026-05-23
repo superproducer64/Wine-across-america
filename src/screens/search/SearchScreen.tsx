@@ -18,6 +18,7 @@ import {
   MilkType, CheeseStyle,
 } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
+import { naturalLanguageSearch } from '@/lib/aiService';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -51,6 +52,11 @@ export function SearchScreen() {
   // Draft filter state inside drawer (only committed on Apply)
   const [draftFilters, setDraftFilters] = useState<FilterParams>({});
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  // Natural language search (Pro only)
+  const [nlQuery, setNlQuery] = useState('');
+  const [nlSummary, setNlSummary] = useState<string | null>(null);
+  const [nlLoading, setNlLoading] = useState(false);
 
   // Slide animation for filter drawer
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
@@ -100,6 +106,23 @@ export function SearchScreen() {
     [user, searchWithFilters, clearSearch]
   );
 
+  const handleNlSearch = async () => {
+    if (!nlQuery.trim() || !user) return;
+    setNlLoading(true);
+    try {
+      const result = await naturalLanguageSearch(nlQuery.trim());
+      const { summary, ...appliedFilters } = result;
+      setNlSummary(summary ?? null);
+      setFilters(appliedFilters);
+      setQuery(appliedFilters.query ?? '');
+      runSearch(appliedFilters.query ?? '', appliedFilters);
+    } catch {
+      setNlSummary(null);
+    } finally {
+      setNlLoading(false);
+    }
+  };
+
   const handleQueryChange = (text: string) => {
     setQuery(text);
     if (debounceTimer) clearTimeout(debounceTimer);
@@ -146,6 +169,38 @@ export function SearchScreen() {
         <Text style={styles.title}>My Cheeses</Text>
         <Text style={styles.count}>{entries.length} entries</Text>
       </View>
+
+      {/* Natural language search (Pro only) */}
+      {isSubscribed && (
+        <View style={styles.nlWrap}>
+          <View style={styles.nlInputRow}>
+            <TextInput
+              value={nlQuery}
+              onChangeText={setNlQuery}
+              placeholder="Ask AI: "stinky Vermont goat under $20"…"
+              containerStyle={styles.nlInput}
+              onSubmitEditing={handleNlSearch}
+              returnKeyType="search"
+            />
+            <Pressable
+              onPress={handleNlSearch}
+              style={[styles.nlBtn, nlLoading && styles.nlBtnDisabled]}
+              disabled={nlLoading}
+            >
+              <Text style={styles.nlBtnText}>{nlLoading ? '…' : '✦'}</Text>
+            </Pressable>
+          </View>
+          {nlSummary ? (
+            <View style={styles.nlSummaryRow}>
+              <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>AI</Text></View>
+              <Text style={styles.nlSummaryText}>{nlSummary}</Text>
+              <Pressable onPress={() => { setNlSummary(null); setNlQuery(''); clearFilters(); }}>
+                <Text style={styles.nlClear}>✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </View>
+      )}
 
       {/* Search bar + filter button */}
       <View style={styles.searchWrap}>
@@ -343,6 +398,56 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: Fonts.playfair, fontSize: 24, color: Colors.ink },
   count: { fontFamily: Fonts.dmSans, fontSize: 13, color: Colors.inkMuted },
+  nlWrap: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.sm,
+    gap: 6,
+  },
+  nlInputRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+  },
+  nlInput: { flex: 1, marginBottom: 0 },
+  nlBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nlBtnDisabled: { opacity: 0.5 },
+  nlBtnText: { fontSize: 18, color: Colors.ink },
+  nlSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.goldPale,
+    borderRadius: Radius.sm,
+    padding: Spacing.sm,
+    borderWidth: 0.5,
+    borderColor: Colors.borderStrong,
+  },
+  aiBadge: {
+    backgroundColor: Colors.gold,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  aiBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 9,
+    color: Colors.ink,
+    letterSpacing: 0.5,
+  },
+  nlSummaryText: {
+    flex: 1,
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMid,
+  },
+  nlClear: { fontFamily: Fonts.dmSans, fontSize: 14, color: Colors.inkMuted },
   searchWrap: {
     flexDirection: 'row',
     gap: Spacing.sm,

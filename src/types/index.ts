@@ -77,8 +77,23 @@ export interface CheeseEntry {
   price: number | null;
   notes: string;
   would_buy_again: boolean | null;
+  ai_tags: string[] | null;
+  typicity_description: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ─── Taste Fingerprint ────────────────────────────────────────────────────────
+
+export interface TasteFingerprint {
+  id: string;
+  user_id: string;
+  description: string;
+  recommendations: string[];
+  blind_spot: string;
+  avg_scores: Record<string, number>;
+  entry_count: number;
+  generated_at: string;
 }
 
 export type CheeseEntryDraft = Omit<CheeseEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
