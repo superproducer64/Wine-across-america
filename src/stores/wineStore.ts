@@ -103,6 +103,9 @@ export const useWineStore = create<WineStore>((set, get) => ({
       grape_blends,
       sweetness,
       custom_aromas,
+      // subregion was added in migration 010 — only include when non-empty so
+      // the INSERT still succeeds on DB instances where the column doesn't exist yet.
+      subregion,
       ...rest
     } = draft;
     const payload: Record<string, unknown> = {
@@ -115,6 +118,7 @@ export const useWineStore = create<WineStore>((set, get) => ({
       ...(aromas_other_note      ? { aromas_other_note }      : {}),
       ...(grape_blends           ? { grape_blends }           : {}),
       ...(sweetness !== undefined ? { sweetness }             : {}),
+      ...(subregion              ? { subregion }              : {}),
       // custom_aromas is always an array; include even when empty so it overwrites stale data
       custom_aromas: custom_aromas ?? [],
     };
