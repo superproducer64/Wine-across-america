@@ -11,42 +11,42 @@ import { useResponsive } from '@/hooks/useResponsive';
 
 // ─── Enthusiast pickers (3 options) ────────────────────────────────────────
 const BODY_ENTHUSIAST: PickerOption[] = [
-  { label: 'Light',  sublabel: 'like water / skim milk', value: 3 },
-  { label: 'Medium', sublabel: 'like whole milk',         value: 6 },
-  { label: 'Full',   sublabel: 'like cream',              value: 9 },
+  { label: 'Light',  value: 3, hint: 'Like water or skim milk' },
+  { label: 'Medium', value: 6, hint: 'Like whole milk' },
+  { label: 'Full',   value: 9, hint: 'Like cream' },
 ];
 const ALCOHOL_ENTHUSIAST: PickerOption[] = [
-  { label: 'Low',    sublabel: 'light, no warmth felt',   value: 3 },
-  { label: 'Medium', sublabel: 'gentle warmth',            value: 6 },
-  { label: 'High',   sublabel: 'noticeable heat',          value: 9 },
+  { label: 'Low',    value: 3, hint: 'Light, no warmth in the back of your throat, few/no legs' },
+  { label: 'Medium', value: 6, hint: 'Gentle warmth, legs move at a moderate speed' },
+  { label: 'High',   value: 9, hint: 'Noticeable heat, many legs, that move slowly' },
 ];
 const INTENSITY_ENTHUSIAST: PickerOption[] = [
-  { label: 'Low',    sublabel: 'nose in the glass',        value: 3 },
-  { label: 'Medium', sublabel: 'at nose / chin level',     value: 6 },
-  { label: 'High',   sublabel: 'expressive from a distance', value: 9 },
+  { label: 'Low',    value: 3, hint: 'Subtle, you need to bring your nose into the glass' },
+  { label: 'Medium', value: 6, hint: 'Noticeable, you smell it at nose or chin level' },
+  { label: 'High',   value: 9, hint: 'Expressive, you can smell it at chin level or even lower' },
 ];
 
 // ─── Sommelier pickers (5 options) ─────────────────────────────────────────
 const BODY_SOMMELIER: PickerOption[] = [
-  { label: 'Light',    sublabel: 'like water / skim milk', value: 2 },
-  { label: 'Medium −', sublabel: '',                        value: 4 },
-  { label: 'Medium',   sublabel: 'like whole milk',         value: 6 },
-  { label: 'Medium +', sublabel: '',                        value: 8 },
-  { label: 'Full',     sublabel: 'like cream',              value: 10 },
+  { label: 'Light',    value: 2,  hint: 'Like water or skim milk' },
+  { label: 'Medium −', value: 4,  hint: 'Lighter side of medium body' },
+  { label: 'Medium',   value: 6,  hint: 'Like whole milk' },
+  { label: 'Medium +', value: 8,  hint: 'Fuller side of medium body' },
+  { label: 'Full',     value: 10, hint: 'Like cream' },
 ];
 const ALCOHOL_SOMMELIER: PickerOption[] = [
-  { label: 'Low',      sublabel: 'light, no warmth felt',   value: 2 },
-  { label: 'Medium −', sublabel: '',                         value: 4 },
-  { label: 'Medium',   sublabel: 'gentle warmth',            value: 6 },
-  { label: 'Medium +', sublabel: '',                         value: 8 },
-  { label: 'High',     sublabel: 'noticeable heat',          value: 10 },
+  { label: 'Low',      value: 2,  hint: 'Light, no warmth in the back of your throat, few/no legs' },
+  { label: 'Medium −', value: 4,  hint: 'Slight warmth, minimal legs' },
+  { label: 'Medium',   value: 6,  hint: 'Gentle warmth, legs move at a moderate speed' },
+  { label: 'Medium +', value: 8,  hint: 'Noticeable warmth, legs move slowly' },
+  { label: 'High',     value: 10, hint: 'Noticeable heat, many legs, that move slowly' },
 ];
 const INTENSITY_SOMMELIER: PickerOption[] = [
-  { label: 'Low',      sublabel: 'nose in the glass',          value: 2 },
-  { label: 'Medium −', sublabel: '',                            value: 4 },
-  { label: 'Medium',   sublabel: 'at nose / chin level',        value: 6 },
-  { label: 'Medium +', sublabel: '',                            value: 8 },
-  { label: 'High',     sublabel: 'expressive from a distance',  value: 10 },
+  { label: 'Low',      value: 2,  hint: 'Subtle, you need to bring your nose into the glass' },
+  { label: 'Medium −', value: 4,  hint: 'Faint, detectable only up close' },
+  { label: 'Medium',   value: 6,  hint: 'Noticeable, you smell it at nose or chin level' },
+  { label: 'Medium +', value: 8,  hint: 'Pronounced, detectable slightly away from the glass' },
+  { label: 'High',     value: 10, hint: 'Expressive, you can smell it at chin level or even lower' },
 ];
 
 // Axes that use categorical pickers for both profiles

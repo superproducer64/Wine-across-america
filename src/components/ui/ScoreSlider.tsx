@@ -19,6 +19,7 @@ interface ScoreSliderProps {
   tip?: string;
   onChange: (value: number) => void;
   accentColor?: string;
+  disabled?: boolean;
 }
 
 export function ScoreSlider({
@@ -32,6 +33,7 @@ export function ScoreSlider({
   tip,
   onChange,
   accentColor = Colors.gold,
+  disabled = false,
 }: ScoreSliderProps) {
   const trackWidth = useRef(0);
 
@@ -55,13 +57,13 @@ export function ScoreSlider({
   );
 
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => !disabled,
+    onMoveShouldSetPanResponder: () => !disabled,
     onPanResponderGrant: (evt) => {
-      onChange(locationToValue(evt.nativeEvent.locationX));
+      if (!disabled) onChange(locationToValue(evt.nativeEvent.locationX));
     },
     onPanResponderMove: (evt) => {
-      onChange(locationToValue(evt.nativeEvent.locationX));
+      if (!disabled) onChange(locationToValue(evt.nativeEvent.locationX));
     },
   });
 
@@ -72,12 +74,14 @@ export function ScoreSlider({
 
   const fillRatio = (value - min) / (max - min);
 
+  const effectiveAccent = disabled ? Colors.inkFaint : accentColor;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, disabled && styles.containerDisabled]}>
       <View style={styles.header}>
-        <Text style={styles.label}>{label}</Text>
-        <View style={[styles.valueBadge, { backgroundColor: accentColor + '22', borderColor: accentColor + '66' }]}>
-          <Text style={[styles.valueText, { color: accentColor }]}>{value}</Text>
+        <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
+        <View style={[styles.valueBadge, { backgroundColor: effectiveAccent + '22', borderColor: effectiveAccent + '66' }]}>
+          <Text style={[styles.valueText, { color: effectiveAccent }]}>{value}</Text>
         </View>
       </View>
 
@@ -87,26 +91,28 @@ export function ScoreSlider({
         {lowLabel ? <Text style={styles.anchor}>{lowLabel}</Text> : null}
 
         <View
-          style={styles.track}
+          style={[styles.track, disabled && styles.trackDisabled]}
           onLayout={handleTrackLayout}
           {...panResponder.panHandlers}
         >
           <View
             style={[
               styles.fill,
-              { width: `${fillRatio * 100}%`, backgroundColor: accentColor },
+              { width: `${fillRatio * 100}%`, backgroundColor: effectiveAccent },
             ]}
           />
-          <View
-            style={[
-              styles.thumb,
-              {
-                left: `${fillRatio * 100}%`,
-                backgroundColor: accentColor,
-                borderColor: Colors.surface,
-              },
-            ]}
-          />
+          {!disabled && (
+            <View
+              style={[
+                styles.thumb,
+                {
+                  left: `${fillRatio * 100}%`,
+                  backgroundColor: effectiveAccent,
+                  borderColor: Colors.surface,
+                },
+              ]}
+            />
+          )}
         </View>
 
         {highLabel ? <Text style={styles.anchor}>{highLabel}</Text> : null}
@@ -126,6 +132,9 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: Spacing.xl,
   },
+  containerDisabled: {
+    opacity: 0.55,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -136,6 +145,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansMedium,
     fontSize: 14,
     color: Colors.ink,
+  },
+  labelDisabled: {
+    color: Colors.inkMuted,
   },
   valueBadge: {
     paddingHorizontal: 10,
@@ -169,6 +181,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     position: 'relative',
     justifyContent: 'center',
+  },
+  trackDisabled: {
+    borderStyle: 'dashed',
   },
   fill: {
     position: 'absolute',

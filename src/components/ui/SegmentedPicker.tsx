@@ -5,6 +5,7 @@ import { Colors, Fonts, Radius, Spacing } from '@/theme';
 export interface PickerOption {
   label: string;
   sublabel?: string;
+  hint?: string;
   value: number;
 }
 
@@ -69,6 +70,13 @@ export function SegmentedPicker({
           );
         })}
       </View>
+
+      {(() => {
+        const activeOpt = options.find((o) => o.value === activeValue);
+        return activeOpt?.hint ? (
+          <Text style={styles.selectionHint}>{activeOpt.hint}</Text>
+        ) : null;
+      })()}
     </View>
   );
 }
@@ -141,5 +149,13 @@ const styles = StyleSheet.create({
   pillSubActive: {
     color: Colors.surface,
     opacity: 0.8,
+  },
+  selectionHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    fontStyle: 'italic',
+    marginTop: 8,
+    lineHeight: 17,
   },
 });

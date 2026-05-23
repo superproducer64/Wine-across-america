@@ -3,12 +3,17 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider } from '@/components/ui/ScoreSlider';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
+import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
 
 export function Step4TechnicalScore() {
   const { draft, setTechnicalScore } = useEntryDraftStore();
+  const { profile } = useAuthStore();
   const { isWide } = useResponsive();
+
+  const isSommelier =
+    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
 
   // Auto-fill Intensity from structure score × 2 on mount.
   // The user can override by moving the slider freely afterward.
@@ -62,26 +67,38 @@ export function Step4TechnicalScore() {
 
   const sliders = (
     <View style={isWide ? styles.slidersCol : undefined}>
-      {TECHNICAL_CATEGORIES.map((cat) => (
-        <View key={cat.key} style={styles.catBlock}>
-          <View style={styles.catHeader}>
-            <Text style={styles.catDesc}>{cat.description}</Text>
-            {cat.key === 'score_intensity' && isAutoFilled && (
-              <View style={styles.autoBadge}>
-                <Text style={styles.autoBadgeText}>Auto · Structure ×2</Text>
-              </View>
+      {TECHNICAL_CATEGORIES.map((cat) => {
+        const isIntensity = cat.key === 'score_intensity';
+        const intensityLocked = isIntensity && !isSommelier;
+        return (
+          <View key={cat.key} style={styles.catBlock}>
+            <View style={styles.catHeader}>
+              <Text style={styles.catDesc}>{cat.description}</Text>
+              {isIntensity && isAutoFilled && (
+                <View style={styles.autoBadge}>
+                  <Text style={styles.autoBadgeText}>
+                    {intensityLocked ? 'Auto · locked' : 'Auto · Structure ×2'}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <ScoreSlider
+              label={cat.label}
+              value={draft[cat.key] ?? 10}
+              min={0}
+              max={20}
+              step={1}
+              disabled={intensityLocked}
+              onChange={(v) => setTechnicalScore({ [cat.key]: v })}
+            />
+            {intensityLocked && (
+              <Text style={styles.lockedHint}>
+                Auto-filled from Structure × 2. Sommelier profile unlocks manual adjustment.
+              </Text>
             )}
           </View>
-          <ScoreSlider
-            label={cat.label}
-            value={draft[cat.key] ?? 10}
-            min={0}
-            max={20}
-            step={1}
-            onChange={(v) => setTechnicalScore({ [cat.key]: v })}
-          />
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 
@@ -232,5 +249,13 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: Colors.inkMid,
     letterSpacing: 0.3,
+  },
+  lockedHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkFaint,
+    fontStyle: 'italic',
+    marginTop: -Spacing.md,
+    marginBottom: Spacing.md,
   },
 });
