@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { CheeseEntryDraft } from '@/types';
+import { CheeseEntryDraft, CheeseScoreDraft, computeTechnicalScore } from '@/types';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
 
@@ -110,6 +110,39 @@ export async function searchCheeseEntries(
   if (filters?.region)    query = query.eq('region', filters.region);
 
   return query.order('created_at', { ascending: false });
+}
+
+// ─── Cheese Score CRUD ────────────────────────────────────────────────────────
+
+export async function createCheeseScore(
+  score: CheeseScoreDraft & { entry_id: string; user_id: string }
+) {
+  const technical_score = computeTechnicalScore(score);
+  return supabase
+    .from('cheese_scores')
+    .insert({ ...score, technical_score })
+    .select()
+    .single();
+}
+
+export async function getCheeseScore(entryId: string) {
+  return supabase
+    .from('cheese_scores')
+    .select('*')
+    .eq('entry_id', entryId)
+    .single();
+}
+
+export async function updateCheeseScore(
+  entryId: string,
+  updates: Partial<CheeseScoreDraft>
+) {
+  return supabase
+    .from('cheese_scores')
+    .update(updates)
+    .eq('entry_id', entryId)
+    .select()
+    .single();
 }
 
 // ─── User Profile ─────────────────────────────────────────────────────────────

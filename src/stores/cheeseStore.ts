@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { CheeseEntry, CheeseEntryDraft } from '@/types';
+import { CheeseEntry, CheeseEntryDraft, CheeseScoreDraft, CheeseScore } from '@/types';
 import {
   listCheeseEntries,
   createCheeseEntry,
   updateCheeseEntry,
   deleteCheeseEntry,
   searchCheeseEntries,
+  createCheeseScore,
+  getCheeseScore,
 } from '@/lib/supabase';
 
 const FREE_TIER_LIMIT = 30;
@@ -27,6 +29,8 @@ interface CheeseStore {
     region?: string;
   }) => Promise<void>;
   clearSearch: () => void;
+  addScore: (userId: string, entryId: string, draft: CheeseScoreDraft) => Promise<CheeseScore | null>;
+  fetchScore: (entryId: string) => Promise<CheeseScore | null>;
 }
 
 export const useCheeseStore = create<CheeseStore>((set) => ({
@@ -80,4 +84,16 @@ export const useCheeseStore = create<CheeseStore>((set) => ({
   },
 
   clearSearch: () => set({ searchResults: [] }),
+
+  addScore: async (userId, entryId, draft) => {
+    const { data, error } = await createCheeseScore({ ...draft, entry_id: entryId, user_id: userId });
+    if (error || !data) return null;
+    return data as CheeseScore;
+  },
+
+  fetchScore: async (entryId) => {
+    const { data, error } = await getCheeseScore(entryId);
+    if (error || !data) return null;
+    return data as CheeseScore;
+  },
 }));

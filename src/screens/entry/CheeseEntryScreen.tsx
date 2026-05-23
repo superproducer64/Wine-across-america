@@ -13,6 +13,8 @@ import { Colors, Fonts, Spacing } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { ProgressDots } from '@/components/ui/ProgressDots';
 import { Step1Basics } from './steps/Step1Basics';
+import { Step2StructureWheel } from './steps/Step2StructureWheel';
+import { Step3TechnicalScore } from './steps/Step3TechnicalScore';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useCheeseStore } from '@/stores/cheeseStore';
@@ -21,16 +23,18 @@ import { MainStackParamList } from '@/navigation/types';
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
 const STEPS = [
-  { component: Step1Basics, label: 'Basics' },
+  { component: Step1Basics,        label: 'Basics'    },
+  { component: Step2StructureWheel, label: 'Structure' },
+  { component: Step3TechnicalScore, label: 'Score'     },
 ];
 
 export function CheeseEntryScreen() {
   const navigation = useNavigation<NavProp>();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const { draft, reset } = useEntryDraftStore();
+  const { draft, scores, reset } = useEntryDraftStore();
   const { user } = useAuthStore();
-  const { addEntry } = useCheeseStore();
+  const { addEntry, addScore } = useCheeseStore();
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
@@ -60,29 +64,32 @@ export function CheeseEntryScreen() {
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (!draft.name.trim()) {
-      Alert.alert('Cheese name required', 'Please enter the cheese name.');
+    setSubmitting(true);
+
+    // Step 1: save the cheese entry
+    const entry = await addEntry(user.id, draft);
+    if (!entry) {
+      setSubmitting(false);
+      Alert.alert('Error', 'Failed to save entry. Please try again.');
       return;
     }
-    setSubmitting(true);
-    const entry = await addEntry(user.id, draft);
+
+    // Step 2: save scores linked to the entry
+    await addScore(user.id, entry.id, scores);
+
     setSubmitting(false);
-    if (entry) {
-      reset();
-      Alert.alert(
-        'Saved!',
-        `${entry.name} has been logged.`,
-        [
-          {
-            text: 'View Entry',
-            onPress: () => navigation.navigate('CheeseDetail', { entryId: entry.id }),
-          },
-          { text: 'Log Another', onPress: () => reset() },
-        ]
-      );
-    } else {
-      Alert.alert('Error', 'Failed to save. Please try again.');
-    }
+    reset();
+    Alert.alert(
+      'Saved!',
+      `${entry.name} has been logged with scores.`,
+      [
+        {
+          text: 'View Entry',
+          onPress: () => navigation.navigate('CheeseDetail', { entryId: entry.id }),
+        },
+        { text: 'Log Another', onPress: () => reset() },
+      ]
+    );
   };
 
   return (
@@ -130,10 +137,7 @@ export function CheeseEntryScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-  },
+  safe: { flex: 1, backgroundColor: Colors.surface },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,10 +157,7 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     fontFamily: Fonts.dmSans,
   },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
+  headerCenter: { flex: 1, alignItems: 'center' },
   headerStep: {
     fontFamily: Fonts.dmSans,
     fontSize: 11,
@@ -169,16 +170,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.ink,
   },
-  stepContainer: {
-    flex: 1,
-  },
+  stepContainer: { flex: 1 },
   footer: {
     padding: Spacing.lg,
     borderTopWidth: 0.5,
     borderTopColor: Colors.border,
     backgroundColor: Colors.surface,
   },
-  fullBtn: {
-    width: '100%',
-  },
+  fullBtn: { width: '100%' },
 });

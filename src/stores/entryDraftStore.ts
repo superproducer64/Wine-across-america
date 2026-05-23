@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CheeseEntryDraft } from '@/types';
+import { CheeseEntryDraft, CheeseScoreDraft, makeDefaultScoreDraft } from '@/types';
 
 function makeDefaultDraft(): CheeseEntryDraft {
   return {
@@ -17,14 +17,26 @@ function makeDefaultDraft(): CheeseEntryDraft {
 
 interface EntryDraftStore {
   draft: CheeseEntryDraft;
+  scores: CheeseScoreDraft;
   setField: (data: Partial<CheeseEntryDraft>) => void;
+  setScore: (data: Partial<CheeseScoreDraft>) => void;
   reset: () => void;
-  loadForEdit: (entry: CheeseEntryDraft) => void;
+  loadForEdit: (entry: CheeseEntryDraft, scores?: CheeseScoreDraft) => void;
 }
 
 export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
   draft: makeDefaultDraft(),
-  setField: (data) => set((state) => ({ draft: { ...state.draft, ...data } })),
-  reset: () => set({ draft: makeDefaultDraft() }),
-  loadForEdit: (entry) => set({ draft: entry }),
+  scores: makeDefaultScoreDraft(),
+
+  setField: (data) =>
+    set((state) => ({ draft: { ...state.draft, ...data } })),
+
+  setScore: (data) =>
+    set((state) => ({ scores: { ...state.scores, ...data } })),
+
+  reset: () =>
+    set({ draft: makeDefaultDraft(), scores: makeDefaultScoreDraft() }),
+
+  loadForEdit: (entry, scores) =>
+    set({ draft: entry, scores: scores ?? makeDefaultScoreDraft() }),
 }));
