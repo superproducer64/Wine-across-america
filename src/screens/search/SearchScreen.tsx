@@ -177,7 +177,7 @@ export function SearchScreen() {
             <TextInput
               value={nlQuery}
               onChangeText={setNlQuery}
-              placeholder="Ask AI: "stinky Vermont goat under $20"…"
+              placeholder={'Ask AI: "stinky Vermont goat under $20"…'}
               containerStyle={styles.nlInput}
               onSubmitEditing={handleNlSearch}
               returnKeyType="search"
