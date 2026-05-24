@@ -31,25 +31,23 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
       "expo-secure-store",
       [
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "15.1",
+            "newArchEnabled": false
           },
           "android": {
             "compileSdkVersion": 34,
             "targetSdkVersion": 34,
-            "buildToolsVersion": "34.0.0"
+            "buildToolsVersion": "34.0.0",
+            "newArchEnabled": false
           }
         }
       ]
     ],
-    "scheme": "cheeseacrossamerica",
-    "experiments": {
-      "typedRoutes": true
-    }
+    "scheme": "cheeseacrossamerica"
   }
 }
