@@ -214,7 +214,7 @@ export async function searchWineEntries(userId: string, searchQuery: string, fil
   maxScore?: number;
   country?: string;
   region?: string;
-  terroir_soil?: string;
+  terroir_soil?: string[];
   maxPrice?: number;
 }) {
   let query = supabase
@@ -241,8 +241,8 @@ export async function searchWineEntries(userId: string, searchQuery: string, fil
   if (filters?.region) {
     query = query.eq('region', filters.region);
   }
-  if (filters?.terroir_soil) {
-    query = query.contains('terroir_soil', [filters.terroir_soil]);
+  if (filters?.terroir_soil && filters.terroir_soil.length > 0) {
+    query = query.contains('terroir_soil', filters.terroir_soil);
   }
 
   return query.order('created_at', { ascending: false });
