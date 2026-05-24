@@ -8,7 +8,7 @@ import {
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
 import { RadarChart } from '@/components/charts/RadarChart';
-import { AromaProfileBars } from '@/components/charts/AromaProfileBars';
+import { AromaDonutChart } from '@/components/charts/AromaDonutChart';
 import { StyleSummaryBar } from '@/components/wine/StyleSummaryBar';
 import { TerriorBadge } from '@/components/wine/TerriorBadge';
 import { TechnicalScoreDisplay } from '@/components/wine/TechnicalScoreDisplay';
@@ -72,7 +72,7 @@ export function WineIdentityCard({
       {entry.aromas_l1.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Aroma Profile</Text>
-          <AromaProfileBars aromasL1={entry.aromas_l1} />
+          <AromaDonutChart aromasL1={entry.aromas_l1} size={160} />
         </View>
       )}
 
