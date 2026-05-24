@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Path, G } from 'react-native-svg';
+import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
 import { Fonts } from '@/theme';
 
@@ -9,137 +9,224 @@ interface AromaDonutChartProps {
   size?: number;
 }
 
-const GAP_DEG = 2.5;
+const GAP = 2;
 
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+function lightenHex(hex: string, amount: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `#${[r, g, b]
+    .map((c) => Math.round(c + (255 - c) * amount).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+function polar(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
 function arcPath(
-  cx: number,
-  cy: number,
-  outerR: number,
-  innerR: number,
-  startAngle: number,
-  endAngle: number,
+  cx: number, cy: number,
+  outerR: number, innerR: number,
+  start: number, end: number,
 ): string {
-  const s1 = polarToCartesian(cx, cy, outerR, startAngle);
-  const e1 = polarToCartesian(cx, cy, outerR, endAngle);
-  const s2 = polarToCartesian(cx, cy, innerR, endAngle);
-  const e2 = polarToCartesian(cx, cy, innerR, startAngle);
-  const large = endAngle - startAngle > 180 ? 1 : 0;
+  const s1 = polar(cx, cy, outerR, start);
+  const e1 = polar(cx, cy, outerR, end);
+  const s2 = polar(cx, cy, innerR, end);
+  const e2 = polar(cx, cy, innerR, start);
+  const large = end - start > 180 ? 1 : 0;
   return [
-    `M ${s1.x.toFixed(3)} ${s1.y.toFixed(3)}`,
-    `A ${outerR} ${outerR} 0 ${large} 1 ${e1.x.toFixed(3)} ${e1.y.toFixed(3)}`,
-    `L ${s2.x.toFixed(3)} ${s2.y.toFixed(3)}`,
-    `A ${innerR} ${innerR} 0 ${large} 0 ${e2.x.toFixed(3)} ${e2.y.toFixed(3)}`,
+    `M ${s1.x.toFixed(2)} ${s1.y.toFixed(2)}`,
+    `A ${outerR} ${outerR} 0 ${large} 1 ${e1.x.toFixed(2)} ${e1.y.toFixed(2)}`,
+    `L ${s2.x.toFixed(2)} ${s2.y.toFixed(2)}`,
+    `A ${innerR} ${innerR} 0 ${large} 0 ${e2.x.toFixed(2)} ${e2.y.toFixed(2)}`,
     'Z',
   ].join(' ');
 }
 
-export function AromaDonutChart({ aromasL1, size = 180 }: AromaDonutChartProps) {
+export function AromaDonutChart({ aromasL1, size = 220 }: AromaDonutChartProps) {
   if (!aromasL1.length) return null;
-
-  // Map each category ID → its group
-  const catToGroup: Record<string, typeof AROMA_GROUPS[0]> = {};
-  AROMA_GROUPS.forEach((g) => {
-    g.categoryIds.forEach((cid) => { catToGroup[cid] = g; });
-  });
-
-  // Count aromas per group
-  const groupCounts: Record<string, number> = {};
-  aromasL1.forEach((catId) => {
-    const g = catToGroup[catId];
-    if (g) groupCounts[g.id] = (groupCounts[g.id] ?? 0) + 1;
-  });
-
-  const activeGroups = AROMA_GROUPS.filter((g) => (groupCounts[g.id] ?? 0) > 0);
-  const total = Object.values(groupCounts).reduce((a, b) => a + b, 0);
 
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - 4;
-  const innerR = outerR * 0.55;
+  const midR   = outerR * 0.66;
+  const holeR  = outerR * 0.36;
 
-  // Build arc segments
-  const gapTotal = GAP_DEG * activeGroups.length;
-  const dataTotal = 360 - gapTotal;
+  // Map category ID → group
+  const catToGroup: Record<string, typeof AROMA_GROUPS[0]> = {};
+  AROMA_GROUPS.forEach((g) => g.categoryIds.forEach((cid) => { catToGroup[cid] = g; }));
 
-  const segments: { path: string; color: string; group: typeof AROMA_GROUPS[0]; count: number }[] = [];
-  let currentAngle = 0;
+  // Deduplicate and group selected categories
+  const unique = [...new Set(aromasL1)];
+  const groupSelectedCats: Record<string, string[]> = {};
+  unique.forEach((catId) => {
+    const g = catToGroup[catId];
+    if (!g) return;
+    if (!groupSelectedCats[g.id]) groupSelectedCats[g.id] = [];
+    groupSelectedCats[g.id].push(catId);
+  });
 
+  const activeGroups = AROMA_GROUPS.filter((g) => (groupSelectedCats[g.id]?.length ?? 0) > 0);
+  const total = activeGroups.reduce((s, g) => s + (groupSelectedCats[g.id]?.length ?? 0), 0);
+
+  const totalGap = GAP * activeGroups.length;
+  const dataSpan = 360 - totalGap;
+
+  type InnerSeg = { path: string; color: string; midAngle: number; emoji: string; groupId: string };
+  type OuterSeg = { path: string; color: string };
+
+  const innerSegs: InnerSeg[] = [];
+  const outerSegs: OuterSeg[] = [];
+
+  let angle = 0;
   activeGroups.forEach((g) => {
-    const count = groupCounts[g.id] ?? 0;
-    const sweep = (count / total) * dataTotal;
-    const start = currentAngle;
-    const end = currentAngle + sweep;
-    segments.push({
-      path: arcPath(cx, cy, outerR, innerR, start, end),
+    const cats = groupSelectedCats[g.id] ?? [];
+    const groupSweep = (cats.length / total) * dataSpan;
+    const groupStart = angle;
+    const groupEnd   = angle + groupSweep;
+
+    innerSegs.push({
+      path: arcPath(cx, cy, midR - 1, holeR, groupStart, groupEnd),
       color: g.color,
-      group: g,
-      count,
+      midAngle: (groupStart + groupEnd) / 2,
+      emoji: g.emoji,
+      groupId: g.id,
     });
-    currentAngle = end + GAP_DEG;
+
+    // Subdivide outer ring for each selected category in this group
+    const catGapTotal = GAP * cats.length;
+    const catSpan = groupSweep - catGapTotal;
+    const perCat = cats.length > 0 ? catSpan / cats.length : 0;
+    let catAngle = groupStart;
+
+    cats.forEach((_, i) => {
+      const shade = i % 2 === 0 ? lightenHex(g.color, 0.42) : lightenHex(g.color, 0.22);
+      outerSegs.push({
+        path: arcPath(cx, cy, outerR, midR + 1, catAngle, catAngle + perCat),
+        color: shade,
+      });
+      catAngle += perCat + GAP;
+    });
+
+    angle = groupEnd + GAP;
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles.wrapper}>
       <Svg width={size} height={size}>
-        <G>
-          {segments.map((seg) => (
-            <Path key={seg.group.id} d={seg.path} fill={seg.color} />
-          ))}
-        </G>
+        {outerSegs.map((s, i) => <Path key={`o${i}`} d={s.path} fill={s.color} />)}
+        {innerSegs.map((s) => <Path key={`i${s.groupId}`} d={s.path} fill={s.color} />)}
+
+        {/* Center hole */}
+        <Circle cx={cx} cy={cy} r={holeR - 2} fill="#FDF8F4" />
+        <SvgText
+          x={cx} y={cy - 4}
+          textAnchor="middle"
+          fontSize={22}
+          fill="#1F1518"
+        >
+          🍷
+        </SvgText>
+        <SvgText
+          x={cx} y={cy + 13}
+          textAnchor="middle"
+          fontSize={9}
+          fill="#9A8590"
+        >
+          {total} aroma{total !== 1 ? 's' : ''}
+        </SvgText>
+
+        {/* Group emoji labels on inner ring */}
+        {innerSegs.map((s) => {
+          const pos = polar(cx, cy, (midR - 1 + holeR) / 2, s.midAngle);
+          return (
+            <SvgText
+              key={`lbl${s.groupId}`}
+              x={pos.x} y={pos.y + 5}
+              textAnchor="middle"
+              fontSize={11}
+              fill="white"
+            >
+              {s.emoji}
+            </SvgText>
+          );
+        })}
       </Svg>
 
       {/* Legend */}
       <View style={styles.legend}>
-        {segments.map((seg) => (
-          <View key={seg.group.id} style={styles.legendRow}>
-            <View style={[styles.dot, { backgroundColor: seg.color }]} />
-            <Text style={styles.legendEmoji}>{seg.group.emoji}</Text>
-            <Text style={styles.legendLabel}>{seg.group.label}</Text>
-            <Text style={styles.legendCount}>×{seg.count}</Text>
-          </View>
-        ))}
+        {activeGroups.map((g) => {
+          const cats = groupSelectedCats[g.id] ?? [];
+          return (
+            <View key={g.id} style={styles.legendGroup}>
+              <View style={styles.legendHeader}>
+                <View style={[styles.dot, { backgroundColor: g.color }]} />
+                <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
+              </View>
+              <View style={styles.catPills}>
+                {cats.map((catId) => {
+                  const cat = AROMA_CATEGORIES.find((c) => c.id === catId);
+                  if (!cat) return null;
+                  return (
+                    <View key={catId} style={[styles.pill, { borderColor: g.color + '55' }]}>
+                      <Text style={styles.pillText}>{cat.emoji} {cat.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
+  wrapper: {
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   legend: {
-    flex: 1,
-    gap: 7,
+    width: '100%',
+    gap: 8,
   },
-  legendRow: {
+  legendGroup: {
+    gap: 4,
+  },
+  legendHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   dot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  legendEmoji: {
-    fontSize: 13,
-  },
-  legendLabel: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 12,
-    color: '#4A3540',
-    flex: 1,
-  },
-  legendCount: {
+  legendGroupLabel: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
-    color: '#9A8590',
+    color: '#4A3540',
+    letterSpacing: 0.2,
+  },
+  catPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    paddingLeft: 14,
+  },
+  pill: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: '#FDF8F4',
+  },
+  pillText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: '#4A3540',
   },
 });
