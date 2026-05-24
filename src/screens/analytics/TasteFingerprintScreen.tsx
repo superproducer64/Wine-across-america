@@ -4,7 +4,7 @@ import {
   Pressable, ActivityIndicator, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { VictoryChart, VictoryPolarAxis, VictoryArea, VictoryLabel } from 'victory-native';
+import Svg, { Polygon, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { generateFingerprint, getCachedFingerprint, TasteFingerprint } from '@/lib/aiService';
@@ -61,10 +61,23 @@ export function TasteFingerprintScreen() {
     }
   };
 
-  // Build radar data
-  const radarData = fingerprint?.avg_scores
-    ? RADAR_AXES.map((a) => ({ x: a.label, y: (fingerprint.avg_scores[a.key] ?? 0) }))
-    : null;
+  // Build radar polygon points
+  const buildRadarPoints = (scores: Record<string, number>, size: number) => {
+    const cx = size / 2, cy = size / 2, r = size * 0.38;
+    return RADAR_AXES.map((a, i) => {
+      const angle = (Math.PI * 2 * i) / RADAR_AXES.length - Math.PI / 2;
+      const val = Math.min(scores[a.key] ?? 0, 10) / 10;
+      return `${cx + r * val * Math.cos(angle)},${cy + r * val * Math.sin(angle)}`;
+    }).join(' ');
+  };
+
+  const buildGridPoints = (size: number, fraction: number) => {
+    const cx = size / 2, cy = size / 2, r = size * 0.38 * fraction;
+    return RADAR_AXES.map((_, i) => {
+      const angle = (Math.PI * 2 * i) / RADAR_AXES.length - Math.PI / 2;
+      return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+    }).join(' ');
+  };
 
   if (loading) {
     return (
@@ -98,32 +111,41 @@ export function TasteFingerprintScreen() {
             <View style={styles.chartCard}>
               <Text style={styles.chartTitle}>Your Structure Profile</Text>
               <Text style={styles.chartSub}>Average across {fingerprint.entry_count} entries</Text>
-              <View style={styles.chartWrap}>
-                <VictoryChart polar domain={{ y: [0, 10] }} height={240} padding={50}>
-                  {RADAR_AXES.map((a) => (
-                    <VictoryPolarAxis
-                      key={a.key}
-                      dependentAxis
-                      style={{
-                        axisLabel: { fill: Colors.inkMuted, fontFamily: Fonts.dmSans, fontSize: 10 },
-                        axis: { stroke: Colors.border, opacity: 0.6 },
-                        grid: { stroke: Colors.border, opacity: 0.3 },
-                        tickLabels: { fill: 'transparent' },
-                      }}
-                      labelPlacement="perpendicular"
-                      axisValue={a.label}
-                      label={a.label}
-                      tickValues={[2, 4, 6, 8, 10]}
-                    />
-                  ))}
-                  <VictoryArea
-                    data={radarData ?? []}
-                    style={{
-                      data: { fill: 'rgba(201,168,76,0.18)', stroke: Colors.gold, strokeWidth: 1.5 },
-                    }}
-                  />
-                </VictoryChart>
-              </View>
+              {fingerprint?.avg_scores ? (() => {
+                const SIZE = 240;
+                const cx = SIZE / 2, cy = SIZE / 2, r = SIZE * 0.38;
+                return (
+                  <Svg width={SIZE} height={SIZE}>
+                    {[0.25, 0.5, 0.75, 1].map((f) => (
+                      <Polygon key={f} points={buildGridPoints(SIZE, f)}
+                        fill="none" stroke={Colors.border} strokeWidth={0.5} opacity={0.6} />
+                    ))}
+                    {RADAR_AXES.map((a, i) => {
+                      const angle = (Math.PI * 2 * i) / RADAR_AXES.length - Math.PI / 2;
+                      const lx = cx + (r + 18) * Math.cos(angle);
+                      const ly = cy + (r + 18) * Math.sin(angle);
+                      return (
+                        <React.Fragment key={a.key}>
+                          <Line x1={cx} y1={cy} x2={cx + r * Math.cos(angle)} y2={cy + r * Math.sin(angle)}
+                            stroke={Colors.border} strokeWidth={0.5} opacity={0.4} />
+                          <SvgText x={lx} y={ly} textAnchor="middle" alignmentBaseline="middle"
+                            fontSize={9} fill={Colors.inkMuted} fontFamily={Fonts.dmSans}>
+                            {a.label}
+                          </SvgText>
+                        </React.Fragment>
+                      );
+                    })}
+                    <Polygon points={buildRadarPoints(fingerprint.avg_scores, SIZE)}
+                      fill="rgba(201,168,76,0.18)" stroke={Colors.gold} strokeWidth={1.5} />
+                    {RADAR_AXES.map((a, i) => {
+                      const angle = (Math.PI * 2 * i) / RADAR_AXES.length - Math.PI / 2;
+                      const val = Math.min(fingerprint.avg_scores[a.key] ?? 0, 10) / 10;
+                      return <Circle key={a.key} cx={cx + r * val * Math.cos(angle)}
+                        cy={cy + r * val * Math.sin(angle)} r={3} fill={Colors.gold} />;
+                    })}
+                  </Svg>
+                );
+              })() : null}
             </View>
 
             {/* Personality */}
