@@ -18,7 +18,7 @@ import { getCheeseEntry } from '@/lib/supabase';
 import { useCheeseStore } from '@/stores/cheeseStore';
 import { CheeseEntry, CheeseScore, CheeseTerroirRecord, PASTEURIZATION_LABELS } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
-import { captureRef } from 'expo-view-shot';
+import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'CheeseDetail'>;
