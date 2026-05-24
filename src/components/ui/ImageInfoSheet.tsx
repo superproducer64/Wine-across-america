@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
   ImageSourcePropType,
   useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Colors, Fonts, Spacing } from '@/theme';
 
@@ -16,15 +18,44 @@ interface ImageInfoSheetProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  source: ImageSourcePropType;
-  scrollHint?: string;
+  sources: ImageSourcePropType[];
+  initialIndex?: number;
 }
 
 const FALLBACK_H_W_RATIO = 2200 / 1700;
 
-export function ImageInfoSheet({ visible, onClose, title, source, scrollHint }: ImageInfoSheetProps) {
+export function ImageInfoSheet({
+  visible,
+  onClose,
+  title,
+  sources,
+  initialIndex = 0,
+}: ImageInfoSheetProps) {
   const { width: screenWidth } = useWindowDimensions();
-  const [hwRatio, setHwRatio] = useState(FALLBACK_H_W_RATIO);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [ratios, setRatios] = useState<number[]>(
+    sources.map(() => FALLBACK_H_W_RATIO),
+  );
+  const scrollRef = useRef<ScrollView>(null);
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+    if (page !== currentIndex) setCurrentIndex(page);
+  };
+
+  const handleLayout = () => {
+    if (scrollRef.current && initialIndex > 0) {
+      scrollRef.current.scrollTo({ x: initialIndex * screenWidth, animated: false });
+    }
+  };
+
+  const setRatio = (index: number, ratio: number) => {
+    setRatios(prev => {
+      const next = [...prev];
+      next[index] = ratio;
+      return next;
+    });
+  };
 
   return (
     <Modal
@@ -35,37 +66,54 @@ export function ImageInfoSheet({ visible, onClose, title, source, scrollHint }: 
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={styles.title} numberOfLines={1}>{title}</Text>
-            {scrollHint ? (
-              <View style={styles.scrollHintPill}>
-                <Text style={styles.scrollHintText}>{scrollHint}</Text>
-              </View>
-            ) : null}
-          </View>
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
           <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={16}>
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
         </View>
 
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          onLayout={handleLayout}
+          style={styles.carousel}
+          contentContainerStyle={{ alignItems: 'flex-start' }}
         >
-          <Image
-            source={source}
-            style={{ width: screenWidth, height: screenWidth * hwRatio }}
-            resizeMode="contain"
-            onLoad={(e) => {
-              const { width, height } = e.nativeEvent.source;
-              if (width && height) {
-                setHwRatio(height / width);
-              }
-            }}
-          />
+          {sources.map((src, i) => (
+            <ScrollView
+              key={i}
+              style={{ width: screenWidth }}
+              contentContainerStyle={styles.pageContent}
+              showsVerticalScrollIndicator={false}
+              bounces
+            >
+              <Image
+                source={src}
+                style={{ width: screenWidth, height: screenWidth * ratios[i] }}
+                resizeMode="contain"
+                onLoad={(e) => {
+                  const { width, height } = e.nativeEvent.source;
+                  if (width && height) setRatio(i, height / width);
+                }}
+              />
+            </ScrollView>
+          ))}
         </ScrollView>
+
+        {sources.length > 1 && (
+          <View style={styles.dots}>
+            {sources.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.dot, i === currentIndex && styles.dotActive]}
+              />
+            ))}
+          </View>
+        )}
       </View>
     </Modal>
   );
@@ -78,7 +126,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
     paddingTop: 52,
@@ -86,30 +134,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
-  headerText: {
-    flex: 1,
-    paddingRight: 12,
-    gap: 6,
-  },
   title: {
     fontFamily: Fonts.playfair,
     fontSize: 18,
     color: Colors.gold,
-  },
-  scrollHintPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(196,132,122,0.18)',
-    borderRadius: 20,
-    borderWidth: 0.5,
-    borderColor: '#C4847A',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  scrollHintText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-    color: '#C4847A',
-    letterSpacing: 0.2,
+    flex: 1,
+    paddingRight: 12,
   },
   closeBtn: {
     width: 32,
@@ -124,11 +154,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
   },
-  scroll: {
+  carousel: {
     flex: 1,
   },
-  scrollContent: {
+  pageContent: {
     alignItems: 'center',
     paddingVertical: Spacing.lg,
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    paddingBottom: 28,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  dotActive: {
+    backgroundColor: '#C4847A',
+    width: 18,
+    borderRadius: 3,
   },
 });

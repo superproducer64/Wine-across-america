@@ -4,7 +4,7 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
-import { PARAMETER_IMAGES, PARAMETER_SCROLL_HINTS } from '@/data/parameterImages';
+import { SPEC_CAROUSEL_PAGES, PARAMETER_CAROUSEL_INDEX } from '@/data/parameterImages';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
@@ -169,13 +169,13 @@ export function Step4TechnicalScore() {
       )}
     </ScrollView>
 
-      {openInfo && PARAMETER_IMAGES[openInfo] && (
+      {openInfo && PARAMETER_CAROUSEL_INDEX[openInfo] !== undefined && (
         <ImageInfoSheet
           visible
           onClose={() => setOpenInfo(null)}
           title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
-          source={PARAMETER_IMAGES[openInfo]}
-          scrollHint={PARAMETER_SCROLL_HINTS[openInfo]}
+          sources={SPEC_CAROUSEL_PAGES}
+          initialIndex={PARAMETER_CAROUSEL_INDEX[openInfo]}
         />
       )}
     </>
