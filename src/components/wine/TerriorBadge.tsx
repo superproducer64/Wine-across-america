@@ -4,7 +4,7 @@ import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { TerriorSoil, TerriorClimate, TERROIR_SOIL_LABELS, TERROIR_CLIMATE_LABELS } from '@/types';
 
 interface TerriorBadgeProps {
-  soil: TerriorSoil | null;
+  soil: TerriorSoil[] | null;
   climate: TerriorClimate | null;
   visible: boolean;
 }
@@ -18,18 +18,19 @@ const SOIL_ICON: Record<TerriorSoil, string> = {
 };
 
 export function TerriorBadge({ soil, climate, visible }: TerriorBadgeProps) {
-  if (!visible || (!soil && !climate)) return null;
+  const soils = Array.isArray(soil) ? soil : soil ? [soil] : [];
+  if (!visible || (soils.length === 0 && !climate)) return null;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Terroir</Text>
       <View style={styles.row}>
-        {soil && (
-          <View style={styles.pill}>
-            <Text style={styles.pillIcon}>{SOIL_ICON[soil]}</Text>
-            <Text style={styles.pillText}>{TERROIR_SOIL_LABELS[soil]}</Text>
+        {soils.map((s) => (
+          <View key={s} style={styles.pill}>
+            <Text style={styles.pillIcon}>{SOIL_ICON[s]}</Text>
+            <Text style={styles.pillText}>{TERROIR_SOIL_LABELS[s]}</Text>
           </View>
-        )}
+        ))}
         {climate && (
           <View style={styles.pill}>
             <Text style={styles.pillIcon}>🌡️</Text>

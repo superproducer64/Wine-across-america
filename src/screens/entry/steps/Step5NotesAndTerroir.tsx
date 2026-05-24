@@ -168,28 +168,29 @@ export function Step5NotesAndTerroir({ isSommelier }: Props) {
 
           {draft.terroir_visible && (
             <View style={styles.terriorExpanded}>
-              <Text style={styles.miniLabel}>Soil Type</Text>
+              <Text style={styles.miniLabel}>Soil Type <Text style={styles.multiHint}>(select all that apply)</Text></Text>
               <View style={styles.chipRow}>
-                {SOILS.map((soil) => (
-                  <Pressable
-                    key={soil}
-                    style={[
-                      styles.terriorChip,
-                      draft.terroir_soil === soil && styles.terriorChipSelected,
-                    ]}
-                    onPress={() => setNotesAndTerroir({ terroir_soil: soil })}
-                  >
-                    <Text style={styles.terriorChipIcon}>{SOIL_ICONS[soil]}</Text>
-                    <Text
-                      style={[
-                        styles.terriorChipText,
-                        draft.terroir_soil === soil && styles.terriorChipTextSelected,
-                      ]}
+                {SOILS.map((soil) => {
+                  const selected = (draft.terroir_soil ?? []).includes(soil);
+                  return (
+                    <Pressable
+                      key={soil}
+                      style={[styles.terriorChip, selected && styles.terriorChipSelected]}
+                      onPress={() => {
+                        const current = draft.terroir_soil ?? [];
+                        const next = selected
+                          ? current.filter((s) => s !== soil)
+                          : [...current, soil];
+                        setNotesAndTerroir({ terroir_soil: next });
+                      }}
                     >
-                      {TERROIR_SOIL_LABELS[soil]}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text style={styles.terriorChipIcon}>{SOIL_ICONS[soil]}</Text>
+                      <Text style={[styles.terriorChipText, selected && styles.terriorChipTextSelected]}>
+                        {TERROIR_SOIL_LABELS[soil]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
 
               <Text style={[styles.miniLabel, { marginTop: Spacing.md }]}>Climate</Text>
@@ -411,6 +412,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.green,
     marginBottom: 6,
+  },
+  multiHint: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 10,
+    letterSpacing: 0,
+    textTransform: 'none',
+    color: Colors.inkMuted,
   },
   chipRow: {
     flexDirection: 'row',

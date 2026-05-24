@@ -242,7 +242,7 @@ export async function searchWineEntries(userId: string, searchQuery: string, fil
     query = query.eq('region', filters.region);
   }
   if (filters?.terroir_soil) {
-    query = query.eq('terroir_soil', filters.terroir_soil);
+    query = query.contains('terroir_soil', [filters.terroir_soil]);
   }
 
   return query.order('created_at', { ascending: false });

@@ -43,7 +43,7 @@ function makeDefaultDraft(): WineEntryDraft {
     want_to_buy: false,
 
     // Terroir
-    terroir_soil: null,
+    terroir_soil: [],
     terroir_climate: null,
     terroir_visible: false,
 

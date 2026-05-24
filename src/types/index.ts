@@ -357,7 +357,7 @@ export interface WineEntry {
   want_to_buy: boolean;
 
   // Terroir
-  terroir_soil: TerriorSoil | null;
+  terroir_soil: TerriorSoil[] | null;
   terroir_climate: TerriorClimate | null;
   terroir_visible: boolean;
 
