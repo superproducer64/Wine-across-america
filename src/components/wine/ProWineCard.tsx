@@ -3,8 +3,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
-import { WineEntry, AROMA_CATEGORIES } from '@/types';
+import { WineEntry } from '@/types';
 import { WineRadarChart } from './WineRadarChart';
+import { AromaDonutChart } from '@/components/charts/AromaDonutChart';
 
 interface Props {
   entry: WineEntry;
@@ -45,92 +46,11 @@ const scoreStyles = StyleSheet.create({
   },
 });
 
-// ─── Aroma Bar ────────────────────────────────────────────────────────────────
-
-function AromaBar({
-  emoji,
-  label,
-  notes,
-  fill,
-  compact,
-}: {
-  emoji: string;
-  label: string;
-  notes: string;
-  fill: number;
-  compact?: boolean;
-}) {
-  return (
-    <View style={aromaStyles.row}>
-      <Text style={aromaStyles.emoji}>{emoji}</Text>
-      <View style={aromaStyles.content}>
-        <Text style={[aromaStyles.label, compact && aromaStyles.labelCompact]}>
-          {label}
-          {notes ? <Text style={aromaStyles.notes}>, {notes}</Text> : null}
-        </Text>
-        <View style={aromaStyles.track}>
-          <View style={[aromaStyles.fill, { width: `${fill * 100}%` as any }]} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const aromaStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  emoji: { fontSize: 13, width: 18 },
-  content: { flex: 1, gap: 2 },
-  label: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-    color: Colors.ink,
-    lineHeight: 14,
-  },
-  labelCompact: { fontSize: 9 },
-  notes: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 10,
-    color: Colors.inkMuted,
-  },
-  track: {
-    height: 8,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-  },
-  fill: {
-    height: '100%',
-    backgroundColor: Colors.ink,
-    borderRadius: Radius.full,
-  },
-});
-
 // ─── Main Card ────────────────────────────────────────────────────────────────
 
 export function ProWineCard({ entry, compact = false }: Props) {
   const score = entry.technical_score ?? 0;
   const radarSize = compact ? 130 : 170;
-
-  // Aromas — top 5 categories by frequency
-  const aromaCounts: Record<string, { count: number; notes: string[] }> = {};
-  entry.aromas_l1.forEach((id) => {
-    if (!aromaCounts[id]) aromaCounts[id] = { count: 0, notes: [] };
-    aromaCounts[id].count += 1;
-  });
-  entry.aromas_l2.forEach((note) => {
-    const cat = AROMA_CATEGORIES.find((c) => c.subcategories.some((s) => s === note));
-    if (cat && aromaCounts[cat.id]) aromaCounts[cat.id].notes.push(note.toLowerCase());
-  });
-  const sortedAromas = Object.entries(aromaCounts)
-    .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, compact ? 4 : 5);
-  const maxAromaCount = sortedAromas[0]?.[1].count ?? 1;
 
   const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
@@ -215,27 +135,8 @@ export function ProWineCard({ entry, compact = false }: Props) {
           ) : null}
         </View>
 
-        {/* Right: Aromas + Score */}
+        {/* Right: Score */}
         <View style={styles.rightCol}>
-          <Text style={[styles.aromaHeader, compact && styles.smallLabel]}>Aroma Profile</Text>
-          <View style={styles.aromaList}>
-            {sortedAromas.map(([id, { count, notes }]) => {
-              const cat = AROMA_CATEGORIES.find((c) => c.id === id);
-              if (!cat) return null;
-              return (
-                <AromaBar
-                  key={id}
-                  emoji={cat.emoji}
-                  label={cat.label}
-                  notes={notes.slice(0, 2).join(', ')}
-                  fill={count / maxAromaCount}
-                  compact={compact}
-                />
-              );
-            })}
-          </View>
-
-          {/* Score */}
           {score > 0 && (
             <View style={styles.scoreBlock}>
               <ScoreCircle score={score} compact={compact} />
@@ -250,6 +151,18 @@ export function ProWineCard({ entry, compact = false }: Props) {
           )}
         </View>
       </View>
+
+      {/* ── Aroma Flavor Wheel ── */}
+      {entry.aromas_l1.length > 0 && (
+        <View style={styles.aromaSection}>
+          <Text style={[styles.aromaHeader, compact && styles.smallLabel]}>Aroma Profile</Text>
+          <AromaDonutChart
+            aromasL1={entry.aromas_l1}
+            size={compact ? 160 : 200}
+            showLegend={!compact}
+          />
+        </View>
+      )}
 
       {/* ── Footer ── */}
       <View style={styles.footer}>
@@ -370,13 +283,21 @@ const styles = StyleSheet.create({
   },
   profileTextCompact: { fontSize: 9, lineHeight: 13 },
 
-  // Aromas
+  // Aroma flavor wheel section
+  aromaSection: {
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
   aromaHeader: {
     fontFamily: Fonts.playfairSemiBold,
     fontSize: 12,
     color: Colors.ink,
+    alignSelf: 'flex-start',
   },
-  aromaList: { gap: 7 },
 
   // Score
   scoreBlock: {

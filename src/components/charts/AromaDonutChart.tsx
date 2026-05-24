@@ -7,6 +7,7 @@ import { Fonts } from '@/theme';
 interface AromaDonutChartProps {
   aromasL1: string[];
   size?: number;
+  showLegend?: boolean;
 }
 
 const GAP = 2;
@@ -44,7 +45,7 @@ function arcPath(
   ].join(' ');
 }
 
-export function AromaDonutChart({ aromasL1, size = 220 }: AromaDonutChartProps) {
+export function AromaDonutChart({ aromasL1, size = 220, showLegend = true }: AromaDonutChartProps) {
   if (!aromasL1.length) return null;
 
   const cx = size / 2;
@@ -154,31 +155,32 @@ export function AromaDonutChart({ aromasL1, size = 220 }: AromaDonutChartProps) 
         })}
       </Svg>
 
-      {/* Legend */}
-      <View style={styles.legend}>
-        {activeGroups.map((g) => {
-          const cats = groupSelectedCats[g.id] ?? [];
-          return (
-            <View key={g.id} style={styles.legendGroup}>
-              <View style={styles.legendHeader}>
-                <View style={[styles.dot, { backgroundColor: g.color }]} />
-                <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
+      {showLegend && (
+        <View style={styles.legend}>
+          {activeGroups.map((g) => {
+            const cats = groupSelectedCats[g.id] ?? [];
+            return (
+              <View key={g.id} style={styles.legendGroup}>
+                <View style={styles.legendHeader}>
+                  <View style={[styles.dot, { backgroundColor: g.color }]} />
+                  <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
+                </View>
+                <View style={styles.catPills}>
+                  {cats.map((catId) => {
+                    const cat = AROMA_CATEGORIES.find((c) => c.id === catId);
+                    if (!cat) return null;
+                    return (
+                      <View key={catId} style={[styles.pill, { borderColor: g.color + '55' }]}>
+                        <Text style={styles.pillText}>{cat.emoji} {cat.label}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </View>
-              <View style={styles.catPills}>
-                {cats.map((catId) => {
-                  const cat = AROMA_CATEGORIES.find((c) => c.id === catId);
-                  if (!cat) return null;
-                  return (
-                    <View key={catId} style={[styles.pill, { borderColor: g.color + '55' }]}>
-                      <Text style={styles.pillText}>{cat.emoji} {cat.label}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        })}
-      </View>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
