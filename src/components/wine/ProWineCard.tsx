@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
@@ -51,6 +51,9 @@ const scoreStyles = StyleSheet.create({
 export function ProWineCard({ entry, compact = false }: Props) {
   const score = entry.technical_score ?? 0;
   const colSize = compact ? 130 : 150;
+  const [wheelOpen, setWheelOpen] = useState(false);
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const popoverSize = Math.min(screenW, screenH) * 0.78;
 
   const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
@@ -133,17 +136,22 @@ export function ProWineCard({ entry, compact = false }: Props) {
           ) : null}
         </View>
 
-        {/* Right: AROMA PROFILE label + Flavor Wheel */}
+        {/* Right: AROMA PROFILE label + Flavor Wheel (tap to expand) */}
         <View style={styles.rightCol}>
           {hasAromas ? (
-            <>
+            <TouchableOpacity
+              onPress={() => setWheelOpen(true)}
+              activeOpacity={0.75}
+              style={styles.wheelTouchable}
+            >
               <Text style={[styles.colLabel, compact && styles.smallLabel]}>Aroma Profile</Text>
               <AromaDonutChart
                 aromasL1={entry.aromas_l1}
                 size={colSize}
                 showLegend={false}
               />
-            </>
+              <Text style={styles.tapHint}>tap to expand ↗</Text>
+            </TouchableOpacity>
           ) : null}
         </View>
       </View>
@@ -165,6 +173,42 @@ export function ProWineCard({ entry, compact = false }: Props) {
           </Text>
         </Text>
       </View>
+
+      {/* ── Aroma Wheel Popover ── */}
+      {hasAromas && (
+        <Modal
+          visible={wheelOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setWheelOpen(false)}
+          statusBarTranslucent
+        >
+          <Pressable style={styles.overlay} onPress={() => setWheelOpen(false)}>
+            <Pressable style={styles.popover} onPress={() => {}}>
+              {/* Title row */}
+              <View style={styles.popoverHeader}>
+                <Text style={styles.popoverTitle}>Aroma Profile</Text>
+                <TouchableOpacity onPress={() => setWheelOpen(false)} style={styles.closeBtn}>
+                  <Text style={styles.closeBtnText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Wine name sub-label */}
+              <Text style={styles.popoverSubtitle} numberOfLines={1}>
+                {entry.producer || entry.name || ''}
+                {entry.vintage ? `  ·  ${entry.vintage}` : ''}
+              </Text>
+
+              {/* Large wheel with legend */}
+              <AromaDonutChart
+                aromasL1={entry.aromas_l1}
+                size={popoverSize}
+                showLegend
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -322,6 +366,70 @@ const styles = StyleSheet.create({
   noText: {
     fontFamily: Fonts.dmSansMedium,
     color: Colors.inkMuted,
+  },
+
+  // Wheel touchable + tap hint
+  wheelTouchable: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  tapHint: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 9,
+    color: Colors.inkMuted,
+    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+
+  // Popover modal
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 10, 12, 0.72)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popover: {
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    ...Shadows.lg,
+    maxWidth: 420,
+    width: '90%',
+  },
+  popoverHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  },
+  popoverTitle: {
+    flex: 1,
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 18,
+    color: Colors.ink,
+  },
+  popoverSubtitle: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMid,
+    alignSelf: 'flex-start',
+    fontStyle: 'italic',
+  },
+  closeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.inkMid,
   },
 
   // Shared small label
