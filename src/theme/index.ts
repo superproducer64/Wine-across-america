@@ -23,7 +23,7 @@ export const Fonts = {
   playfair: 'PlayfairDisplay_400Regular',
   playfairItalic: 'PlayfairDisplay_400Regular_Italic',
   playfairSemiBold: 'PlayfairDisplay_600SemiBold',
-  dmSans: 'DMSans_300Light',
+  dmSans: 'DMSans_400Regular',
   dmSansRegular: 'DMSans_400Regular',
   dmSansMedium: 'DMSans_500Medium',
 } as const;

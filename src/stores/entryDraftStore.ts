@@ -16,6 +16,8 @@ function makeDefaultDraft(): CheeseEntryDraft {
     price: null,
     notes: '',
     would_buy_again: null,
+    ai_tags: null,
+    typicity_description: null,
   };
 }
 
