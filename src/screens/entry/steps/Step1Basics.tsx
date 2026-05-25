@@ -84,7 +84,14 @@ export function Step1Basics() {
     if (Object.keys(updates).length > 0) setBasics(updates);
     if (data.photoUrl) setLabelPhoto(data.photoUrl, data.photoBlurHash ?? null, data.backPhotoUrl ?? null);
     if (data.grapes && data.grapes.length > 0) {
-      setGrapeBlends(data.grapes.map((g) => ({ name: g, percentage: 100 })));
+      const AUTO_SPLITS: Record<number, number[]> = { 1: [100], 2: [60, 40], 3: [60, 25, 15] };
+      const splits = AUTO_SPLITS[data.grapes.length];
+      setGrapeBlends(
+        data.grapes.map((g, i) => ({
+          name: g,
+          percentage: splits ? splits[i] : 100,
+        }))
+      );
     }
   };
 

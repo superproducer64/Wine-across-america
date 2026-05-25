@@ -16,6 +16,19 @@ interface Props {
   onChange: (entries: GrapeBlendEntry[]) => void;
 }
 
+// Auto-distribute percentages for 1–3 grapes, descending dominant pattern
+const AUTO_SPLITS: Record<number, number[]> = {
+  1: [100],
+  2: [60, 40],
+  3: [60, 25, 15],
+};
+
+function autoDistribute(entries: GrapeBlendEntry[]): GrapeBlendEntry[] {
+  const splits = AUTO_SPLITS[entries.length];
+  if (!splits) return entries;
+  return entries.map((e, i) => ({ ...e, percentage: splits[i] }));
+}
+
 export function GrapeBlendInput({ value, onChange }: Props) {
   const [query, setQuery] = useState('');
 
@@ -32,11 +45,13 @@ export function GrapeBlendInput({ value, onChange }: Props) {
     [value]
   );
 
+  const isAutoMode = value.length >= 2 && value.length <= 3;
   const hasAnyPct = value.some((e) => e.percentage !== null);
 
   const handleAdd = (name: string) => {
     if (selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: 100 }]);
+    const next = [...value, { name, percentage: 0 }];
+    onChange(next.length <= 3 ? autoDistribute(next) : next);
     setQuery('');
     Keyboard.dismiss();
   };
@@ -44,18 +59,38 @@ export function GrapeBlendInput({ value, onChange }: Props) {
   const handleAddCustom = () => {
     const name = query.trim();
     if (!name || selectedNames.includes(name)) return;
-    onChange([...value, { name, percentage: 100 }]);
+    const next = [...value, { name, percentage: 0 }];
+    onChange(next.length <= 3 ? autoDistribute(next) : next);
     setQuery('');
     Keyboard.dismiss();
   };
 
   const handleRemove = (name: string) => {
-    onChange(value.filter((e) => e.name !== name));
+    const next = value.filter((e) => e.name !== name);
+    onChange(next.length >= 1 && next.length <= 3 ? autoDistribute(next) : next);
   };
 
   const handlePctChange = (name: string, raw: string) => {
-    const pct = raw === '' ? null : Math.min(100, Math.max(1, parseInt(raw) || 0));
-    onChange(value.map((e) => (e.name === name ? { ...e, percentage: pct } : e)));
+    const pct = raw === '' ? null : Math.min(100, Math.max(0, parseInt(raw) || 0));
+    const updated = value.map((e) => (e.name === name ? { ...e, percentage: pct } : e));
+
+    // In auto mode: when editing any grape except the last, auto-adjust the last
+    // grape so the total stays at 100
+    if (isAutoMode && pct !== null) {
+      const editedIdx = updated.findIndex((e) => e.name === name);
+      const lastIdx = updated.length - 1;
+      if (editedIdx !== lastIdx) {
+        const othersSum = updated
+          .slice(0, lastIdx)
+          .reduce((s, e) => s + (e.percentage ?? 0), 0);
+        updated[lastIdx] = {
+          ...updated[lastIdx],
+          percentage: Math.max(0, 100 - othersSum),
+        };
+      }
+    }
+
+    onChange(updated);
   };
 
   const pctColor =
@@ -107,15 +142,17 @@ export function GrapeBlendInput({ value, onChange }: Props) {
           {/* Blend total */}
           {hasAnyPct && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Blend total</Text>
+              <Text style={styles.totalLabel}>
+                {isAutoMode ? 'Auto-balanced  ⚡' : 'Blend total'}
+              </Text>
               <Text style={[styles.totalValue, { color: pctColor }]}>
                 {totalPct}%{totalPct === 100 ? '  ✓' : totalPct > 100 ? '  over 100' : ''}
               </Text>
             </View>
           )}
 
-          {/* Blend warning */}
-          {hasAnyPct && totalPct !== 100 && (
+          {/* Blend warning — only shown in manual mode (4+ grapes) */}
+          {!isAutoMode && hasAnyPct && totalPct !== 100 && (
             <View style={styles.warningBanner}>
               <Text style={styles.warningText}>
                 Blend adds up to {totalPct}% — tap a field to adjust
