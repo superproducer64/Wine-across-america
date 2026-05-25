@@ -1,38 +1,38 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
-import { Fonts } from '@/theme';
+import { Colors, Fonts, Spacing, Radius } from '@/theme';
 
-interface AromaDonutChartProps {
+export interface AromaDonutChartProps {
   aromasL1: string[];
+  aromasL2?: string[];
   size?: number;
   showLegend?: boolean;
+  pinchable?: boolean;
 }
 
-const GAP = 2;
+const GAP = 1.5;
 
-// Short wheel labels for inner ring
-const WHEEL_LABEL: Record<string, string> = {
-  'fresh-bright':         'Fresh',
-  'fruit-core':           'Fruit',
-  'aromatic':             'Floral',
-  'earth-complexity':     'Earth',
-  'structure-winemaking': 'Spice',
-  'evolution-style':      'Sweet',
-};
+// Module-level note→category lookup (built once)
+const NOTE_TO_CATEGORY: Record<string, string> = {};
+AROMA_CATEGORIES.forEach(cat => {
+  [...cat.subcategories, ...(cat.sommelierSubcategories ?? [])].forEach(note => {
+    NOTE_TO_CATEGORY[note.toLowerCase()] = cat.id;
+  });
+});
 
 function lightenHex(hex: string, amount: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `#${[r, g, b]
-    .map((c) => Math.round(c + (255 - c) * amount).toString(16).padStart(2, '0'))
+    .map(c => Math.round(c + (255 - c) * amount).toString(16).padStart(2, '0'))
     .join('')}`;
 }
 
-function polar(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
+function polar(cx: number, cy: number, r: number, deg: number) {
+  const rad = ((deg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
@@ -41,6 +41,7 @@ function arcPath(
   outerR: number, innerR: number,
   start: number, end: number,
 ): string {
+  if (end - start < 0.1) return '';
   const s1 = polar(cx, cy, outerR, start);
   const e1 = polar(cx, cy, outerR, end);
   const s2 = polar(cx, cy, innerR, end);
@@ -55,180 +56,344 @@ function arcPath(
   ].join(' ');
 }
 
-// Rotation for tangential arc text (avoids upside-down labels)
-function arcTextRotation(midAngle: number) {
+function labelRotation(midAngle: number) {
   return midAngle <= 180 ? midAngle : midAngle - 180;
 }
 
-export function AromaDonutChart({ aromasL1, size = 220, showLegend = true }: AromaDonutChartProps) {
+type SelectedInfo = {
+  color: string;
+  title: string;
+  subtitle?: string;
+  items: string[];
+} | null;
+
+export function AromaDonutChart({
+  aromasL1,
+  aromasL2 = [],
+  size = 220,
+  showLegend = true,
+  pinchable = false,
+}: AromaDonutChartProps) {
   if (!aromasL1.length) return null;
+
+  const [selected, setSelected] = useState<SelectedInfo>(null);
+  const [scale, setScale] = useState(1);
+  const lastDistRef = useRef<number | null>(null);
+  const scaleRef = useRef(1);
 
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - 4;
-  const midR   = outerR * 0.66;
-  const holeR  = outerR * 0.36;
 
-  const innerTextR = (holeR + midR) / 2;
-  const outerTextR = (midR + outerR) / 2;
+  // Determine valid L2 notes (must match a selected L1 category)
+  const noteToCat: Record<string, string> = {};
+  aromasL2.forEach(note => {
+    const catId = NOTE_TO_CATEGORY[note.toLowerCase()];
+    if (catId && aromasL1.includes(catId)) noteToCat[note] = catId;
+  });
+  const hasNotes = Object.keys(noteToCat).length > 0;
+  const show3 = hasNotes && size >= 180;
+
+  // Ring boundary radii
+  const holeR     = outerR * (show3 ? 0.27 : 0.34);
+  const innerEdge = outerR * (show3 ? 0.47 : 0.63);
+  const midEdge   = show3 ? outerR * 0.72 : outerR;
 
   // Map category → group
   const catToGroup: Record<string, typeof AROMA_GROUPS[0]> = {};
-  AROMA_GROUPS.forEach((g) => g.categoryIds.forEach((cid) => { catToGroup[cid] = g; }));
+  AROMA_GROUPS.forEach(g => g.categoryIds.forEach(cid => { catToGroup[cid] = g; }));
 
-  const unique = [...new Set(aromasL1)];
-  const groupSelectedCats: Record<string, string[]> = {};
-  unique.forEach((catId) => {
+  // Build: groupId → { group, cats: [{ cat, notes[] }] }
+  type GroupData = { group: typeof AROMA_GROUPS[0]; cats: { cat: typeof AROMA_CATEGORIES[0]; notes: string[] }[] };
+  const groupMap: Record<string, GroupData> = {};
+  [...new Set(aromasL1)].forEach(catId => {
     const g = catToGroup[catId];
-    if (!g) return;
-    if (!groupSelectedCats[g.id]) groupSelectedCats[g.id] = [];
-    groupSelectedCats[g.id].push(catId);
+    const cat = AROMA_CATEGORIES.find(c => c.id === catId);
+    if (!g || !cat) return;
+    if (!groupMap[g.id]) groupMap[g.id] = { group: g, cats: [] };
+    const notes = aromasL2.filter(n => noteToCat[n] === catId);
+    groupMap[g.id].cats.push({ cat, notes });
   });
 
-  const activeGroups = AROMA_GROUPS.filter((g) => (groupSelectedCats[g.id]?.length ?? 0) > 0);
-  const total = activeGroups.reduce((s, g) => s + (groupSelectedCats[g.id]?.length ?? 0), 0);
+  const activeGroups = AROMA_GROUPS.filter(g => groupMap[g.id]);
+  const totalCats = activeGroups.reduce((s, g) => s + groupMap[g.id].cats.length, 0);
+  const dataSpan = 360 - GAP * activeGroups.length;
 
-  const totalGap = GAP * activeGroups.length;
-  const dataSpan = 360 - totalGap;
-
-  type InnerSeg = {
-    path: string; color: string; midAngle: number; groupId: string; sweep: number;
-  };
-  type OuterSeg = {
-    path: string; color: string; midAngle: number; sweep: number; label: string;
-  };
+  // Segment types
+  type InnerSeg = { path: string; color: string; mid: number; sweep: number; groupId: string; label: string; emoji: string };
+  type MidSeg   = { path: string; color: string; mid: number; sweep: number; catId: string; groupId: string; label: string; emoji: string; notes: string[] };
+  type OuterSeg = { path: string; color: string; mid: number; sweep: number; note: string; catId: string; groupId: string };
 
   const innerSegs: InnerSeg[] = [];
+  const midSegs: MidSeg[] = [];
   const outerSegs: OuterSeg[] = [];
 
   let angle = 0;
-  activeGroups.forEach((g) => {
-    const cats = groupSelectedCats[g.id] ?? [];
-    const groupSweep = (cats.length / total) * dataSpan;
-    const groupStart = angle;
-    const groupEnd   = angle + groupSweep;
+  activeGroups.forEach(g => {
+    const gd = groupMap[g.id];
+    const numCats = gd.cats.length;
+    const groupSweep = (numCats / totalCats) * dataSpan;
+    const gStart = angle;
 
     innerSegs.push({
-      path: arcPath(cx, cy, midR - 1, holeR, groupStart, groupEnd),
+      path: arcPath(cx, cy, innerEdge, holeR, gStart, gStart + groupSweep),
       color: g.color,
-      midAngle: (groupStart + groupEnd) / 2,
-      groupId: g.id,
+      mid: gStart + groupSweep / 2,
       sweep: groupSweep,
+      groupId: g.id,
+      label: g.label,
+      emoji: g.emoji,
     });
 
-    const catGapTotal = GAP * cats.length;
-    const catSpan = groupSweep - catGapTotal;
-    const perCat = cats.length > 0 ? catSpan / cats.length : 0;
-    let catAngle = groupStart;
+    const catSpan = groupSweep - GAP * numCats;
+    const perCat = numCats > 0 ? catSpan / numCats : 0;
+    let cAngle = gStart;
 
-    cats.forEach((catId, i) => {
-      const category = AROMA_CATEGORIES.find((c) => c.id === catId);
-      const shade = i % 2 === 0 ? lightenHex(g.color, 0.38) : lightenHex(g.color, 0.18);
-      const mid = catAngle + perCat / 2;
-      outerSegs.push({
-        path: arcPath(cx, cy, outerR, midR + 1, catAngle, catAngle + perCat),
+    gd.cats.forEach((cd, ci) => {
+      const cStart = cAngle;
+      const cEnd = cStart + perCat;
+      const shade = ci % 2 === 0 ? lightenHex(g.color, 0.30) : lightenHex(g.color, 0.13);
+
+      midSegs.push({
+        path: arcPath(cx, cy, show3 ? midEdge : outerR, innerEdge + 1, cStart, cEnd),
         color: shade,
-        midAngle: mid,
+        mid: cStart + perCat / 2,
         sweep: perCat,
-        label: category?.label ?? catId,
+        catId: cd.cat.id,
+        groupId: g.id,
+        label: cd.cat.label,
+        emoji: cd.cat.emoji,
+        notes: cd.notes,
       });
-      catAngle += perCat + GAP;
+
+      if (show3 && cd.notes.length > 0) {
+        const noteSpan = perCat - GAP * cd.notes.length;
+        const perNote = cd.notes.length > 0 ? noteSpan / cd.notes.length : 0;
+        let nAngle = cStart;
+        cd.notes.forEach((note, ni) => {
+          outerSegs.push({
+            path: arcPath(cx, cy, outerR, midEdge + 1, nAngle, nAngle + perNote),
+            color: ni % 2 === 0 ? lightenHex(g.color, 0.55) : lightenHex(g.color, 0.40),
+            mid: nAngle + perNote / 2,
+            sweep: perNote,
+            note,
+            catId: cd.cat.id,
+            groupId: g.id,
+          });
+          nAngle += perNote + GAP;
+        });
+      }
+
+      cAngle += perCat + GAP;
     });
 
-    angle = groupEnd + GAP;
+    angle = gStart + groupSweep + GAP;
   });
 
-  // Min sweep (degrees) to render text labels
-  const minInnerSweep = 28;
-  const minOuterSweep = 22;
+  const innerFontSize = Math.max(7, Math.min(11, size * 0.042));
+  const midFontSize   = Math.max(6, Math.min(9,  size * 0.032));
+  const centerLabel   = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
 
-  // Inner label font sizes scale with wheel size
-  const innerFontSize = Math.max(6, Math.min(9, size * 0.038));
-  const outerFontSize = Math.max(5, Math.min(7, size * 0.030));
+  // Pinch-to-zoom (native only)
+  const panResponder = pinchable ? PanResponder.create({
+    onStartShouldSetPanResponder: e => e.nativeEvent.touches.length === 2,
+    onMoveShouldSetPanResponder:  e => e.nativeEvent.touches.length === 2,
+    onPanResponderMove: e => {
+      const t = e.nativeEvent.touches;
+      if (t.length === 2) {
+        const dx = t[0].pageX - t[1].pageX;
+        const dy = t[0].pageY - t[1].pageY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (lastDistRef.current !== null) {
+          scaleRef.current = Math.min(Math.max(scaleRef.current * (dist / lastDistRef.current), 0.7), 3.5);
+          setScale(scaleRef.current);
+        }
+        lastDistRef.current = dist;
+      }
+    },
+    onPanResponderRelease: () => { lastDistRef.current = null; },
+  }) : { panHandlers: {} };
 
   return (
     <View style={styles.wrapper}>
-      <Svg width={size} height={size}>
-        {/* Outer ring segments */}
-        {outerSegs.map((s, i) => <Path key={`o${i}`} d={s.path} fill={s.color} />)}
+      {/* ── Wheel ── */}
+      <View
+        {...(pinchable ? panResponder.panHandlers : {})}
+        style={{ transform: [{ scale }] }}
+      >
+        <Svg width={size} height={size}>
+          {/* Outer ring — specific notes (L2) */}
+          {outerSegs.map((s, i) => (
+            <Path
+              key={`n${i}`}
+              d={s.path}
+              fill={s.color}
+              onPress={() => {
+                const g   = AROMA_GROUPS.find(x => x.id === s.groupId);
+                const cat = AROMA_CATEGORIES.find(x => x.id === s.catId);
+                setSelected({
+                  color: g?.color ?? s.color,
+                  title: `${cat?.emoji ?? ''} ${cat?.label ?? ''}`,
+                  subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`,
+                  items: [s.note],
+                });
+              }}
+            />
+          ))}
 
-        {/* Inner ring segments */}
-        {innerSegs.map((s) => <Path key={`i${s.groupId}`} d={s.path} fill={s.color} />)}
+          {/* Middle ring — categories (L1) */}
+          {midSegs.map((s, i) => (
+            <Path
+              key={`m${i}`}
+              d={s.path}
+              fill={s.color}
+              onPress={() => {
+                const g = AROMA_GROUPS.find(x => x.id === s.groupId);
+                const defaultItems = AROMA_CATEGORIES.find(c => c.id === s.catId)?.subcategories ?? [];
+                setSelected({
+                  color: g?.color ?? s.color,
+                  title: `${s.emoji} ${s.label}`,
+                  subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`,
+                  items: s.notes.length > 0 ? s.notes : defaultItems,
+                });
+              }}
+            />
+          ))}
 
-        {/* Center hole */}
-        <Circle cx={cx} cy={cy} r={holeR - 2} fill="white" />
-        <SvgText x={cx} y={cy - 4} textAnchor="middle" fontSize={size * 0.1} fill="#1F1518">
-          🍷
-        </SvgText>
-        <SvgText x={cx} y={cy + size * 0.058} textAnchor="middle" fontSize={size * 0.042} fill="#9A8590">
-          {total} aroma{total !== 1 ? 's' : ''}
-        </SvgText>
+          {/* Inner ring — groups */}
+          {innerSegs.map((s, i) => (
+            <Path
+              key={`g${i}`}
+              d={s.path}
+              fill={s.color}
+              onPress={() => {
+                const gd = groupMap[s.groupId];
+                setSelected({
+                  color: s.color,
+                  title: `${s.emoji} ${s.label}`,
+                  items: gd.cats.map(c => `${c.cat.emoji} ${c.cat.label}`),
+                });
+              }}
+            />
+          ))}
 
-        {/* Inner ring: group arc text labels */}
-        {innerSegs.map((s) => {
-          const label = WHEEL_LABEL[s.groupId] ?? '';
-          if (!label || s.sweep < minInnerSweep) return null;
-          const pos = polar(cx, cy, innerTextR, s.midAngle);
-          const rot = arcTextRotation(s.midAngle);
-          return (
-            <G key={`gt-${s.groupId}`} transform={`translate(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}) rotate(${rot})`}>
-              <SvgText
-                textAnchor="middle"
-                alignmentBaseline="middle"
-                fontSize={innerFontSize}
-                fontFamily={Fonts.dmSansMedium}
-                fill="white"
-                fillOpacity={0.95}
-              >
-                {label}
-              </SvgText>
-            </G>
-          );
-        })}
+          {/* Center hole */}
+          <Circle cx={cx} cy={cy} r={holeR - 2} fill="white" />
+          <SvgText
+            x={cx} y={cy - holeR * 0.06}
+            textAnchor="middle"
+            fontSize={holeR * 0.62}
+            fill="#1F1518"
+          >
+            🍷
+          </SvgText>
+          <SvgText
+            x={cx} y={cy + holeR * 0.44}
+            textAnchor="middle"
+            fontSize={Math.max(6, holeR * 0.26)}
+            fontFamily={Fonts.dmSans}
+            fill="#9A8590"
+          >
+            {centerLabel}
+          </SvgText>
 
-        {/* Outer ring: category arc text labels */}
-        {outerSegs.map((s, i) => {
-          if (!s.label || s.sweep < minOuterSweep) return null;
-          const pos = polar(cx, cy, outerTextR, s.midAngle);
-          const rot = arcTextRotation(s.midAngle);
-          return (
-            <G key={`ct-${i}`} transform={`translate(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}) rotate(${rot})`}>
-              <SvgText
-                textAnchor="middle"
-                alignmentBaseline="middle"
-                fontSize={outerFontSize}
-                fontFamily={Fonts.dmSans}
-                fill="#1F1518"
-                fillOpacity={0.85}
-              >
-                {s.label}
-              </SvgText>
-            </G>
-          );
-        })}
-      </Svg>
+          {/* Inner ring text labels (group names) */}
+          {innerSegs.map((s, i) => {
+            if (s.sweep < 24) return null;
+            const tr = (holeR + innerEdge) / 2;
+            const pos = polar(cx, cy, tr, s.mid);
+            const rot = labelRotation(s.mid);
+            return (
+              <G key={`il${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
+                <SvgText
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  fontSize={innerFontSize}
+                  fontFamily={Fonts.dmSansMedium}
+                  fill="white"
+                  fillOpacity={0.95}
+                >
+                  {s.label}
+                </SvgText>
+              </G>
+            );
+          })}
 
-      {/* Legend */}
+          {/* Middle ring text labels (category names) */}
+          {midSegs.map((s, i) => {
+            if (s.sweep < 15) return null;
+            const tr = show3
+              ? (innerEdge + midEdge) / 2
+              : (innerEdge + outerR) / 2;
+            const pos = polar(cx, cy, tr, s.mid);
+            const rot = labelRotation(s.mid);
+            return (
+              <G key={`ml${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
+                <SvgText
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  fontSize={midFontSize}
+                  fontFamily={Fonts.dmSans}
+                  fill="#1F1518"
+                  fillOpacity={0.82}
+                >
+                  {s.label}
+                </SvgText>
+              </G>
+            );
+          })}
+        </Svg>
+      </View>
+
+      {/* ── Segment Detail Card (tap result) ── */}
+      {selected && (
+        <View style={[styles.detailCard, { borderLeftColor: selected.color }]}>
+          <View style={styles.detailHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.detailTitle}>{selected.title}</Text>
+              {selected.subtitle ? (
+                <Text style={styles.detailSub}>{selected.subtitle}</Text>
+              ) : null}
+            </View>
+            <TouchableOpacity onPress={() => setSelected(null)} style={styles.detailClose}>
+              <Text style={styles.detailCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          {selected.items.length > 0 && (
+            <View style={styles.detailPills}>
+              {selected.items.map((item, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.detailPill,
+                    { borderColor: selected.color + '60', backgroundColor: selected.color + '12' },
+                  ]}
+                >
+                  <Text style={[styles.detailPillText, { color: selected.color }]}>{item}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* ── Legend ── */}
       {showLegend && (
         <View style={styles.legend}>
-          {activeGroups.map((g) => {
-            const cats = groupSelectedCats[g.id] ?? [];
+          {activeGroups.map(g => {
+            const gd = groupMap[g.id];
             return (
               <View key={g.id} style={styles.legendGroup}>
-                <View style={styles.legendHeader}>
-                  <View style={[styles.dot, { backgroundColor: g.color }]} />
+                <View style={styles.legendRow}>
+                  <View style={[styles.legendDot, { backgroundColor: g.color }]} />
                   <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
                 </View>
                 <View style={styles.catPills}>
-                  {cats.map((catId) => {
-                    const cat = AROMA_CATEGORIES.find((c) => c.id === catId);
-                    if (!cat) return null;
-                    return (
-                      <View key={catId} style={[styles.pill, { borderColor: g.color + '55' }]}>
-                        <Text style={styles.pillText}>{cat.emoji} {cat.label}</Text>
-                      </View>
-                    );
-                  })}
+                  {gd.cats.map(cd => (
+                    <View key={cd.cat.id} style={[styles.pill, { borderColor: g.color + '55' }]}>
+                      <Text style={styles.pillText}>{cd.cat.emoji} {cd.cat.label}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
             );
@@ -244,17 +409,76 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+
+  // Tap detail card
+  detailCard: {
+    width: '100%',
+    backgroundColor: '#FDFAF7',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderLeftWidth: 3,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  detailTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: Colors.ink,
+    lineHeight: 20,
+  },
+  detailSub: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkMid,
+    marginTop: 1,
+  },
+  detailClose: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailCloseText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: Colors.inkMid,
+  },
+  detailPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  detailPill: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  detailPillText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+  },
+
+  // Legend
   legend: {
     width: '100%',
     gap: 8,
   },
   legendGroup: { gap: 4 },
-  legendHeader: {
+  legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  dot: {
+  legendDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -262,7 +486,7 @@ const styles = StyleSheet.create({
   legendGroupLabel: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
-    color: '#4A3540',
+    color: Colors.inkMid,
     letterSpacing: 0.2,
   },
   catPills: {
@@ -281,6 +505,6 @@ const styles = StyleSheet.create({
   pillText: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 11,
-    color: '#4A3540',
+    color: Colors.inkMid,
   },
 });
