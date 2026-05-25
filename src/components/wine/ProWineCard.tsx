@@ -50,12 +50,13 @@ const scoreStyles = StyleSheet.create({
 
 export function ProWineCard({ entry, compact = false }: Props) {
   const score = entry.technical_score ?? 0;
-  const radarSize = compact ? 130 : 170;
+  const colSize = compact ? 130 : 150;
 
   const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
 
   const isBestValue = entry.want_to_buy && score >= 80;
+  const hasAromas = entry.aromas_l1.length > 0;
 
   return (
     <View style={[styles.card, compact && styles.cardCompact]}>
@@ -106,10 +107,11 @@ export function ProWineCard({ entry, compact = false }: Props) {
         <View style={styles.divider} />
       </View>
 
-      {/* ── Body ── */}
+      {/* ── Body: Radar (left) + Flavor Wheel (right) ── */}
       <View style={styles.body}>
-        {/* Left: Radar + Profile */}
+        {/* Left: PROFILE label + Radar + notes */}
         <View style={styles.leftCol}>
+          <Text style={[styles.colLabel, compact && styles.smallLabel]}>Profile</Text>
           <WineRadarChart
             sweetness={entry.sweetness ?? 5}
             acidity={entry.acidity}
@@ -118,54 +120,44 @@ export function ProWineCard({ entry, compact = false }: Props) {
             tannin={entry.tannin}
             intensity={entry.intensity}
             finish_length={entry.finish_length ?? 5}
-            size={radarSize}
+            size={colSize}
             color={Colors.ink}
           />
-
           {entry.free_notes ? (
-            <View style={styles.profileBlock}>
-              <Text style={[styles.profileLabel, compact && styles.smallLabel]}>Profile</Text>
-              <Text
-                style={[styles.profileText, compact && styles.profileTextCompact]}
-                numberOfLines={compact ? 3 : 5}
-              >
-                {entry.free_notes}
-              </Text>
-            </View>
+            <Text
+              style={[styles.profileText, compact && styles.profileTextCompact]}
+              numberOfLines={compact ? 2 : 4}
+            >
+              {entry.free_notes}
+            </Text>
           ) : null}
         </View>
 
-        {/* Right: Score */}
+        {/* Right: AROMA PROFILE label + Flavor Wheel */}
         <View style={styles.rightCol}>
-          {score > 0 && (
-            <View style={styles.scoreBlock}>
-              <ScoreCircle score={score} compact={compact} />
-              {isBestValue && (
-                <View style={styles.bestValueBadge}>
-                  <Text style={[styles.bestValueText, compact && styles.bestValueTextCompact]}>
-                    Best Value ✓
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
+          {hasAromas ? (
+            <>
+              <Text style={[styles.colLabel, compact && styles.smallLabel]}>Aroma Profile</Text>
+              <AromaDonutChart
+                aromasL1={entry.aromas_l1}
+                size={colSize}
+                showLegend={false}
+              />
+            </>
+          ) : null}
         </View>
       </View>
 
-      {/* ── Aroma Flavor Wheel ── */}
-      {entry.aromas_l1.length > 0 && (
-        <View style={styles.aromaSection}>
-          <Text style={[styles.aromaHeader, compact && styles.smallLabel]}>Aroma Profile</Text>
-          <AromaDonutChart
-            aromasL1={entry.aromas_l1}
-            size={compact ? 160 : 200}
-            showLegend={!compact}
-          />
-        </View>
-      )}
-
-      {/* ── Footer ── */}
+      {/* ── Score + Footer row ── */}
       <View style={styles.footer}>
+        {score > 0 && <ScoreCircle score={score} compact={compact} />}
+        {isBestValue && (
+          <View style={styles.bestValueBadge}>
+            <Text style={[styles.bestValueText, compact && styles.bestValueTextCompact]}>
+              Best Value ✓
+            </Text>
+          </View>
+        )}
         <Text style={[styles.buyAgain, compact && styles.buyAgainCompact]}>
           Would I buy again?{' '}
           <Text style={entry.want_to_buy ? styles.yesText : styles.noText}>
@@ -253,58 +245,44 @@ const styles = StyleSheet.create({
   body: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs ?? 4,
     gap: Spacing.sm,
+    alignItems: 'flex-start',
   },
   leftCol: {
-    flex: 1.1,
+    flex: 1,
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 4,
   },
   rightCol: {
     flex: 1,
-    gap: Spacing.sm,
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 4,
   },
 
-  // Profile text
-  profileBlock: { width: '100%', gap: 3 },
-  profileLabel: {
-    fontFamily: Fonts.playfairSemiBold,
-    fontSize: 12,
-    color: Colors.ink,
+  // Column section label (PROFILE / AROMA PROFILE)
+  colLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: Colors.inkMuted,
+    alignSelf: 'center',
   },
+
+  // Profile free-text note under radar
   profileText: {
     fontFamily: Fonts.dmSansRegular,
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.inkMid,
-    lineHeight: 16,
+    lineHeight: 14,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
-  profileTextCompact: { fontSize: 9, lineHeight: 13 },
+  profileTextCompact: { fontSize: 8, lineHeight: 12 },
 
-  // Aroma flavor wheel section
-  aromaSection: {
-    borderTopWidth: 0.5,
-    borderTopColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  aromaHeader: {
-    fontFamily: Fonts.playfairSemiBold,
-    fontSize: 12,
-    color: Colors.ink,
-    alignSelf: 'flex-start',
-  },
-
-  // Score
-  scoreBlock: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
+  // Score + Best Value badge
   bestValueBadge: {
     backgroundColor: Colors.ink,
     borderRadius: Radius.sm,
@@ -319,7 +297,7 @@ const styles = StyleSheet.create({
   },
   bestValueTextCompact: { fontSize: 8 },
 
-  // Footer
+  // Footer row: score + best value + "Would I buy again?"
   footer: {
     borderTopWidth: 0.5,
     borderTopColor: Colors.border,
@@ -327,11 +305,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.sm,
   },
   buyAgain: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 12,
     color: Colors.inkMid,
+    flex: 1,
+    textAlign: 'right',
   },
   buyAgainCompact: { fontSize: 9 },
   yesText: {
@@ -344,5 +325,5 @@ const styles = StyleSheet.create({
   },
 
   // Shared small label
-  smallLabel: { fontSize: 10 },
+  smallLabel: { fontSize: 9 },
 });
