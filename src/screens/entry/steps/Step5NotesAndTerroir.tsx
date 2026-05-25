@@ -26,7 +26,11 @@ const SOILS: TerriorSoil[] = [
   // Metamorphic / igneous
   'granite', 'decomposed-granite', 'slate', 'schist', 'shale',
 ];
-const CLIMATES: TerriorClimate[] = ['cool', 'moderate', 'warm'];
+const CLIMATES: TerriorClimate[] = [
+  'cool', 'cool-continental', 'temperate', 'oceanic', 'maritime',
+  'moderate', 'continental', 'mediterranean', 'warm', 'hot',
+  'semi-arid', 'alpine', 'tropical', 'desert',
+];
 
 const SOIL_ICONS: Record<TerriorSoil, string> = {
   // Sedimentary / carbonate

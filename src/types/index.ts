@@ -7,7 +7,10 @@ export type TerriorSoil =
   | 'volcanic' | 'volcanic-ash' | 'tuff' | 'basalt'
   | 'granite' | 'decomposed-granite' | 'slate' | 'schist' | 'shale';
 
-export type TerriorClimate = 'cool' | 'moderate' | 'warm';
+export type TerriorClimate =
+  | 'cool' | 'cool-continental' | 'temperate' | 'oceanic' | 'maritime'
+  | 'moderate' | 'continental' | 'mediterranean' | 'warm' | 'hot'
+  | 'semi-arid' | 'alpine' | 'tropical' | 'desert';
 
 export const TERROIR_SOIL_LABELS: Record<TerriorSoil, string> = {
   // Sedimentary / carbonate
@@ -42,9 +45,20 @@ export const TERROIR_SOIL_LABELS: Record<TerriorSoil, string> = {
 };
 
 export const TERROIR_CLIMATE_LABELS: Record<TerriorClimate, string> = {
-  cool: 'Cool',
-  moderate: 'Moderate',
-  warm: 'Warm',
+  cool:               'Cool',
+  'cool-continental': 'Cool-Continental',
+  temperate:          'Temperate',
+  oceanic:            'Oceanic',
+  maritime:           'Maritime',
+  moderate:           'Moderate',
+  continental:        'Continental',
+  mediterranean:      'Mediterranean',
+  warm:               'Warm',
+  hot:                'Hot',
+  'semi-arid':        'Semi-arid',
+  alpine:             'Alpine / Mountain',
+  tropical:           'Tropical',
+  desert:             'Desert',
 };
 
 // ─── Aroma Data ──────────────────────────────────────────────────────────────
