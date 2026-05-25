@@ -1,43 +1,102 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { getStyleSummary, WineEntry } from '@/types';
+import { InfoPopover } from '@/components/ui/InfoPopover';
 
 interface StyleSummaryBarProps {
   entry: Partial<WineEntry>;
 }
 
-interface AxisProps {
+interface AxisInfo {
   leftLabel: string;
   rightLabel: string;
-  value: number; // 0-1
+  description: string;
 }
 
-function Axis({ leftLabel, rightLabel, value }: AxisProps) {
+const AXIS_INFO: AxisInfo[] = [
+  {
+    leftLabel: 'Dry',
+    rightLabel: 'Sweet',
+    description:
+      'Perceived sweetness from residual sugar or very ripe fruit. A dry wine has little to no sugar; a sweet wine has noticeable sweetness on the finish.',
+  },
+  {
+    leftLabel: 'Light',
+    rightLabel: 'Full',
+    description:
+      'Body is the weight and richness of the wine on your palate — think of it like the difference between skim milk (light) and whole milk (full). Driven by alcohol, extract, and ripeness.',
+  },
+  {
+    leftLabel: 'Low Acid',
+    rightLabel: 'High Acid',
+    description:
+      'Acidity gives wine its crispness, freshness, and structure. High-acid wines taste lively and pair well with food; low-acid wines feel rounder and softer.',
+  },
+  {
+    leftLabel: 'Soft',
+    rightLabel: 'Tannic',
+    description:
+      'Tannins are polyphenols from grape skins, seeds, and oak that create a drying, grippy sensation. Higher tannin = more structure and aging potential — more common in red wines.',
+  },
+];
+
+interface AxisProps {
+  info: AxisInfo;
+  value: number;
+  onPress: () => void;
+}
+
+function Axis({ info, value, onPress }: AxisProps) {
   return (
-    <View style={styles.axisRow}>
-      <Text style={styles.axisLabel}>{leftLabel}</Text>
+    <TouchableOpacity style={styles.axisRow} onPress={onPress} activeOpacity={0.6}>
+      <Text style={styles.axisLabel}>{info.leftLabel}</Text>
       <View style={styles.track}>
         <View style={[styles.indicator, { left: `${value * 100}%` }]} />
       </View>
-      <Text style={[styles.axisLabel, styles.rightLabel]}>{rightLabel}</Text>
-    </View>
+      <Text style={[styles.axisLabel, styles.rightLabel]}>{info.rightLabel}</Text>
+      <Text style={styles.infoIcon}>ⓘ</Text>
+    </TouchableOpacity>
   );
 }
 
 export function StyleSummaryBar({ entry }: StyleSummaryBarProps) {
   const summary = getStyleSummary(entry);
+  const [active, setActive] = useState<AxisInfo | null>(null);
+
+  const values = [1 - summary.dryness, summary.fullness, summary.acidity, summary.tannin];
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Style Profile</Text>
-      <Axis leftLabel="Dry" rightLabel="Sweet" value={1 - summary.dryness} />
-      <Axis leftLabel="Light" rightLabel="Full" value={summary.fullness} />
-      <Axis leftLabel="Low Acid" rightLabel="High Acid" value={summary.acidity} />
-      <Axis leftLabel="Soft" rightLabel="Tannic" value={summary.tannin} />
+      {AXIS_INFO.map((info, i) => (
+        <Axis
+          key={info.leftLabel}
+          info={info}
+          value={values[i]}
+          onPress={() => setActive(info)}
+        />
+      ))}
+
+      <InfoPopover
+        visible={active !== null}
+        onClose={() => setActive(null)}
+        title={`${active?.leftLabel} → ${active?.rightLabel}`}
+      >
+        <Text style={popoverStyles.description}>{active?.description}</Text>
+      </InfoPopover>
     </View>
   );
 }
+
+const popoverStyles = StyleSheet.create({
+  description: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.inkMid,
+    lineHeight: 21,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -82,5 +141,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold,
     top: -4,
     marginLeft: -6,
+  },
+  infoIcon: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    width: 14,
+    textAlign: 'right',
   },
 });

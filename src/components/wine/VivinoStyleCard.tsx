@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { InfoPopover } from '@/components/ui/InfoPopover';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry, AROMA_CATEGORIES } from '@/types';
@@ -83,23 +84,39 @@ const starStyles = StyleSheet.create({
 
 // ─── Axis Slider ─────────────────────────────────────────────────────────────
 
+const VIVINO_AXIS_DESCRIPTIONS: Record<string, string> = {
+  'Dry|Sweet':
+    'Perceived sweetness from residual sugar or very ripe fruit. A dry wine has little to no sugar; a sweet wine has noticeable sweetness on the finish.',
+  'Light Body|Full Body':
+    'Body is the weight and richness of the wine on your palate — think skim milk (light) vs whole milk (full). Driven by alcohol, extract, and ripeness.',
+  'Soft|Tannic':
+    'Tannins from grape skins, seeds, and oak create a drying, grippy sensation. Higher tannin = more structure and aging potential.',
+  'Low Acid|High Acid':
+    'Acidity gives wine its crispness, freshness, and structure. High-acid wines taste lively and pair well with food; low-acid wines feel rounder and softer.',
+  'Cool|Warming':
+    'Alcohol creates a warm sensation on the palate and in the throat. Higher alcohol wines feel richer and more warming.',
+};
+
 function AxisSlider({
   left,
   right,
   value,
+  onPress,
 }: {
   left: string;
   right: string;
-  value: number; // 0-1
+  value: number;
+  onPress?: () => void;
 }) {
   return (
-    <View style={axisStyles.row}>
+    <TouchableOpacity style={axisStyles.row} onPress={onPress} activeOpacity={onPress ? 0.6 : 1}>
       <Text style={axisStyles.label}>{left}</Text>
       <View style={axisStyles.track}>
         <View style={[axisStyles.dot, { left: `${Math.min(Math.max(value * 100, 4), 96)}%` as any }]} />
       </View>
       <Text style={[axisStyles.label, axisStyles.labelRight]}>{right}</Text>
-    </View>
+      {onPress && <Text style={axisStyles.infoIcon}>ⓘ</Text>}
+    </TouchableOpacity>
   );
 }
 
@@ -135,6 +152,12 @@ const axisStyles = StyleSheet.create({
     backgroundColor: Colors.gold,
     top: -4,
     marginLeft: -5,
+  },
+  infoIcon: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    width: 14,
+    textAlign: 'right',
   },
 });
 
@@ -222,6 +245,13 @@ function Divider() {
 
 export function VivinoStyleCard({ entry }: Props) {
   const score = entry.technical_score ?? 0;
+  const [activeAxis, setActiveAxis] = useState<{ title: string; description: string } | null>(null);
+
+  const openAxis = (left: string, right: string) => {
+    const key = `${left}|${right}`;
+    const description = VIVINO_AXIS_DESCRIPTIONS[key] ?? '';
+    setActiveAxis({ title: `${left} → ${right}`, description });
+  };
 
   // Aroma profile — top 5 categories by frequency
   const aromaCounts: Record<string, number> = {};
@@ -364,13 +394,21 @@ export function VivinoStyleCard({ entry }: Props) {
         <View style={styles.section}>
           <SectionHeader label="Style" />
           <View style={{ gap: 12 }}>
-            <AxisSlider left="Dry" right="Sweet" value={1 - norm(entry.acidity)} />
-            <AxisSlider left="Light Body" right="Full Body" value={norm(entry.body)} />
-            <AxisSlider left="Soft" right="Tannic" value={norm(entry.tannin)} />
-            <AxisSlider left="Low Acid" right="High Acid" value={norm(entry.acidity)} />
-            <AxisSlider left="Cool" right="Warming" value={norm(entry.alcohol)} />
+            <AxisSlider left="Dry" right="Sweet" value={1 - norm(entry.acidity)} onPress={() => openAxis('Dry', 'Sweet')} />
+            <AxisSlider left="Light Body" right="Full Body" value={norm(entry.body)} onPress={() => openAxis('Light Body', 'Full Body')} />
+            <AxisSlider left="Soft" right="Tannic" value={norm(entry.tannin)} onPress={() => openAxis('Soft', 'Tannic')} />
+            <AxisSlider left="Low Acid" right="High Acid" value={norm(entry.acidity)} onPress={() => openAxis('Low Acid', 'High Acid')} />
+            <AxisSlider left="Cool" right="Warming" value={norm(entry.alcohol)} onPress={() => openAxis('Cool', 'Warming')} />
           </View>
         </View>
+
+        <InfoPopover
+          visible={activeAxis !== null}
+          onClose={() => setActiveAxis(null)}
+          title={activeAxis?.title ?? ''}
+        >
+          <Text style={vivinoPopoverStyles.description}>{activeAxis?.description}</Text>
+        </InfoPopover>
 
         {/* Food Pairings */}
         {pairings.length > 0 && (
@@ -712,5 +750,14 @@ const styles = StyleSheet.create({
     color: Colors.gold,
     letterSpacing: 0.5,
     marginTop: 6,
+  },
+});
+
+const vivinoPopoverStyles = StyleSheet.create({
+  description: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.inkMid,
+    lineHeight: 21,
   },
 });

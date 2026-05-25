@@ -6,6 +6,7 @@ import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
 import { WineRadarChart } from './WineRadarChart';
 import { AromaDonutChart } from '@/components/charts/AromaDonutChart';
+import { InfoPopover } from '@/components/ui/InfoPopover';
 
 interface Props {
   entry: WineEntry;
@@ -48,10 +49,21 @@ const scoreStyles = StyleSheet.create({
 
 // ─── Main Card ────────────────────────────────────────────────────────────────
 
+const RADAR_AXES = [
+  { label: 'Sweetness', key: 'sweetness' as const, fallback: 5 },
+  { label: 'Acidity', key: 'acidity' as const, fallback: 5 },
+  { label: 'Body', key: 'body' as const, fallback: 5 },
+  { label: 'Alcohol', key: 'alcohol' as const, fallback: 5 },
+  { label: 'Tannin', key: 'tannin' as const, fallback: 5 },
+  { label: 'Intensity', key: 'intensity' as const, fallback: 5 },
+  { label: 'Finish', key: 'finish_length' as const, fallback: 5 },
+];
+
 export function ProWineCard({ entry, compact = false }: Props) {
   const score = entry.technical_score ?? 0;
   const colSize = compact ? 130 : 150;
   const [wheelOpen, setWheelOpen] = useState(false);
+  const [radarOpen, setRadarOpen] = useState(false);
   const { width: screenW, height: screenH } = useWindowDimensions();
   const popoverSize = Math.min(screenW, screenH) * 0.78;
 
@@ -112,20 +124,27 @@ export function ProWineCard({ entry, compact = false }: Props) {
 
       {/* ── Body: Radar (left) + Flavor Wheel (right) ── */}
       <View style={styles.body}>
-        {/* Left: PROFILE label + Radar + notes */}
+        {/* Left: PROFILE label + Radar + notes (tap to expand) */}
         <View style={styles.leftCol}>
-          <Text style={[styles.colLabel, compact && styles.smallLabel]}>Profile</Text>
-          <WineRadarChart
-            sweetness={entry.sweetness ?? 5}
-            acidity={entry.acidity}
-            body={entry.body}
-            alcohol={entry.alcohol}
-            tannin={entry.tannin}
-            intensity={entry.intensity}
-            finish_length={entry.finish_length ?? 5}
-            size={colSize}
-            color={Colors.ink}
-          />
+          <TouchableOpacity
+            onPress={() => setRadarOpen(true)}
+            activeOpacity={0.75}
+            style={styles.wheelTouchable}
+          >
+            <Text style={[styles.colLabel, compact && styles.smallLabel]}>Profile</Text>
+            <WineRadarChart
+              sweetness={entry.sweetness ?? 5}
+              acidity={entry.acidity}
+              body={entry.body}
+              alcohol={entry.alcohol}
+              tannin={entry.tannin}
+              intensity={entry.intensity}
+              finish_length={entry.finish_length ?? 5}
+              size={colSize}
+              color={Colors.ink}
+            />
+            <Text style={styles.tapHint}>tap to expand ↗</Text>
+          </TouchableOpacity>
           {entry.free_notes ? (
             <Text
               style={[styles.profileText, compact && styles.profileTextCompact]}
@@ -173,6 +192,43 @@ export function ProWineCard({ entry, compact = false }: Props) {
           </Text>
         </Text>
       </View>
+
+      {/* ── Radar Profile Popover ── */}
+      <InfoPopover
+        visible={radarOpen}
+        onClose={() => setRadarOpen(false)}
+        title="Structure Profile"
+      >
+        <Text style={radarPopoverStyles.subtitle} numberOfLines={1}>
+          {entry.producer || entry.name || ''}
+          {entry.vintage ? `  ·  ${entry.vintage}` : ''}
+        </Text>
+        <WineRadarChart
+          sweetness={entry.sweetness ?? 5}
+          acidity={entry.acidity}
+          body={entry.body}
+          alcohol={entry.alcohol}
+          tannin={entry.tannin}
+          intensity={entry.intensity}
+          finish_length={entry.finish_length ?? 5}
+          size={Math.min(popoverSize, 260)}
+          color={Colors.ink}
+        />
+        <View style={radarPopoverStyles.table}>
+          {RADAR_AXES.map(({ label, key, fallback }) => {
+            const val: number = (entry[key] as number | undefined) ?? fallback;
+            return (
+              <View key={key} style={radarPopoverStyles.tableRow}>
+                <Text style={radarPopoverStyles.tableLabel}>{label}</Text>
+                <View style={radarPopoverStyles.tableTrack}>
+                  <View style={[radarPopoverStyles.tableFill, { width: `${(val / 10) * 100}%` as any }]} />
+                </View>
+                <Text style={radarPopoverStyles.tableVal}>{val}<Text style={radarPopoverStyles.tableMax}>/10</Text></Text>
+              </View>
+            );
+          })}
+        </View>
+      </InfoPopover>
 
       {/* ── Aroma Wheel Popover ── */}
       {hasAromas && (
@@ -434,4 +490,57 @@ const styles = StyleSheet.create({
 
   // Shared small label
   smallLabel: { fontSize: 9 },
+});
+
+const radarPopoverStyles = StyleSheet.create({
+  subtitle: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMid,
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    marginTop: -4,
+  },
+  table: {
+    width: '100%',
+    gap: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.md,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tableLabel: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.inkMid,
+    width: 72,
+  },
+  tableTrack: {
+    flex: 1,
+    height: 4,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+  },
+  tableFill: {
+    height: '100%',
+    backgroundColor: Colors.ink,
+    borderRadius: Radius.full,
+  },
+  tableVal: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 14,
+    color: Colors.ink,
+    width: 42,
+    textAlign: 'right',
+  },
+  tableMax: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 10,
+    color: Colors.inkMuted,
+  },
 });
