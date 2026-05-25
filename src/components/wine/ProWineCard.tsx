@@ -166,6 +166,7 @@ export function ProWineCard({ entry, compact = false }: Props) {
               <Text style={[styles.colLabel, compact && styles.smallLabel]}>Aroma Profile</Text>
               <AromaDonutChart
                 aromasL1={entry.aromas_l1}
+                aromasL2={entry.aromas_l2}
                 size={colSize}
                 showLegend={false}
               />
@@ -258,8 +259,10 @@ export function ProWineCard({ entry, compact = false }: Props) {
               {/* Large wheel with legend */}
               <AromaDonutChart
                 aromasL1={entry.aromas_l1}
+                aromasL2={entry.aromas_l2}
                 size={popoverSize}
                 showLegend
+                pinchable
               />
             </Pressable>
           </Pressable>

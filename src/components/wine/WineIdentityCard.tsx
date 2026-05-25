@@ -72,7 +72,7 @@ export function WineIdentityCard({
       {entry.aromas_l1.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Aroma Profile</Text>
-          <AromaDonutChart aromasL1={entry.aromas_l1} size={160} />
+          <AromaDonutChart aromasL1={entry.aromas_l1} aromasL2={entry.aromas_l2} size={160} />
         </View>
       )}
 
