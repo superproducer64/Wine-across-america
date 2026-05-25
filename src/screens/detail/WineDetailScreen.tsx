@@ -26,6 +26,7 @@ import { getWineEntry } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
+import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
 import { WineEntry, PriceEntry } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -152,6 +153,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [notesText, setNotesText] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesBanner, setNotesBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [photoModal, setPhotoModal] = useState(false);
 
   const handleEditNotes = () => {
     setNotesText(entry?.free_notes ?? '');
@@ -512,15 +514,18 @@ export function WineDetailScreen({ route, navigation }: Props) {
         {entry.label_photo_url ? (
           <View style={styles.labelPhotoBlock}>
             <Text style={styles.labelPhotoLabel}>Label Photo</Text>
-            <Image
-              source={{ uri: entry.label_photo_url }}
-              style={styles.labelPhoto}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
-              placeholderContentFit="cover"
-              transition={300}
-            />
+            <Pressable onPress={() => setPhotoModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+              <Image
+                source={{ uri: entry.label_photo_url }}
+                style={styles.labelPhoto}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
+                placeholderContentFit="cover"
+                transition={300}
+              />
+              <Text style={styles.labelPhotoHint}>tap to enlarge</Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -547,6 +552,24 @@ export function WineDetailScreen({ route, navigation }: Props) {
           senderName={profile?.display_name ?? profile?.email ?? 'A member'}
         />
       )}
+
+      {/* Label photo lightbox */}
+      {entry.label_photo_url && (() => {
+        const photos: LabelPhoto[] = [
+          { uri: entry.label_photo_url!, label: 'Front Label', blurhash: entry.label_photo_blurhash },
+        ];
+        if (entry.back_label_photo_url) {
+          photos.push({ uri: entry.back_label_photo_url, label: 'Back Label' });
+        }
+        return (
+          <LabelPhotoModal
+            visible={photoModal}
+            onClose={() => setPhotoModal(false)}
+            photos={photos}
+            wineName={entry.name || entry.producer || undefined}
+          />
+        );
+      })()}
     </SafeAreaView>
   );
 }
@@ -909,6 +932,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.inkMuted,
     marginBottom: Spacing.sm,
+  },
+  labelPhotoHint: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    textAlign: 'center',
+    marginTop: 6,
+    opacity: 0.6,
   },
   labelPhoto: {
     width: '100%',

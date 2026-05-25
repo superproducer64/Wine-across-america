@@ -7,6 +7,7 @@ import { WineEntry } from '@/types';
 import { WineRadarChart } from './WineRadarChart';
 import { AromaDonutChart } from '@/components/charts/AromaDonutChart';
 import { InfoPopover } from '@/components/ui/InfoPopover';
+import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
 
 interface Props {
   entry: WineEntry;
@@ -64,6 +65,8 @@ export function ProWineCard({ entry, compact = false }: Props) {
   const colSize = compact ? 130 : 150;
   const [wheelOpen, setWheelOpen] = useState(false);
   const [radarOpen, setRadarOpen] = useState(false);
+  const [photoModal, setPhotoModal] = useState(false);
+  const [photoModalIdx, setPhotoModalIdx] = useState(0);
   const { width: screenW, height: screenH } = useWindowDimensions();
   const popoverSize = Math.min(screenW, screenH) * 0.78;
 
@@ -80,32 +83,42 @@ export function ProWineCard({ entry, compact = false }: Props) {
         {(entry.label_photo_url || entry.back_label_photo_url) ? (
           <View style={styles.photoRow}>
             {entry.label_photo_url ? (
-              <Image
-                source={{ uri: entry.label_photo_url }}
-                style={[
-                  styles.headerThumbnail,
-                  compact && styles.headerThumbnailCompact,
-                  entry.back_label_photo_url ? styles.headerThumbnailDuo : undefined,
-                ]}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
-                placeholderContentFit="cover"
-                transition={300}
-              />
+              <TouchableOpacity
+                onPress={() => { setPhotoModalIdx(0); setPhotoModal(true); }}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: entry.label_photo_url }}
+                  style={[
+                    styles.headerThumbnail,
+                    compact && styles.headerThumbnailCompact,
+                    entry.back_label_photo_url ? styles.headerThumbnailDuo : undefined,
+                  ]}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  placeholder={entry.label_photo_blurhash ?? LABEL_PHOTO_PLACEHOLDER}
+                  placeholderContentFit="cover"
+                  transition={300}
+                />
+              </TouchableOpacity>
             ) : null}
             {entry.back_label_photo_url ? (
-              <Image
-                source={{ uri: entry.back_label_photo_url }}
-                style={[
-                  styles.headerThumbnail,
-                  compact && styles.headerThumbnailCompact,
-                  styles.headerThumbnailDuo,
-                ]}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                transition={300}
-              />
+              <TouchableOpacity
+                onPress={() => { setPhotoModalIdx(1); setPhotoModal(true); }}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: entry.back_label_photo_url }}
+                  style={[
+                    styles.headerThumbnail,
+                    compact && styles.headerThumbnailCompact,
+                    styles.headerThumbnailDuo,
+                  ]}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={300}
+                />
+              </TouchableOpacity>
             ) : null}
           </View>
         ) : null}
@@ -268,6 +281,22 @@ export function ProWineCard({ entry, compact = false }: Props) {
           </Pressable>
         </Modal>
       )}
+
+      {/* ── Label Photo Lightbox ── */}
+      {(entry.label_photo_url || entry.back_label_photo_url) && (() => {
+        const photos: LabelPhoto[] = [];
+        if (entry.label_photo_url) photos.push({ uri: entry.label_photo_url, label: 'Front Label', blurhash: entry.label_photo_blurhash });
+        if (entry.back_label_photo_url) photos.push({ uri: entry.back_label_photo_url, label: 'Back Label' });
+        return (
+          <LabelPhotoModal
+            visible={photoModal}
+            onClose={() => setPhotoModal(false)}
+            photos={photos}
+            wineName={entry.name || entry.producer || undefined}
+            initialIndex={photoModalIdx}
+          />
+        );
+      })()}
     </View>
   );
 }
