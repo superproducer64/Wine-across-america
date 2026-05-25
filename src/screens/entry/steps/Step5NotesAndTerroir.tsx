@@ -14,15 +14,50 @@ import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { TerriorSoil, TerriorClimate, TERROIR_SOIL_LABELS, TERROIR_CLIMATE_LABELS } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
 
-const SOILS: TerriorSoil[] = ['limestone', 'volcanic', 'granite', 'clay', 'sand'];
+const SOILS: TerriorSoil[] = [
+  // Sedimentary / carbonate
+  'limestone', 'chalk', 'marl', 'calcareous', 'dolomite', 'flint',
+  // Clay-based
+  'clay', 'terra-rossa', 'red-iron',
+  // Sandy / gravelly
+  'sand', 'gravel', 'galets', 'loam', 'silt', 'alluvial',
+  // Volcanic
+  'volcanic', 'volcanic-ash', 'tuff', 'basalt',
+  // Metamorphic / igneous
+  'granite', 'decomposed-granite', 'slate', 'schist', 'shale',
+];
 const CLIMATES: TerriorClimate[] = ['cool', 'moderate', 'warm'];
 
 const SOIL_ICONS: Record<TerriorSoil, string> = {
-  limestone: '🪨',
-  volcanic: '🌋',
-  granite: '⛰️',
-  clay: '🌿',
-  sand: '🏖️',
+  // Sedimentary / carbonate
+  limestone:            '🪨',
+  chalk:                '⬜',
+  marl:                 '🟫',
+  calcareous:           '🪨',
+  dolomite:             '🪨',
+  flint:                '💎',
+  // Clay-based
+  clay:                 '🌿',
+  'terra-rossa':        '🔴',
+  'red-iron':           '🔴',
+  // Sandy / gravelly
+  sand:                 '🏖️',
+  gravel:               '🪨',
+  galets:               '⚪',
+  loam:                 '🌱',
+  silt:                 '💧',
+  alluvial:             '🏞️',
+  // Volcanic
+  volcanic:             '🌋',
+  'volcanic-ash':       '🌋',
+  tuff:                 '🌋',
+  basalt:               '⬛',
+  // Metamorphic / igneous
+  granite:              '⛰️',
+  'decomposed-granite': '⛰️',
+  slate:                '🖤',
+  schist:               '🪨',
+  shale:                '🪨',
 };
 
 import { detectLocation } from '@/utils/detectLocation';

@@ -1,14 +1,44 @@
 // ─── Enums & Constants ───────────────────────────────────────────────────────
 
-export type TerriorSoil = 'limestone' | 'volcanic' | 'granite' | 'clay' | 'sand';
+export type TerriorSoil =
+  | 'limestone' | 'chalk' | 'marl' | 'calcareous' | 'dolomite' | 'flint'
+  | 'clay' | 'terra-rossa' | 'red-iron'
+  | 'sand' | 'gravel' | 'galets' | 'loam' | 'silt' | 'alluvial'
+  | 'volcanic' | 'volcanic-ash' | 'tuff' | 'basalt'
+  | 'granite' | 'decomposed-granite' | 'slate' | 'schist' | 'shale';
+
 export type TerriorClimate = 'cool' | 'moderate' | 'warm';
 
 export const TERROIR_SOIL_LABELS: Record<TerriorSoil, string> = {
-  limestone: 'Limestone',
-  volcanic: 'Volcanic',
-  granite: 'Granite',
-  clay: 'Clay',
-  sand: 'Sand',
+  // Sedimentary / carbonate
+  limestone:          'Limestone',
+  chalk:              'Chalk',
+  marl:               'Marl',
+  calcareous:         'Calcareous soils',
+  dolomite:           'Dolomite',
+  flint:              'Flint (Silex)',
+  // Clay-based
+  clay:               'Clay',
+  'terra-rossa':      'Terra rossa',
+  'red-iron':         'Red iron-rich soils',
+  // Sandy / gravelly
+  sand:               'Sand',
+  gravel:             'Gravel',
+  galets:             'Pebbles / Galets roulés',
+  loam:               'Loam',
+  silt:               'Silt',
+  alluvial:           'Alluvial soils',
+  // Volcanic
+  volcanic:           'Volcanic',
+  'volcanic-ash':     'Volcanic ash',
+  tuff:               'Tuff',
+  basalt:             'Basalt',
+  // Metamorphic / igneous
+  granite:            'Granite',
+  'decomposed-granite': 'Decomposed granite',
+  slate:              'Slate',
+  schist:             'Schist',
+  shale:              'Shale',
 };
 
 export const TERROIR_CLIMATE_LABELS: Record<TerriorClimate, string> = {
