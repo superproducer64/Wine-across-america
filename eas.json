@@ -17,7 +17,6 @@
       "ios": {
         "simulator": false
       },
-      "prebuildCommand": "npm install react-native@0.81.5 expo@55.0.26 --legacy-peer-deps --no-save && npx expo prebuild",
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://tipdttjafoncheibhlxg.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-anon-key-here"
