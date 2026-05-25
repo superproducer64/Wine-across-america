@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node -e \"try{const v=require('./node_modules/expo/package.json').version;console.log('>>> INSTALLED EXPO VERSION:',v)}catch(e){}\""
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.2.3",
