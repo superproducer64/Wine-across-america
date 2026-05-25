@@ -19,6 +19,7 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { ProWineCard } from '@/components/wine/ProWineCard';
+import { TechnicalScoreDisplay } from '@/components/wine/TechnicalScoreDisplay';
 import { Button } from '@/components/ui/Button';
 import { DatePickerInput } from '@/components/ui/DatePickerInput';
 import { getWineEntry } from '@/lib/supabase';
@@ -367,6 +368,11 @@ export function WineDetailScreen({ route, navigation }: Props) {
 
         {/* Intelligence Card — radar chart layout */}
         <ProWineCard entry={entry} />
+
+        {/* Technical Score Breakdown */}
+        {(entry.technical_score ?? 0) > 0 && (
+          <TechnicalScoreDisplay entry={entry} />
+        )}
 
         {/* Original Wine Card */}
         <VivinoStyleCard entry={entry} />

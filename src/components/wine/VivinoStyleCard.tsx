@@ -115,7 +115,11 @@ function AxisSlider({
         <View style={[axisStyles.dot, { left: `${Math.min(Math.max(value * 100, 4), 96)}%` as any }]} />
       </View>
       <Text style={[axisStyles.label, axisStyles.labelRight]}>{right}</Text>
-      {onPress && <Text style={axisStyles.infoIcon}>ⓘ</Text>}
+      {onPress && (
+        <View style={axisStyles.infoBtn}>
+          <Text style={axisStyles.infoBtnText}>i</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -153,11 +157,20 @@ const axisStyles = StyleSheet.create({
     top: -4,
     marginLeft: -5,
   },
-  infoIcon: {
-    fontSize: 11,
-    color: Colors.inkMuted,
-    width: 14,
-    textAlign: 'right',
+  infoBtn: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: Colors.inkMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: Colors.inkMid,
+    lineHeight: 14,
   },
 });
 

@@ -46,7 +46,9 @@ export function TechnicalScoreDisplay({ entry }: TechnicalScoreDisplayProps) {
                 <View style={[styles.fill, { width: `${(val / 20) * 100}%` }]} />
               </View>
               <Text style={styles.catScore}>{val}</Text>
-              <Text style={styles.infoIcon}>ⓘ</Text>
+              <View style={styles.infoBtn}>
+                <Text style={styles.infoBtnText}>i</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -159,11 +161,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  infoIcon: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.3)',
-    width: 14,
-    textAlign: 'right',
+  infoBtn: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    lineHeight: 14,
   },
   catLabel: {
     fontFamily: Fonts.dmSans,

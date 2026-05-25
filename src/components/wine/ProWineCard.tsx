@@ -430,11 +430,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tapHint: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 9,
-    color: Colors.inkMuted,
-    letterSpacing: 0.3,
-    marginTop: 2,
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 10,
+    color: Colors.inkMid,
+    letterSpacing: 0.2,
+    marginTop: 4,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
 
   // Popover modal
