@@ -174,7 +174,12 @@ export function Step1Basics() {
       <TextInput
         label="Vintage"
         value={draft.vintage ? String(draft.vintage) : ''}
-        onChangeText={(v) => setBasics({ vintage: parseInt(v) || null })}
+        onChangeText={(v) => {
+          const n = parseInt(v) || null;
+          // Only accept years within the DB constraint (1800–2100); treat anything
+          // else as null so the insert never fires a 23514 vintage check violation.
+          setBasics({ vintage: n !== null && n >= 1800 && n <= 2100 ? n : null });
+        }}
         keyboardType="number-pad"
         placeholder="e.g., 2019"
       />

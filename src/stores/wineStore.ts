@@ -130,6 +130,10 @@ export const useWineStore = create<WineStore>((set, get) => ({
       score_complexity: clamp(draft.score_complexity ?? 10, 0, 20),
       score_finish:     clamp(draft.score_finish     ?? 10, 0, 20),
       score_typicity:   clamp(draft.score_typicity   ?? 10, 0, 20),
+      // Vintage — DB requires NULL or 1800..2100; null out anything outside that range
+      vintage: (draft.vintage !== null && draft.vintage !== undefined &&
+                draft.vintage >= 1800 && draft.vintage <= 2100)
+        ? draft.vintage : null,
       ...(label_photo_url        ? { label_photo_url }        : {}),
       ...(label_photo_blurhash   ? { label_photo_blurhash }   : {}),
       ...(back_label_photo_url   ? { back_label_photo_url }   : {}),
