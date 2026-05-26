@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -345,59 +345,74 @@ export function AromaDonutChart({
         </Svg>
       </View>
 
-      {/* ── Segment Detail Modal ── */}
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelected(null)}
-      >
-        <Pressable style={styles.backdrop} onPress={() => setSelected(null)}>
-          <Pressable style={styles.popover} onPress={() => {}}>
-            {/* Colour accent bar */}
-            <View style={[styles.accentBar, { backgroundColor: selected?.color ?? Colors.gold }]} />
-
-            {/* Header */}
+      {/* ── Segment Detail Popover ── */}
+      {selected && Platform.OS === 'web' ? (
+        /* Web: fixed-position overlay (Modal doesn't float on web) */
+        <View style={styles.webBackdrop} pointerEvents="box-none">
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setSelected(null)} />
+          <View style={styles.popover}>
+            <View style={[styles.accentBar, { backgroundColor: selected.color }]} />
             <View style={styles.popoverHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.popoverTitle}>{selected?.title}</Text>
-                {selected?.subtitle ? (
-                  <Text style={styles.popoverSub}>{selected.subtitle}</Text>
-                ) : null}
+                <Text style={styles.popoverTitle}>{selected.title}</Text>
+                {selected.subtitle ? <Text style={styles.popoverSub}>{selected.subtitle}</Text> : null}
               </View>
               <TouchableOpacity onPress={() => setSelected(null)} style={styles.popoverClose} hitSlop={8}>
                 <Text style={styles.popoverCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Divider */}
-            <View style={[styles.popoverDivider, { backgroundColor: selected?.color ? selected.color + '30' : Colors.border }]} />
-
-            {/* Pills */}
-            {(selected?.items ?? []).length > 0 && (
-              <ScrollView
-                style={styles.popoverScroll}
-                showsVerticalScrollIndicator={false}
-                bounces={false}
-              >
+            <View style={[styles.popoverDivider, { backgroundColor: selected.color + '30' }]} />
+            {selected.items.length > 0 && (
+              <ScrollView style={styles.popoverScroll} showsVerticalScrollIndicator={false} bounces={false}>
                 <View style={styles.popoverPills}>
-                  {(selected?.items ?? []).map((item, i) => (
-                    <View
-                      key={i}
-                      style={[styles.popoverPill, { backgroundColor: selected?.color ? selected.color + '18' : Colors.goldPale }]}
-                    >
+                  {selected.items.map((item, i) => (
+                    <View key={i} style={[styles.popoverPill, { backgroundColor: selected.color + '18' }]}>
                       <Text style={styles.popoverPillText}>{item}</Text>
                     </View>
                   ))}
                 </View>
               </ScrollView>
             )}
-
-            {/* Dismiss hint */}
             <Text style={styles.popoverHint}>Tap outside to close</Text>
+          </View>
+        </View>
+      ) : (
+        /* Native: true Modal overlay */
+        <Modal
+          visible={selected !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSelected(null)}
+        >
+          <Pressable style={styles.backdrop} onPress={() => setSelected(null)}>
+            <Pressable style={styles.popover} onPress={() => {}}>
+              <View style={[styles.accentBar, { backgroundColor: selected?.color ?? Colors.gold }]} />
+              <View style={styles.popoverHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.popoverTitle}>{selected?.title}</Text>
+                  {selected?.subtitle ? <Text style={styles.popoverSub}>{selected.subtitle}</Text> : null}
+                </View>
+                <TouchableOpacity onPress={() => setSelected(null)} style={styles.popoverClose} hitSlop={8}>
+                  <Text style={styles.popoverCloseText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[styles.popoverDivider, { backgroundColor: selected?.color ? selected.color + '30' : Colors.border }]} />
+              {(selected?.items ?? []).length > 0 && (
+                <ScrollView style={styles.popoverScroll} showsVerticalScrollIndicator={false} bounces={false}>
+                  <View style={styles.popoverPills}>
+                    {(selected?.items ?? []).map((item, i) => (
+                      <View key={i} style={[styles.popoverPill, { backgroundColor: selected?.color ? selected.color + '18' : Colors.goldPale }]}>
+                        <Text style={styles.popoverPillText}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              )}
+              <Text style={styles.popoverHint}>Tap outside to close</Text>
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
+      )}
 
       {/* ── Legend ── */}
       {showLegend && (
@@ -432,7 +447,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  // Segment detail modal
+  // Segment detail popover
+  webBackdrop: {
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(31,21,24,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xxl,
+    zIndex: 9999,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(31,21,24,0.55)',
