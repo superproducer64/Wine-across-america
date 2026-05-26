@@ -214,10 +214,10 @@ export function AromaDonutChart({
   const totalCats = activeGroups.reduce((s, g) => s + groupMap[g.id].cats.length, 0);
   const dataSpan = 360 - GAP * activeGroups.length;
 
-  // Segment types
-  type InnerSeg = { path: string; color: string; mid: number; sweep: number; groupId: string; label: string; emoji: string };
-  type MidSeg   = { path: string; color: string; mid: number; sweep: number; catId: string; groupId: string; label: string; emoji: string; notes: string[] };
-  type OuterSeg = { path: string; color: string; mid: number; sweep: number; note: string; catId: string; groupId: string };
+  // Segment types — rMin/rMax enable coordinate-based hit testing
+  type InnerSeg = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; groupId: string; label: string; emoji: string };
+  type MidSeg   = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; catId: string; groupId: string; label: string; emoji: string; notes: string[] };
+  type OuterSeg = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; note: string; catId: string; groupId: string };
 
   const innerSegs: InnerSeg[] = [];
   const midSegs: MidSeg[] = [];
@@ -235,6 +235,7 @@ export function AromaDonutChart({
       color: g.color,
       mid: gStart + groupSweep / 2,
       sweep: groupSweep,
+      rMin: holeR, rMax: innerEdge,
       groupId: g.id,
       label: g.label,
       emoji: g.emoji,
@@ -254,6 +255,7 @@ export function AromaDonutChart({
         color: shade,
         mid: cStart + perCat / 2,
         sweep: perCat,
+        rMin: innerEdge + 1, rMax: show3 ? midEdge : outerR,
         catId: cd.cat.id,
         groupId: g.id,
         label: cd.cat.label,
@@ -271,6 +273,7 @@ export function AromaDonutChart({
             color: ni % 2 === 0 ? lightenHex(g.color, 0.55) : lightenHex(g.color, 0.40),
             mid: nAngle + perNote / 2,
             sweep: perNote,
+            rMin: midEdge + 1, rMax: outerR,
             note,
             catId: cd.cat.id,
             groupId: g.id,
@@ -288,6 +291,52 @@ export function AromaDonutChart({
   const innerFontSize = Math.max(7, Math.min(11, size * 0.042));
   const midFontSize   = Math.max(6, Math.min(9,  size * 0.032));
   const centerLabel   = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
+
+  // ── Coordinate-based tap detection ────────────────────────────────────────
+  // Works on all platforms including mobile Safari (SVG onPress is unreliable
+  // on iOS browser). We put a single Pressable over the wheel and use
+  // angle + radius math to identify which segment was tapped.
+  const inSweep = (angle: number, mid: number, sweep: number) => {
+    const half  = sweep / 2;
+    const start = ((mid - half) % 360 + 360) % 360;
+    const end   = ((mid + half) % 360 + 360) % 360;
+    const a     = ((angle)      % 360 + 360) % 360;
+    return start <= end ? a >= start && a <= end : a >= start || a <= end;
+  };
+
+  const handleSvgTap = (lx: number, ly: number) => {
+    const dx = lx - cx;
+    const dy = ly - cy;
+    const r  = Math.sqrt(dx * dx + dy * dy);
+    if (r < holeR || r > outerR + 4) return; // inside hole or outside wheel
+    // Convert to 0=top, clockwise angle matching our polar() convention
+    const a = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
+
+    // Outer ring (most specific — check first)
+    if (show3) {
+      const hit = outerSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
+      if (hit) {
+        const g   = AROMA_GROUPS.find(x => x.id === hit.groupId);
+        const cat = AROMA_CATEGORIES.find(x => x.id === hit.catId);
+        setSelected({ color: g?.color ?? hit.color, title: `${cat?.emoji ?? ''} ${cat?.label ?? ''}`, subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`, items: [hit.note] });
+        return;
+      }
+    }
+    // Mid ring
+    const hitMid = midSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
+    if (hitMid) {
+      const g = AROMA_GROUPS.find(x => x.id === hitMid.groupId);
+      const defaults = AROMA_CATEGORIES.find(c => c.id === hitMid.catId)?.subcategories ?? [];
+      setSelected({ color: g?.color ?? hitMid.color, title: `${hitMid.emoji} ${hitMid.label}`, subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`, items: hitMid.notes.length > 0 ? hitMid.notes : defaults });
+      return;
+    }
+    // Inner ring
+    const hitIn = innerSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
+    if (hitIn) {
+      const gd = groupMap[hitIn.groupId];
+      setSelected({ color: hitIn.color, title: `${hitIn.emoji} ${hitIn.label}`, items: gd.cats.map(c => `${c.cat.emoji} ${c.cat.label}`) });
+    }
+  };
 
   // Pinch-to-zoom (native only)
   const panResponder = pinchable ? PanResponder.create({
@@ -316,23 +365,20 @@ export function AromaDonutChart({
         {...(pinchable ? panResponder.panHandlers : {})}
         style={{ transform: [{ scale }] }}
       >
-        <Svg width={size} height={size}>
+        {/* Single Pressable over the whole wheel — coordinate hit-testing handles
+            which segment was tapped. This is the only reliable approach on
+            mobile Safari where SVG path onPress events are not fired. */}
+        <Pressable
+          onPress={e => handleSvgTap(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+          style={{ width: size, height: size }}
+        >
+        <Svg width={size} height={size} pointerEvents="none">
           {/* Outer ring — specific notes (L2) */}
           {outerSegs.map((s, i) => (
             <Path
               key={`n${i}`}
               d={s.path}
               fill={s.color}
-              onPress={() => {
-                const g   = AROMA_GROUPS.find(x => x.id === s.groupId);
-                const cat = AROMA_CATEGORIES.find(x => x.id === s.catId);
-                setSelected({
-                  color: g?.color ?? s.color,
-                  title: `${cat?.emoji ?? ''} ${cat?.label ?? ''}`,
-                  subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`,
-                  items: [s.note],
-                });
-              }}
             />
           ))}
 
@@ -342,16 +388,6 @@ export function AromaDonutChart({
               key={`m${i}`}
               d={s.path}
               fill={s.color}
-              onPress={() => {
-                const g = AROMA_GROUPS.find(x => x.id === s.groupId);
-                const defaultItems = AROMA_CATEGORIES.find(c => c.id === s.catId)?.subcategories ?? [];
-                setSelected({
-                  color: g?.color ?? s.color,
-                  title: `${s.emoji} ${s.label}`,
-                  subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`,
-                  items: s.notes.length > 0 ? s.notes : defaultItems,
-                });
-              }}
             />
           ))}
 
@@ -361,14 +397,6 @@ export function AromaDonutChart({
               key={`g${i}`}
               d={s.path}
               fill={s.color}
-              onPress={() => {
-                const gd = groupMap[s.groupId];
-                setSelected({
-                  color: s.color,
-                  title: `${s.emoji} ${s.label}`,
-                  items: gd.cats.map(c => `${c.cat.emoji} ${c.cat.label}`),
-                });
-              }}
             />
           ))}
 
@@ -438,6 +466,7 @@ export function AromaDonutChart({
             );
           })}
         </Svg>
+        </Pressable>
       </View>
 
       {/* ── Segment Detail Popover ── */}
