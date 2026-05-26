@@ -111,7 +111,7 @@ const popoverStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.ink,
+    backgroundColor: '#3E2A32',
     borderRadius: Radius.md,
     padding: Spacing.lg,
   },
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.65)',
   },
   totalBadge: {
     flexDirection: 'row',
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   totalMax: {
     fontFamily: Fonts.dmSans,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.5)',
   },
   tier: {
     fontFamily: Fonts.playfairItalic,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   breakdown: {
     gap: 8,
     borderTopWidth: 0.5,
-    borderTopColor: 'rgba(201,168,76,0.15)',
+    borderTopColor: 'rgba(201,168,76,0.25)',
     paddingTop: Spacing.md,
   },
   row: {
@@ -166,26 +166,26 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderColor: 'rgba(255,255,255,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoBtnText: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.65)',
     lineHeight: 14,
   },
   catLabel: {
     fontFamily: Fonts.dmSans,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.75)',
     width: 90,
   },
   track: {
     flex: 1,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: Radius.full,
   },
   fill: {
