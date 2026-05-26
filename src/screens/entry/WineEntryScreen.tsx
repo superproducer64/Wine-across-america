@@ -87,8 +87,11 @@ export function WineEntryScreen(_props: Props) {
     } else {
       setConfirmBlend(false);
       const storeErr = useWineStore.getState().lastSaveError;
-      // Show the Supabase error code in dev to aid debugging, friendly message in all cases
-      const devHint = storeErr ? ` (${storeErr.split(' | ')[0]})` : '';
+      // Show code + message so we can identify the exact constraint name
+      const parts = storeErr ? storeErr.split(' | ') : [];
+      const devHint = parts.length > 1
+        ? ` (${parts[0]}: ${parts[1]})`
+        : parts[0] ? ` (${parts[0]})` : '';
       setError(`Failed to save wine entry. Please try again.${devHint}`);
     }
   };

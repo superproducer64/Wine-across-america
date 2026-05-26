@@ -108,10 +108,28 @@ export const useWineStore = create<WineStore>((set, get) => ({
       subregion,
       ...rest
     } = draft;
+    // Clamp every constrained field to its valid DB range so a stale draft or
+    // edge-case shortcut value never causes a 23514 check-constraint violation.
+    const clamp = (v: number, lo: number, hi: number) =>
+      Math.min(hi, Math.max(lo, Math.round(v)));
+
     const payload: Record<string, unknown> = {
       ...rest,
       user_id: userId,
-      technical_score,
+      technical_score: clamp(technical_score, 0, 100),
+      // Structure wheel — DB requires 1..10
+      acidity:       clamp(draft.acidity       ?? 5, 1, 10),
+      tannin:        clamp(draft.tannin        ?? 5, 1, 10),
+      body:          clamp(draft.body          ?? 5, 1, 10),
+      alcohol:       clamp(draft.alcohol       ?? 5, 1, 10),
+      intensity:     clamp(draft.intensity     ?? 5, 1, 10),
+      finish_length: clamp(draft.finish_length ?? 5, 1, 10),
+      // Technical score dimensions — DB requires 0..20
+      score_balance:    clamp(draft.score_balance    ?? 10, 0, 20),
+      score_intensity:  clamp(draft.score_intensity  ?? 10, 0, 20),
+      score_complexity: clamp(draft.score_complexity ?? 10, 0, 20),
+      score_finish:     clamp(draft.score_finish     ?? 10, 0, 20),
+      score_typicity:   clamp(draft.score_typicity   ?? 10, 0, 20),
       ...(label_photo_url        ? { label_photo_url }        : {}),
       ...(label_photo_blurhash   ? { label_photo_blurhash }   : {}),
       ...(back_label_photo_url   ? { back_label_photo_url }   : {}),
