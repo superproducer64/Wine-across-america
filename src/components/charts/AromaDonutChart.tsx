@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -345,37 +345,59 @@ export function AromaDonutChart({
         </Svg>
       </View>
 
-      {/* ── Segment Detail Card (tap result) ── */}
-      {selected && (
-        <View style={[styles.detailCard, { borderLeftColor: selected.color }]}>
-          <View style={styles.detailHeader}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.detailTitle}>{selected.title}</Text>
-              {selected.subtitle ? (
-                <Text style={styles.detailSub}>{selected.subtitle}</Text>
-              ) : null}
+      {/* ── Segment Detail Modal ── */}
+      <Modal
+        visible={selected !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelected(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setSelected(null)}>
+          <Pressable style={styles.popover} onPress={() => {}}>
+            {/* Colour accent bar */}
+            <View style={[styles.accentBar, { backgroundColor: selected?.color ?? Colors.gold }]} />
+
+            {/* Header */}
+            <View style={styles.popoverHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.popoverTitle}>{selected?.title}</Text>
+                {selected?.subtitle ? (
+                  <Text style={styles.popoverSub}>{selected.subtitle}</Text>
+                ) : null}
+              </View>
+              <TouchableOpacity onPress={() => setSelected(null)} style={styles.popoverClose} hitSlop={8}>
+                <Text style={styles.popoverCloseText}>✕</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => setSelected(null)} style={styles.detailClose}>
-              <Text style={styles.detailCloseText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          {selected.items.length > 0 && (
-            <View style={styles.detailPills}>
-              {selected.items.map((item, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.detailPill,
-                    { borderColor: selected.color + '60', backgroundColor: selected.color + '12' },
-                  ]}
-                >
-                  <Text style={[styles.detailPillText, { color: selected.color }]}>{item}</Text>
+
+            {/* Divider */}
+            <View style={[styles.popoverDivider, { backgroundColor: selected?.color ? selected.color + '30' : Colors.border }]} />
+
+            {/* Pills */}
+            {(selected?.items ?? []).length > 0 && (
+              <ScrollView
+                style={styles.popoverScroll}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                <View style={styles.popoverPills}>
+                  {(selected?.items ?? []).map((item, i) => (
+                    <View
+                      key={i}
+                      style={[styles.popoverPill, { backgroundColor: selected?.color ? selected.color + '18' : Colors.goldPale }]}
+                    >
+                      <Text style={styles.popoverPillText}>{item}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          )}
-        </View>
-      )}
+              </ScrollView>
+            )}
+
+            {/* Dismiss hint */}
+            <Text style={styles.popoverHint}>Tap outside to close</Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* ── Legend ── */}
       {showLegend && (
@@ -410,61 +432,97 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  // Tap detail card
-  detailCard: {
-    width: '100%',
-    backgroundColor: '#FDFAF7',
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderLeftWidth: 3,
-    padding: Spacing.md,
-    gap: Spacing.sm,
+  // Segment detail modal
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(31,21,24,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xxl,
   },
-  detailHeader: {
+  popover: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    overflow: 'hidden',
+    shadowColor: Colors.ink,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  accentBar: {
+    height: 5,
+    width: '100%',
+  },
+  popoverHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.md,
+    gap: 10,
   },
-  detailTitle: {
+  popoverTitle: {
     fontFamily: Fonts.playfairSemiBold,
-    fontSize: 15,
+    fontSize: 20,
     color: Colors.ink,
-    lineHeight: 20,
+    lineHeight: 26,
   },
-  detailSub: {
+  popoverSub: {
     fontFamily: Fonts.dmSansRegular,
-    fontSize: 11,
-    color: Colors.inkMid,
-    marginTop: 1,
+    fontSize: 13,
+    color: Colors.inkMuted,
+    marginTop: 2,
+    letterSpacing: 0.2,
   },
-  detailClose: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  popoverClose: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: Colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
-  detailCloseText: {
+  popoverCloseText: {
     fontFamily: Fonts.dmSansMedium,
-    fontSize: 10,
-    color: Colors.inkMid,
+    fontSize: 11,
+    color: Colors.inkMuted,
   },
-  detailPills: {
+  popoverDivider: {
+    height: 1,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  popoverScroll: {
+    maxHeight: 220,
+    paddingHorizontal: Spacing.lg,
+  },
+  popoverPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
+    paddingBottom: Spacing.md,
   },
-  detailPill: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+  popoverPill: {
+    borderRadius: Radius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
-  detailPillText: {
+  popoverPillText: {
     fontFamily: Fonts.dmSansMedium,
-    fontSize: 12,
+    fontSize: 14,
+    color: Colors.ink,
+    letterSpacing: 0.1,
+  },
+  popoverHint: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 11,
+    color: Colors.inkFaint,
+    textAlign: 'center',
+    paddingBottom: Spacing.md,
+    paddingTop: 2,
   },
 
   // Legend
