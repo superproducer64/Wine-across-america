@@ -10,7 +10,7 @@ export type TerriorSoil =
 export type TerriorClimate =
   | 'cool' | 'cool-continental' | 'temperate' | 'oceanic' | 'maritime'
   | 'moderate' | 'continental' | 'mediterranean' | 'warm' | 'hot'
-  | 'semi-arid' | 'alpine' | 'tropical' | 'desert';
+  | 'semi-arid' | 'alpine-mountain' | 'tropical' | 'desert';
 
 export const TERROIR_SOIL_LABELS: Record<TerriorSoil, string> = {
   // Sedimentary / carbonate
@@ -56,7 +56,7 @@ export const TERROIR_CLIMATE_LABELS: Record<TerriorClimate, string> = {
   warm:               'Warm',
   hot:                'Hot',
   'semi-arid':        'Semi-arid',
-  alpine:             'Alpine / Mountain',
+  'alpine-mountain':  'Alpine / Mountain',
   tropical:           'Tropical',
   desert:             'Desert',
 };
