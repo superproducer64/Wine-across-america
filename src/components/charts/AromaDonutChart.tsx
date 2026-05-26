@@ -1,8 +1,99 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+
+// ── Web-only portal overlay ──────────────────────────────────────────────────
+// Renders directly into document.body so no RN stacking-context can trap it.
+function WebAromaPopover({
+  selected,
+  onClose,
+}: {
+  selected: { color: string; title: string; subtitle?: string; items: string[] } | null;
+  onClose: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted || !selected || Platform.OS !== 'web') return null;
+
+  let createPortal: (node: React.ReactNode, container: Element) => React.ReactPortal;
+  try { createPortal = require('react-dom').createPortal; }
+  catch { return null; }
+
+  const accentRgb = selected.color;
+
+  const overlay: React.CSSProperties = {
+    position: 'fixed', inset: 0,
+    backgroundColor: 'rgba(31,21,24,0.58)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: 32, zIndex: 99999, boxSizing: 'border-box',
+  };
+  const card: React.CSSProperties = {
+    backgroundColor: '#FDFAF7', borderRadius: 20, overflow: 'hidden',
+    maxWidth: 380, width: '100%',
+    boxShadow: '0 12px 48px rgba(31,21,24,0.22)',
+  };
+  const header: React.CSSProperties = {
+    display: 'flex', alignItems: 'flex-start', gap: 10,
+    padding: '20px 20px 12px',
+  };
+  const pill: React.CSSProperties = {
+    backgroundColor: accentRgb + '1E', borderRadius: 20,
+    padding: '7px 14px', fontSize: 14, color: '#1F1518',
+    fontFamily: 'system-ui, sans-serif',
+  };
+  const pillsWrap: React.CSSProperties = {
+    display: 'flex', flexWrap: 'wrap', gap: 8,
+    padding: '0 20px 16px', maxHeight: 240, overflowY: 'auto',
+  };
+
+  return createPortal(
+    <div style={overlay} onClick={onClose}>
+      <div style={card} onClick={e => e.stopPropagation()}>
+        {/* accent bar */}
+        <div style={{ height: 5, backgroundColor: accentRgb }} />
+        {/* header */}
+        <div style={header}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Georgia,"Playfair Display",serif', fontSize: 20, color: '#1F1518', lineHeight: 1.35 }}>
+              {selected.title}
+            </div>
+            {selected.subtitle ? (
+              <div style={{ fontFamily: 'system-ui,sans-serif', fontSize: 13, color: '#9A8590', marginTop: 4 }}>
+                {selected.subtitle}
+              </div>
+            ) : null}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 28, height: 28, borderRadius: 14, border: 'none',
+              backgroundColor: '#F5EDE8', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, color: '#9A8590', flexShrink: 0,
+            }}
+          >✕</button>
+        </div>
+        {/* divider */}
+        <div style={{ height: 1, backgroundColor: accentRgb + '33', margin: '0 20px 12px' }} />
+        {/* pills */}
+        {selected.items.length > 0 && (
+          <div style={pillsWrap}>
+            {selected.items.map((item, i) => (
+              <span key={i} style={pill}>{item}</span>
+            ))}
+          </div>
+        )}
+        {/* hint */}
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#C4B0B8', fontFamily: 'system-ui,sans-serif', paddingBottom: 14 }}>
+          Click outside to close
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
 
 export interface AromaDonutChartProps {
   aromasL1: string[];
@@ -350,38 +441,12 @@ export function AromaDonutChart({
       </View>
 
       {/* ── Segment Detail Popover ── */}
-      {selected && Platform.OS === 'web' ? (
-        /* Web: fixed-position overlay (Modal doesn't float on web) */
-        <View style={styles.webBackdrop} pointerEvents="box-none">
-          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setSelected(null)} />
-          <View style={styles.popover}>
-            <View style={[styles.accentBar, { backgroundColor: selected.color }]} />
-            <View style={styles.popoverHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.popoverTitle}>{selected.title}</Text>
-                {selected.subtitle ? <Text style={styles.popoverSub}>{selected.subtitle}</Text> : null}
-              </View>
-              <TouchableOpacity onPress={() => setSelected(null)} style={styles.popoverClose} hitSlop={8}>
-                <Text style={styles.popoverCloseText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.popoverDivider, { backgroundColor: selected.color + '30' }]} />
-            {selected.items.length > 0 && (
-              <ScrollView style={styles.popoverScroll} showsVerticalScrollIndicator={false} bounces={false}>
-                <View style={styles.popoverPills}>
-                  {selected.items.map((item, i) => (
-                    <View key={i} style={[styles.popoverPill, { backgroundColor: selected.color + '18' }]}>
-                      <Text style={styles.popoverPillText}>{item}</Text>
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-            )}
-            <Text style={styles.popoverHint}>Tap outside to close</Text>
-          </View>
-        </View>
-      ) : (
-        /* Native: true Modal overlay */
+      {/* Web: portal renders at document.body — escapes all RN stacking contexts */}
+      {Platform.OS === 'web' && (
+        <WebAromaPopover selected={selected} onClose={() => setSelected(null)} />
+      )}
+      {/* Native: true Modal overlay */}
+      {Platform.OS !== 'web' && (
         <Modal
           visible={selected !== null}
           transparent
