@@ -57,7 +57,11 @@ function arcPath(
 }
 
 function labelRotation(midAngle: number) {
-  return midAngle <= 180 ? midAngle : midAngle - 180;
+  // Flip text in the bottom half (90°–270°) so it never renders upside-down
+  if (midAngle > 90 && midAngle <= 270) {
+    return midAngle - 180;
+  }
+  return midAngle;
 }
 
 type SelectedInfo = {
