@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  FlatList,
   StyleSheet,
   SafeAreaView,
   Pressable,
@@ -234,25 +233,8 @@ export function HomeScreen() {
             ))}
           </>
         ) : (
-          <FlatList
-            key={isWide ? 'grid' : 'list'}
-            data={recentEntries}
-            keyExtractor={(item) => item.id}
-            numColumns={isWide ? 2 : 1}
-            columnWrapperStyle={isWide ? { gap: Spacing.md } : undefined}
-            renderItem={({ item }) =>
-              isWide ? (
-                <WineGridItem entry={item} onPress={handleWinePress} />
-              ) : (
-                <WineListItem entry={item} onPress={handleWinePress} />
-              )
-            }
-            scrollEnabled={false}
-            removeClippedSubviews
-            initialNumToRender={8}
-            maxToRenderPerBatch={5}
-            windowSize={5}
-            ListEmptyComponent={
+          <>
+            {recentEntries.length === 0 ? (
               loadError ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyEmoji}>⚠️</Text>
@@ -274,23 +256,33 @@ export function HomeScreen() {
                   </Text>
                 </View>
               )
-            }
-            ListFooterComponent={
-              hasMore ? (
-                <Pressable
-                  style={styles.loadMoreBtn}
-                  onPress={() => user && loadMore(user.id, isSubscribed)}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <ActivityIndicator size="small" color={Colors.gold} />
+            ) : (
+              <View style={isWide ? styles.gridWrap : undefined}>
+                {recentEntries.map(item =>
+                  isWide ? (
+                    <View key={item.id} style={styles.gridCell}>
+                      <WineGridItem entry={item} onPress={handleWinePress} />
+                    </View>
                   ) : (
-                    <Text style={styles.loadMoreText}>Load more</Text>
-                  )}
-                </Pressable>
-              ) : null
-            }
-          />
+                    <WineListItem key={item.id} entry={item} onPress={handleWinePress} />
+                  )
+                )}
+              </View>
+            )}
+            {hasMore && (
+              <Pressable
+                style={styles.loadMoreBtn}
+                onPress={() => user && loadMore(user.id, isSubscribed)}
+                disabled={loadingMore}
+              >
+                {loadingMore ? (
+                  <ActivityIndicator size="small" color={Colors.gold} />
+                ) : (
+                  <Text style={styles.loadMoreText}>Load more</Text>
+                )}
+              </Pressable>
+            )}
+          </>
         )}
       </View>
       </ScrollView>
@@ -510,6 +502,16 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansMedium,
     fontSize: 13,
     color: Colors.gold,
+  },
+
+  gridWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: 240,
   },
 
   // Shared with Me
