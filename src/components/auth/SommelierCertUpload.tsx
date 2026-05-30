@@ -30,18 +30,19 @@ export function SommelierCertUpload({ onCertSelected, certDataUrl, certMime, upl
     setPicking(true);
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') return;
+      if (status !== 'granted') {
+        alert('Please allow photo access in your device settings to upload a certificate.');
+        return;
+      }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.85,
-        base64: true,
         allowsEditing: false,
       });
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         const mime = asset.mimeType ?? 'image/jpeg';
-        const dataUrl = `data:${mime};base64,${asset.base64}`;
-        onCertSelected(dataUrl, mime);
+        onCertSelected(asset.uri, mime);
       }
     } finally {
       setPicking(false);

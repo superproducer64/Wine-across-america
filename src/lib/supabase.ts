@@ -268,7 +268,10 @@ export async function uploadSommelierCert(
   try {
     const response = await fetch(fileUri);
     const blob = await response.blob();
-    const resolvedMime = mimeType ?? blob.type;
+    const resolvedMime =
+      mimeType ??
+      blob.type ??
+      (fileUri.endsWith('.png') ? 'image/png' : fileUri.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
     const ext =
       resolvedMime === 'image/png' ? 'png'
       : resolvedMime === 'application/pdf' ? 'pdf'
