@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
+  Alert,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -51,21 +52,24 @@ export function SettingsScreen() {
 
   const handleSommelierApply = async () => {
     if (!certDataUrl || !user) {
-      setCertError('Please upload your certification before submitting.');
+      Alert.alert('Certificate Required', 'Please upload your Level 3 certification before submitting.');
       return;
     }
     setCertUploading(true);
     setCertError('');
     const { url, error: uploadError } = await uploadSommelierCert(user.id, certDataUrl, certMime ?? undefined);
     if (uploadError || !url) {
-      setCertError(uploadError ?? 'Upload failed. Please try again.');
+      const msg = uploadError ?? 'Upload failed. Please try again.';
+      setCertError(msg);
       setCertUploading(false);
+      Alert.alert('Upload Failed', msg);
       return;
     }
     const { error: applyError } = await submitSommelierApplication(user.id, url, profile?.display_name);
     if (applyError) {
       setCertError(applyError);
       setCertUploading(false);
+      Alert.alert('Submission Failed', applyError);
       return;
     }
     await loadProfile(user.id);

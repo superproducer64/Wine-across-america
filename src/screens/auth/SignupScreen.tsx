@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -57,9 +58,18 @@ export function SignupScreen({ navigation }: Props) {
       const data = await signUpWithEmail(email.trim(), password, name.trim(), role);
 
       if (role === 'sommelier' && certDataUrl && data.user) {
-        const { url } = await uploadSommelierCert(data.user.id, certDataUrl, certMime ?? undefined);
-        if (url) {
-          await submitSommelierApplication(data.user.id, url, name.trim());
+        const { url, error: uploadError } = await uploadSommelierCert(data.user.id, certDataUrl, certMime ?? undefined);
+        if (uploadError || !url) {
+          const msg = uploadError ?? 'Certificate upload failed. Please try again from Settings.';
+          setError(msg);
+          Alert.alert('Upload Failed', msg);
+          return;
+        }
+        const { error: applyError } = await submitSommelierApplication(data.user.id, url, name.trim());
+        if (applyError) {
+          setError(applyError);
+          Alert.alert('Submission Failed', applyError);
+          return;
         }
       }
 
