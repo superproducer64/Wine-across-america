@@ -66,25 +66,42 @@ function findMatches(entries: WineEntry[], producer: string, vintageStr: string)
   return matches.slice(0, 3);
 }
 
-async function pickImage(source: 'camera' | 'gallery'): Promise<string | null> {
+interface PickedImage {
+  uri: string;       // file:// URI — used for preview display
+  dataUri: string;   // data: URI  — used for AI analysis (works on native + web)
+}
+
+async function pickImage(source: 'camera' | 'gallery'): Promise<PickedImage | null> {
   if (source === 'camera') {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') return null;
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
+      base64: true,
     });
     if (result.canceled || !result.assets?.[0]) return null;
-    return result.assets[0].uri;
+    const asset = result.assets[0];
+    const mime = asset.mimeType ?? 'image/jpeg';
+    const dataUri = asset.base64
+      ? `data:${mime};base64,${asset.base64}`
+      : asset.uri;
+    return { uri: asset.uri, dataUri };
   } else {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return null;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
+      base64: true,
     });
     if (result.canceled || !result.assets?.[0]) return null;
-    return result.assets[0].uri;
+    const asset = result.assets[0];
+    const mime = asset.mimeType ?? 'image/jpeg';
+    const dataUri = asset.base64
+      ? `data:${mime};base64,${asset.base64}`
+      : asset.uri;
+    return { uri: asset.uri, dataUri };
   }
 }
 
@@ -93,8 +110,10 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   const { entries } = useWineStore();
 
   const [phase, setPhase] = useState<Phase>('pick_front');
-  const [frontUri, setFrontUri] = useState<string | null>(null);
+  const [frontUri, setFrontUri] = useState<string | null>(null);       // file URI — display only
+  const [frontDataUri, setFrontDataUri] = useState<string | null>(null); // data URI — AI input
   const [backUri, setBackUri] = useState<string | null>(null);
+  const [backDataUri, setBackDataUri] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [matches, setMatches] = useState<WineMatch[]>([]);
 
@@ -113,7 +132,9 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   const reset = () => {
     setPhase('pick_front');
     setFrontUri(null);
+    setFrontDataUri(null);
     setBackUri(null);
+    setBackDataUri(null);
     setErrorMsg('');
     setName('');
     setProducer('');
@@ -134,13 +155,16 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
     onClose();
   };
 
-  const processImages = async (front: string, back: string | null) => {
+  const processImages = async (
+    front: string, back: string | null,
+    frontData: string, backData: string | null
+  ) => {
     setPhase('uploading');
 
     try {
       const tasks: Promise<unknown>[] = [
         uploadLabelPhoto(userId, front),
-        analyzeWineLabelWithAI(front, back),
+        analyzeWineLabelWithAI(frontData, backData),
         computeLabelPhotoPlaceholder(front),
       ];
       if (back) tasks.push(uploadLabelPhoto(userId, back));
@@ -177,24 +201,26 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
   };
 
   const handlePickFront = async (source: 'camera' | 'gallery') => {
-    const uri = await pickImage(source);
-    if (!uri) {
+    const picked = await pickImage(source);
+    if (!picked) {
       if (source === 'camera') { setErrorMsg('Camera permission denied.'); setPhase('error'); }
       return;
     }
-    setFrontUri(uri);
+    setFrontUri(picked.uri);
+    setFrontDataUri(picked.dataUri);
     setPhase('pick_back');
   };
 
   const handlePickBack = async (source: 'camera' | 'gallery') => {
-    const uri = await pickImage(source);
-    if (!uri) return;
-    setBackUri(uri);
-    await processImages(frontUri!, uri);
+    const picked = await pickImage(source);
+    if (!picked) return;
+    setBackUri(picked.uri);
+    setBackDataUri(picked.dataUri);
+    await processImages(frontUri!, picked.uri, frontDataUri!, picked.dataUri);
   };
 
   const handleSkipBack = async () => {
-    await processImages(frontUri!, null);
+    await processImages(frontUri!, null, frontDataUri!, null);
   };
 
   const handleApply = () => {
