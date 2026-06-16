@@ -72,37 +72,24 @@ interface PickedImage {
 }
 
 async function pickImage(source: 'camera' | 'gallery'): Promise<PickedImage | null> {
+  const opts = { mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85, base64: true } as const;
+
+  let result: ImagePicker.ImagePickerResult;
   if (source === 'camera') {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') return null;
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-      base64: true,
-    });
-    if (result.canceled || !result.assets?.[0]) return null;
-    const asset = result.assets[0];
-    const mime = asset.mimeType ?? 'image/jpeg';
-    const dataUri = asset.base64
-      ? `data:${mime};base64,${asset.base64}`
-      : asset.uri;
-    return { uri: asset.uri, dataUri };
+    result = await ImagePicker.launchCameraAsync(opts);
   } else {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return null;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-      base64: true,
-    });
-    if (result.canceled || !result.assets?.[0]) return null;
-    const asset = result.assets[0];
-    const mime = asset.mimeType ?? 'image/jpeg';
-    const dataUri = asset.base64
-      ? `data:${mime};base64,${asset.base64}`
-      : asset.uri;
-    return { uri: asset.uri, dataUri };
+    result = await ImagePicker.launchImageLibraryAsync(opts);
   }
+
+  if (result.canceled || !result.assets?.[0]) return null;
+  const asset = result.assets[0];
+  const mime = asset.mimeType ?? 'image/jpeg';
+  const dataUri = asset.base64 ? `data:${mime};base64,${asset.base64}` : asset.uri;
+  return { uri: asset.uri, dataUri };
 }
 
 export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) {
