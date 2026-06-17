@@ -6,18 +6,13 @@ import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
 import { SPEC_CAROUSEL_PAGES, PARAMETER_CAROUSEL_INDEX } from '@/data/parameterImages';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
-import { useAuthStore } from '@/stores/authStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
 
 export function Step4TechnicalScore() {
   const { draft, setTechnicalScore } = useEntryDraftStore();
-  const { profile } = useAuthStore();
   const { isWide } = useResponsive();
   const [openInfo, setOpenInfo] = useState<string | null>(null);
-
-  const isSommelier =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
 
   // Zone definitions for score sliders (0–20 scale)
   const SCORE_ZONES: Record<string, SliderZone[]> = {
@@ -106,16 +101,13 @@ export function Step4TechnicalScore() {
     <View style={isWide ? styles.slidersCol : undefined}>
       {TECHNICAL_CATEGORIES.map((cat) => {
         const isIntensity = cat.key === 'score_intensity';
-        const intensityLocked = isIntensity && !isSommelier;
         return (
           <View key={cat.key} style={styles.catBlock}>
             <View style={styles.catHeader}>
               <Text style={styles.catDesc}>{cat.description}</Text>
               {isIntensity && isAutoFilled && (
                 <View style={styles.autoBadge}>
-                  <Text style={styles.autoBadgeText}>
-                    {intensityLocked ? 'Auto · locked' : 'Auto · Structure ×2'}
-                  </Text>
+                  <Text style={styles.autoBadgeText}>Auto · Structure ×2</Text>
                 </View>
               )}
             </View>
@@ -125,16 +117,10 @@ export function Step4TechnicalScore() {
               min={0}
               max={20}
               step={1}
-              disabled={intensityLocked}
               zones={SCORE_ZONES[cat.key]}
               onChange={(v) => setTechnicalScore({ [cat.key]: v })}
               onInfo={PARAMETER_INFO[cat.key] ? () => setOpenInfo(cat.key) : undefined}
             />
-            {intensityLocked && (
-              <Text style={styles.lockedHint}>
-                Auto-filled from Structure × 2. Sommelier profile unlocks manual adjustment.
-              </Text>
-            )}
           </View>
         );
       })}
