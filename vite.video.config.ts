@@ -15,7 +15,7 @@ export default defineConfig({
   publicDir: 'public',
   build: {
     rollupOptions: {
-      input: 'video.html',
+      input: 'index.html',
     },
   },
   server: {
