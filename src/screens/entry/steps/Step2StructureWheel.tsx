@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from 'react-native';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { Colors, Fonts, Spacing } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { SegmentedPicker, PickerOption } from '@/components/ui/SegmentedPicker';
@@ -11,6 +26,10 @@ import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { STRUCTURE_DIMENSIONS } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // ─── Enthusiast pickers (3 options) ────────────────────────────────────────
 const BODY_ENTHUSIAST: PickerOption[] = [
@@ -84,18 +103,47 @@ const getStructureZones = (key: string): SliderZone[] | undefined => {
   return undefined;
 };
 
-// Axes that use categorical pickers for both profiles
 const PICKER_KEYS = new Set(['body', 'alcohol', 'intensity']);
+
+function getZoneLabel(value: number, zones?: SliderZone[]): string {
+  if (!zones) return String(value);
+  const zone = zones.find((z) => value >= z.min && value <= z.max);
+  return zone ? zone.label : String(value);
+}
 
 export function Step2StructureWheel() {
   const { draft, setStructureWheel } = useEntryDraftStore();
   const { profile } = useAuthStore();
   const [openInfo, setOpenInfo] = useState<string | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
   const { isWide } = useResponsive();
 
+  // ─── Pinch-to-zoom ─────────────────────────────────────────────────────────
+  const baseScale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      const next = savedScale.value * e.scale;
+      baseScale.value = Math.min(Math.max(next, 0.85), 2.0);
+    })
+    .onEnd(() => {
+      savedScale.value = baseScale.value;
+      if (baseScale.value < 1) {
+        baseScale.value = withSpring(1);
+        savedScale.value = 1;
+      }
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: baseScale.value }],
+    transformOrigin: 'top center',
+  }));
+
+  // ─── Scores ────────────────────────────────────────────────────────────────
   const scores = {
     sweetness:     draft.sweetness,
     acidity:       draft.acidity,
@@ -118,6 +166,21 @@ export function Step2StructureWheel() {
     return [];
   };
 
+  const getValueLabel = (key: string, value: number): string => {
+    if (PICKER_KEYS.has(key)) {
+      const opts = getPickerOptions(key);
+      const match = opts.find((o) => o.value === value);
+      return match ? match.label : String(value);
+    }
+    return getZoneLabel(value, getStructureZones(key));
+  };
+
+  const toggleSection = (key: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedKey((prev) => (prev === key ? null : key));
+  };
+
+  // ─── Radar chart ───────────────────────────────────────────────────────────
   const radarSize = isWide ? 260 : 200;
 
   const radarPanel = (
@@ -131,9 +194,9 @@ export function Step2StructureWheel() {
     </View>
   );
 
+  // ─── Accordion sliders/pickers ─────────────────────────────────────────────
   const slidersPanel = (
     <View style={isWide && styles.slidersCol}>
-      {/* Profile badge */}
       <View style={styles.modeBadge}>
         <Text style={styles.modeBadgeText}>
           {isSommelier ? '🎓 Sommelier profile' : 'Wine Explorer profile — tap to select'}
@@ -141,34 +204,54 @@ export function Step2StructureWheel() {
       </View>
 
       {STRUCTURE_DIMENSIONS.map((dim) => {
-        if (PICKER_KEYS.has(dim.key)) {
-          return (
-            <SegmentedPicker
-              key={dim.key}
-              label={dim.displayLabel}
-              tip={dim.tip}
-              options={getPickerOptions(dim.key)}
-              value={scores[dim.key as keyof typeof scores]}
-              onChange={(v) => setStructureWheel({ [dim.key]: v })}
-              onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
-            />
-          );
-        }
+        const isOpen = expandedKey === dim.key;
+        const currentValue = scores[dim.key as keyof typeof scores];
+        const valueLabel = getValueLabel(dim.key, currentValue);
 
         return (
-          <ScoreSlider
-            key={dim.key}
-            label={dim.displayLabel}
-            value={scores[dim.key as keyof typeof scores]}
-            min={1}
-            max={10}
-            tip={dim.tip}
-            lowLabel={dim.lowAnchor}
-            highLabel={dim.highAnchor}
-            zones={getStructureZones(dim.key)}
-            onChange={(v) => setStructureWheel({ [dim.key]: v })}
-            onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
-          />
+          <View key={dim.key} style={styles.accordionCard}>
+            <Pressable
+              style={styles.accordionHeader}
+              onPress={() => toggleSection(dim.key)}
+              hitSlop={4}
+            >
+              <Text style={styles.accordionLabel}>{dim.displayLabel}</Text>
+              <View style={styles.accordionRight}>
+                <View style={styles.valueBadge}>
+                  <Text style={styles.valueBadgeText}>{valueLabel}</Text>
+                </View>
+                <Text style={styles.chevron}>{isOpen ? '▲' : '▼'}</Text>
+              </View>
+            </Pressable>
+
+            {isOpen && (
+              <View style={styles.accordionBody}>
+                {PICKER_KEYS.has(dim.key) ? (
+                  <SegmentedPicker
+                    label=""
+                    tip={dim.tip}
+                    options={getPickerOptions(dim.key)}
+                    value={currentValue}
+                    onChange={(v) => setStructureWheel({ [dim.key]: v })}
+                    onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
+                  />
+                ) : (
+                  <ScoreSlider
+                    label=""
+                    value={currentValue}
+                    min={1}
+                    max={10}
+                    tip={dim.tip}
+                    lowLabel={dim.lowAnchor}
+                    highLabel={dim.highAnchor}
+                    zones={getStructureZones(dim.key)}
+                    onChange={(v) => setStructureWheel({ [dim.key]: v })}
+                    onInfo={PARAMETER_INFO[dim.key] ? () => setOpenInfo(dim.key) : undefined}
+                  />
+                )}
+              </View>
+            )}
+          </View>
         );
       })}
     </View>
@@ -176,28 +259,31 @@ export function Step2StructureWheel() {
 
   return (
     <>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
-    >
-      <Text style={styles.stepTitle}>Structure</Text>
-      <Text style={styles.intro}>
-        Rate Sweetness, Acidity, Tannin and Finish on a 1–10 scale.
-        Select a level for Body, Alcohol and Intensity.
-      </Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+      >
+        <Text style={styles.stepTitle}>Structure</Text>
+        <Text style={styles.intro}>
+          Tap any dimension to expand and rate it. Pinch the screen to zoom in or out.
+        </Text>
 
-      {isWide ? (
-        <View style={styles.twoColRow}>
-          <View style={styles.leftCol}>{radarPanel}</View>
-          <View style={styles.rightCol}>{slidersPanel}</View>
-        </View>
-      ) : (
-        <>
-          {radarPanel}
-          {slidersPanel}
-        </>
-      )}
-    </ScrollView>
+        <GestureDetector gesture={pinchGesture}>
+          <Animated.View style={animatedStyle}>
+            {isWide ? (
+              <View style={styles.twoColRow}>
+                <View style={styles.leftCol}>{radarPanel}</View>
+                <View style={styles.rightCol}>{slidersPanel}</View>
+              </View>
+            ) : (
+              <>
+                {radarPanel}
+                {slidersPanel}
+              </>
+            )}
+          </Animated.View>
+        </GestureDetector>
+      </ScrollView>
 
       {openInfo && PARAMETER_CAROUSEL_INDEX[openInfo] !== undefined && (
         <ImageInfoSheet
@@ -268,7 +354,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.gold,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   modeBadgeText: {
     fontFamily: Fonts.dmSansMedium,
@@ -277,4 +363,56 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   slidersCol: { gap: 4 },
+  // ─── Accordion ─────────────────────────────────────────────────────────────
+  accordionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 14,
+  },
+  accordionLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 15,
+    color: Colors.ink,
+    flex: 1,
+  },
+  accordionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  valueBadge: {
+    backgroundColor: Colors.goldPale,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: Colors.gold,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  valueBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.inkMid,
+  },
+  chevron: {
+    fontSize: 10,
+    color: Colors.inkMuted,
+    width: 12,
+    textAlign: 'center',
+  },
+  accordionBody: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
 });
