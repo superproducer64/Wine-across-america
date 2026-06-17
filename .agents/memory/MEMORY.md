@@ -1,0 +1,2 @@
+- [Tailwind v4 Vite setup](tailwind-v4-vite.md) — Tailwind v4 breaks standard postcss.config.js; use @tailwindcss/vite plugin instead, CSS must use `@import "tailwindcss"`.
+- [Video marketing app](video-app.md) — standalone Vite app at video.html on port 5000; AnimatePresence must use mode="wait" (not "popLayout") since scene components lack forwardRef.

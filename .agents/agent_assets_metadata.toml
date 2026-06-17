@@ -30,6 +30,12 @@ uri = "file://assets/notification-icon.png"
 type = "image"
 title = "android notification icon white"
 
+[[generated]]
+id = "wXUlSQI5oGwbv1iKf2z0-"
+uri = "file://public/images/burgundy-bg.png"
+type = "image"
+title = "burgundy background"
+
 [[outputs]]
 id = "I9PpjAcqP3PVFq4ObRXs6"
 uri = "file://Pour_Across_America_Dev_Report.md"
@@ -311,3 +317,21 @@ id = "3J5Dz1nCY54h5sH8I_QvY"
 uri = "file://PAA_Master_Build_Report.md"
 type = "text"
 title = "PAA Master Build Report"
+
+[[outputs]]
+id = "vTiuIlD4wPLs0bowrqzGZ"
+uri = "file://public/images/wine-bottle.jpg"
+type = "image"
+title = "close up of a luxury red wine bottle label in dark moody lighting"
+
+[[outputs]]
+id = "nQDNt_bO1s9cS97FeW_hs"
+uri = "file://public/images/wine-splash.jpg"
+type = "image"
+title = "elegant red wine splashing in a crystal glass on dark background"
+
+[[outputs]]
+id = "ZefnJBqVCuJmAzOrUsJOI"
+uri = "file://public/images/vineyard.jpg"
+type = "image"
+title = "beautiful vineyard at golden hour"
