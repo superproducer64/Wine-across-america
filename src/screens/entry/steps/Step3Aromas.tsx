@@ -7,7 +7,6 @@ import {
   Pressable,
   TextInput as RNTextInput,
 } from 'react-native';
-import { FlavorWheelSheet } from '@/components/ui/FlavorWheelSheet';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -36,7 +35,6 @@ export function Step3Aromas() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState('');
-  const [showWheel, setShowWheel] = useState(false);
 
   const isSommelier =
     profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
@@ -337,9 +335,6 @@ export function Step3Aromas() {
       >
         <View style={styles.titleRow}>
           <Text style={styles.stepTitle}>Aroma Profile</Text>
-          <Pressable style={styles.wheelBtn} onPress={() => setShowWheel(true)} hitSlop={8}>
-            <Text style={styles.wheelBtnText}>🍷 Flavor Wheel</Text>
-          </Pressable>
         </View>
         <Text style={styles.intro}>
           Select the aromas you detect. Tap a category then pick specific notes.
@@ -364,10 +359,6 @@ export function Step3Aromas() {
         )}
       </ScrollView>
 
-      <FlavorWheelSheet
-        visible={showWheel}
-        onClose={() => setShowWheel(false)}
-      />
     </>
   );
 }
@@ -391,20 +382,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.playfair,
     fontSize: 22,
     color: Colors.ink,
-  },
-  wheelBtn: {
-    backgroundColor: Colors.goldPale,
-    borderRadius: Radius.full,
-    borderWidth: 0.5,
-    borderColor: Colors.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  wheelBtnText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-    color: Colors.inkMid,
-    letterSpacing: 0.2,
   },
   intro: {
     fontFamily: Fonts.dmSans,
