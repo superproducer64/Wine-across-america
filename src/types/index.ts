@@ -99,7 +99,7 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     label: 'Green / Herbal',
     emoji: '🌿',
     subcategories: ['Grass', 'Bell pepper', 'Jalapeño', 'Fresh herbs'],
-    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Green pepper', 'Thyme', 'Tomato leaf'],
+    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Thyme', 'Tomato leaf'],
   },
   // ── Fruit Core ──────────────────────────────────────────────────────────────
   {
@@ -121,7 +121,7 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     label: 'Tropical Fruit',
     emoji: '🍍',
     subcategories: ['Pineapple', 'Mango', 'Passion fruit'],
-    sommelierSubcategories: ['Papaya', 'Guava', 'Lychee', 'Banana', 'Melon', 'Dragon fruit'],
+    sommelierSubcategories: ['Papaya', 'Guava', 'Lychee', 'Melon', 'Dragon fruit'],
   },
   {
     id: 'red-fruit',
