@@ -51,7 +51,7 @@ externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "npx serve dist -l 5000 --single"]
+run = ["bash", "-c", "node_modules/.bin/serve dist -l 5000 --single"]
 build = ["bash", "-c", "echo EXPO_PUBLIC_SUPABASE_URL=$EXPO_PUBLIC_SUPABASE_URL > .env.local && echo EXPO_PUBLIC_SUPABASE_ANON_KEY=$EXPO_PUBLIC_SUPABASE_ANON_KEY >> .env.local && npx expo export --platform web"]
 publicDir = "dist"
 

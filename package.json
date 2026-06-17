@@ -54,6 +54,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-view-shot": "3.8.0",
     "react-native-web": "^0.19.13",
+    "serve": "^14.2.6",
     "tesseract.js": "^5.1.1",
     "zustand": "^4.5.4"
   },
