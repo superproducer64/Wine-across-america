@@ -16,15 +16,18 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Video Preview"
+args = "Start application"
 
 [[workflows.workflow]]
-name = "Video Preview"
+name = "Start application"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev:client"
+args = """
+printf 'EXPO_PUBLIC_SUPABASE_URL=%s
+EXPO_PUBLIC_SUPABASE_ANON_KEY=%s
+' \"$EXPO_PUBLIC_SUPABASE_URL\" \"$EXPO_PUBLIC_SUPABASE_ANON_KEY\" > .env.local && npx expo start --web --port 5000 --clear"""
 waitForPort = 5000
 
 [workflows.workflow.metadata]
