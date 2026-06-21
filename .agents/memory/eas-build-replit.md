@@ -15,8 +15,11 @@ Use `GIT_INDEX_FILE=/tmp/eas-git-index` as an env prefix when running `eas build
 GIT_INDEX_FILE=/tmp/eas-git-index EAS_BUILD_NO_EXPO_GO_WARNING=1 npx eas-cli build --platform ios --profile production --non-interactive
 ```
 
-## iOS build image
-Use `macos-sonoma-14.5-xcode-15.4` (not `expo-51` which is Linux-only, not `latest` which may be incompatible).
+## iOS build image (as of June 2026)
+Use `macos-sequoia-15.6-xcode-26.2` — Apple requires Xcode 26+ for ALL App Store/TestFlight submissions since April 28, 2026. Xcode 15 builds are rejected.
+
+**Why:** Apple's requirement starting Apr 28, 2026: "apps submitted to the App Store [must] be built with Xcode 26 or newer."
+
 Set in `eas.json` under `build.production.ios.image`.
 
 ## npm install reliability
