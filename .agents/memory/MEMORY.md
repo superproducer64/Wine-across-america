@@ -1,2 +1,3 @@
+- [EAS iOS build from Replit](eas-build-replit.md) — GIT_INDEX_FILE=/tmp/eas-git-index bypasses Replit's git-lock restriction; use macos-sonoma-14.5-xcode-15.4 image; keep postinstall non-fatal.
 - [Tailwind v4 Vite setup](tailwind-v4-vite.md) — Tailwind v4 breaks standard postcss.config.js; use @tailwindcss/vite plugin instead, CSS must use `@import "tailwindcss"`.
 - [Video marketing app](video-app.md) — standalone Vite app at video.html on port 5000; AnimatePresence must use mode="wait" (not "popLayout") since scene components lack forwardRef.

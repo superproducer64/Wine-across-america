@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "postinstall": "npx patch-package",
+    "postinstall": "npx patch-package || true",
     "dev:client": "vite --config vite.video.config.ts"
   },
   "dependencies": {

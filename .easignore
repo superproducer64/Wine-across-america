@@ -1,0 +1,6 @@
+# Ignore web/video build artifacts and dev-only files
+dist/
+.expo/
+attached_assets/
+.local/
+*.log
