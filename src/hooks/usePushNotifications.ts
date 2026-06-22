@@ -44,9 +44,10 @@ export function usePushNotifications() {
       if (finalStatus !== 'granted') return;
 
       try {
+        const extra = Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined;
         const projectId =
-          Constants.expoConfig?.extra?.eas?.projectId ??
-          (Constants as Record<string, unknown>).easConfig?.projectId as string | undefined;
+          extra?.eas?.projectId ??
+          ((Constants as Record<string, unknown>).easConfig as { projectId?: string } | undefined)?.projectId;
 
         const tokenData = projectId
           ? await Notifications.getExpoPushTokenAsync({ projectId })

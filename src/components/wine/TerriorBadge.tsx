@@ -11,10 +11,29 @@ interface TerriorBadgeProps {
 
 const SOIL_ICON: Record<TerriorSoil, string> = {
   limestone: '🪨',
-  volcanic: '🌋',
-  granite: '⛰️',
+  chalk: '🪨',
+  marl: '🪨',
+  calcareous: '🪨',
+  dolomite: '🪨',
+  flint: '🪨',
   clay: '🌿',
+  'terra-rossa': '🌿',
+  'red-iron': '🌿',
   sand: '🏖️',
+  gravel: '🏖️',
+  galets: '🏖️',
+  loam: '🏖️',
+  silt: '🏖️',
+  alluvial: '🏖️',
+  volcanic: '🌋',
+  'volcanic-ash': '🌋',
+  tuff: '🌋',
+  basalt: '🌋',
+  granite: '⛰️',
+  'decomposed-granite': '⛰️',
+  slate: '⛰️',
+  schist: '⛰️',
+  shale: '⛰️',
 };
 
 export function TerriorBadge({ soil, climate, visible }: TerriorBadgeProps) {

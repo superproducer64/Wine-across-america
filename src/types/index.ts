@@ -780,7 +780,7 @@ export function computeSignatureScore(entry: Partial<WineEntry>): number | null 
     entry.sig_enjoyment,
   ];
   if (vals.some((v) => v == null)) return null;
-  return vals.reduce((sum, v) => sum + (v ?? 0), 0);
+  return vals.reduce<number>((sum, v) => sum + (v ?? 0), 0);
 }
 
 export function getStyleSummary(entry: Partial<WineEntry>) {

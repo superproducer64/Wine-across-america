@@ -8,7 +8,6 @@ import {
   PlayfairDisplay_600SemiBold,
 } from '@expo-google-fonts/playfair-display';
 import {
-  DMSans_300Light,
   DMSans_400Regular,
   DMSans_500Medium,
 } from '@expo-google-fonts/dm-sans';
@@ -71,7 +70,6 @@ export default function App() {
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,
     PlayfairDisplay_600SemiBold,
-    DMSans_300Light,
     DMSans_400Regular,
     DMSans_500Medium,
   });

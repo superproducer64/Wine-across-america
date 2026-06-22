@@ -417,7 +417,8 @@ export async function getSommelierCertSignedUrl(
       .createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) return null;
     return data.signedUrl;
-  } catch {
+  } catch (err) {
+    console.error('[supabase] getSignedCertUrl failed:', err);
     return null;
   }
 }

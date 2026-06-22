@@ -17,7 +17,7 @@ type Props = NativeStackScreenProps<MainStackParamList, 'SharedWineDetail'>;
 
 export function SharedWineDetailScreen({ route, navigation }: Props) {
   const { snapshot, senderName } = route.params;
-  const entry = snapshot as WineEntry;
+  const entry = snapshot as unknown as WineEntry;
 
   return (
     <SafeAreaView style={styles.safe}>

@@ -25,7 +25,8 @@ export function RootNavigator() {
       if (session?.user) {
         checkSubscription(session.user.id);
       }
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('[RootNavigator] getSession failed:', err);
       setSession(null);
     });
 

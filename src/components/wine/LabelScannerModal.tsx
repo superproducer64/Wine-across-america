@@ -341,7 +341,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
               <View style={styles.loadingPhase}>
                 <View style={styles.photoRow}>
                   {frontUri && (
-                    <Image source={{ uri: frontUri }} style={[styles.previewImage, backUri && styles.previewImageHalf]} />
+                    <Image source={{ uri: frontUri }} style={[styles.previewImage, backUri ? styles.previewImageHalf : undefined]} />
                   )}
                   {backUri && (
                     <Image source={{ uri: backUri }} style={[styles.previewImage, styles.previewImageHalf]} />
@@ -360,7 +360,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
               <View style={styles.recognitionPhase}>
                 <View style={styles.photoRow}>
                   {frontUri && (
-                    <Image source={{ uri: frontUri }} style={[styles.recognitionImage, backUri && styles.recognitionImageHalf]} />
+                    <Image source={{ uri: frontUri }} style={[styles.recognitionImage, backUri ? styles.recognitionImageHalf : undefined]} />
                   )}
                   {backUri && (
                     <Image source={{ uri: backUri }} style={[styles.recognitionImage, styles.recognitionImageHalf]} />
@@ -443,7 +443,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
                 {/* Photo previews */}
                 <View style={styles.photoRow}>
                   {frontUri && (
-                    <View style={[styles.photoPreviewWrap, backUri && styles.photoPreviewHalf]}>
+                    <View style={[styles.photoPreviewWrap, backUri ? styles.photoPreviewHalf : undefined]}>
                       <Image source={{ uri: frontUri }} style={styles.reviewImage} />
                       <Text style={styles.photoLabel}>Front</Text>
                       {photoUrl && !backUri && (

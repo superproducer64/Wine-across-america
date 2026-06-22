@@ -33,7 +33,7 @@ export function TextInput({ label, error, hint, containerStyle, style, ...props 
           style={[
             styles.input,
             focused && styles.inputFocused,
-            error && styles.inputError,
+            error ? styles.inputError : undefined,
             props.multiline && styles.multiline,
             isPassword && styles.inputWithToggle,
             style,

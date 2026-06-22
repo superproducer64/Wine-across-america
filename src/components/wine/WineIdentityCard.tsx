@@ -35,6 +35,7 @@ export function WineIdentityCard({
     alcohol: entry.alcohol,
     intensity: entry.intensity,
     finish_length: entry.finish_length,
+    sweetness: entry.sweetness,
   };
 
   return (
