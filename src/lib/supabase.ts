@@ -31,8 +31,10 @@ const ExpoSecureStoreAdapter = {
 
 // ─── Supabase Client ──────────────────────────────────────────────────────────
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://wldcernnxtzhkpqfjamk.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_corJZoELDMUijew3Tf4P4g_b-B5jLuA';
+// These are EXPO_PUBLIC_ values — already public by definition (baked into the JS bundle).
+// Hardcoded here to bypass EAS environment variable conflicts that cause "Network request failed".
+const supabaseUrl = 'https://wldcernnxtzhkpqfjamk.supabase.co';
+const supabaseAnonKey = 'sb_publishable_corJZoELDMUijew3Tf4P4g_b-B5jLuA';
 
 
 const createSupabaseClient = () => {
@@ -46,8 +48,8 @@ const createSupabaseClient = () => {
       },
     });
   } catch (e) {
-    console.warn('Supabase client could not be initialized. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.');
-    return createClient('https://wldcernnxtzhkpqfjamk.supabase.co', 'sb_publishable_corJZoELDMUijew3Tf4P4g_b-B5jLuA', {
+    console.warn('Supabase client could not be initialized.');
+    return createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         storage: ExpoSecureStoreAdapter,
         autoRefreshToken: true,
