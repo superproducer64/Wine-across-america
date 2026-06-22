@@ -31,8 +31,8 @@ const ExpoSecureStoreAdapter = {
 
 // ─── Supabase Client ──────────────────────────────────────────────────────────
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://wldcernnxtzhkpqfjamk.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_corJZoELDMUijew3Tf4P4g_b-B5jLuA';
 
 
 const createSupabaseClient = () => {
@@ -47,7 +47,7 @@ const createSupabaseClient = () => {
     });
   } catch (e) {
     console.warn('Supabase client could not be initialized. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.');
-    return createClient('https://placeholder.supabase.co', 'placeholder-anon-key', {
+    return createClient('https://wldcernnxtzhkpqfjamk.supabase.co', 'sb_publishable_corJZoELDMUijew3Tf4P4g_b-B5jLuA', {
       auth: {
         storage: ExpoSecureStoreAdapter,
         autoRefreshToken: true,
