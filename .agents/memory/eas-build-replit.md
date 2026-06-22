@@ -22,8 +22,30 @@ Use `macos-sequoia-15.6-xcode-26.2` — Apple requires Xcode 26+ for ALL App Sto
 
 Set in `eas.json` under `build.production.ios.image`.
 
+## npm "Exit handler never called" fix (critical)
+Builds on `macos-sequoia-15.6-xcode-26.2` consistently fail at "Install dependencies" with "Exit handler never called!" — a known npm 10.x CLI bug on that image's default npm version.
+
+**Fix (both parts required):**
+1. Regenerate a fresh `package-lock.json` locally: `npm install --legacy-peer-deps --package-lock-only`
+2. Add `eas-hooks/eas-build-pre-install.sh` to upgrade npm before EAS runs install:
+```bash
+#!/bin/bash
+set -eo pipefail
+npm install -g npm@10.8.1
+echo "npm version: $(npm --version)"
+```
+
+**Why:** The default npm version shipped with the xcode-26.2 image triggers the "Exit handler never called" bug mid-install. Upgrading to npm 10.8.1 (stable) in the pre-install hook fixes it. A fresh lockfile rules out lockfile corruption as a secondary cause.
+
+**What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images — none of these address the npm version bug.
+
+## Dependency hygiene — keep it React Native only
+Web-only devDependencies (vite, rollup, framer-motion, tailwindcss, lucide-react, tesseract.js) cause npm install failures on EAS macOS servers because their lockfile entries are Linux-platform-specific binaries.
+
+**Rule:** Never leave web-build toolchain packages in package.json for a React Native / Expo project. Remove them before submitting an EAS build.
+
 ## npm install reliability
-- Add `.npmrc` with `legacy-peer-deps=true` to handle peer dep conflicts from web-only devDeps (vite, tailwind, etc.)
+- Add `.npmrc` with `legacy-peer-deps=true` to handle peer dep conflicts
 - Set `postinstall` to `npx patch-package || true` so a patch version mismatch doesn't abort the build
 - Add `.easignore` to exclude `dist/`, `.expo/`, `.local/`, `attached_assets/` (reduces archive from ~250MB to ~140MB)
 
