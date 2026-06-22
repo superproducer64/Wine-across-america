@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -20,6 +20,7 @@ interface ImageInfoSheetProps {
   title: string;
   sources: ImageSourcePropType[];
   initialIndex?: number;
+  autoScrollFraction?: number;
 }
 
 const FALLBACK_H_W_RATIO = 2200 / 1700;
@@ -30,6 +31,7 @@ export function ImageInfoSheet({
   title,
   sources,
   initialIndex = 0,
+  autoScrollFraction = 0,
 }: ImageInfoSheetProps) {
   const { width: screenWidth } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -37,6 +39,7 @@ export function ImageInfoSheet({
     sources.map(() => FALLBACK_H_W_RATIO),
   );
   const scrollRef = useRef<ScrollView>(null);
+  const pageScrollRefs = useRef<(ScrollView | null)[]>([]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
@@ -56,6 +59,18 @@ export function ImageInfoSheet({
       return next;
     });
   };
+
+  useEffect(() => {
+    if (!visible || autoScrollFraction <= 0) return;
+
+    const timer = setTimeout(() => {
+      const ratio = ratios[initialIndex] ?? FALLBACK_H_W_RATIO;
+      const targetY = autoScrollFraction * screenWidth * ratio;
+      pageScrollRefs.current[initialIndex]?.scrollTo({ y: targetY, animated: true });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   return (
     <Modal
@@ -86,6 +101,7 @@ export function ImageInfoSheet({
           {sources.map((src, i) => (
             <ScrollView
               key={i}
+              ref={ref => { pageScrollRefs.current[i] = ref; }}
               style={{ width: screenWidth }}
               contentContainerStyle={styles.pageContent}
               showsVerticalScrollIndicator={false}

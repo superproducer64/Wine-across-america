@@ -44,3 +44,18 @@ export const PARAMETER_IMAGES: Record<string, ImageSourcePropType> = {
 };
 
 export const PARAMETER_SCROLL_HINTS: Record<string, string> = {};
+
+export const PARAMETER_AUTO_SCROLL: Record<string, number> = {
+  sweetness:        0,
+  acidity:          0.5,
+  tannin:           0,
+  body:             0.5,
+  alcohol:          0,
+  intensity:        0,
+  finish_length:    0.5,
+  score_balance:    0,
+  score_intensity:  0,
+  score_complexity: 0,
+  score_finish:     0.5,
+  score_typicity:   0,
+};

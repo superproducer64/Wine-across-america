@@ -4,7 +4,7 @@ import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
 import { PARAMETER_INFO } from '@/data/parameterInfo';
-import { SPEC_CAROUSEL_PAGES, PARAMETER_CAROUSEL_INDEX } from '@/data/parameterImages';
+import { SPEC_CAROUSEL_PAGES, PARAMETER_CAROUSEL_INDEX, PARAMETER_AUTO_SCROLL } from '@/data/parameterImages';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { TECHNICAL_CATEGORIES, computeTechnicalScore } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -162,6 +162,7 @@ export function Step4TechnicalScore() {
           title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
           sources={SPEC_CAROUSEL_PAGES}
           initialIndex={PARAMETER_CAROUSEL_INDEX[openInfo]}
+          autoScrollFraction={PARAMETER_AUTO_SCROLL[openInfo] ?? 0}
         />
       )}
     </>
