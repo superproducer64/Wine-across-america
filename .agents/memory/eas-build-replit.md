@@ -39,16 +39,20 @@ echo "npm version: $(npm --version)"
 
 **What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images, adding `hooks` key to `eas.json` (that key is not valid — EAS rejects it).
 
-## Preferred package manager: yarn (to bypass npm Exit Handler bug)
-Use `yarn.lock` so EAS runs `yarn install` instead of `npm install`. This completely bypasses the npm "Exit Handler never called" bug.
+## WORKING fix: yarn.lock with real npm registry URLs
 
-**How to generate:** `npx synp --source-file package-lock.json` converts package-lock.json → yarn.lock in ~5 seconds. Do NOT use `yarn install` — it times out in the Replit sandbox.
+**Full procedure (all steps required):**
 
-**Critical:** `yarn.lock` must be **committed to git** before triggering the EAS build. EAS uses `git archive` which only includes tracked (committed) files. Untracked files are never in the EAS archive even if they appear in the working directory. Generate yarn.lock, then `mark_task_complete` to commit it, then trigger the next build.
+1. `npx synp --source-file package-lock.json` — generates yarn.lock from package-lock.json (~5s). Do NOT use `yarn install` — it times out in Replit.
+2. `sed -i 's|http://package-firewall\.replit\.local/npm/|https://registry.npmjs.org/|g' yarn.lock` — CRITICAL: synp copies Replit's local proxy URLs into the resolved fields. EAS can't reach `package-firewall.replit.local` → yarn fails. Replace all with real registry.
+3. Ensure yarn.lock is committed to git (EAS uses `git archive` — untracked files are NOT included, but modifications to tracked files ARE included).
+4. Keep `package-lock.json` in the archive (EAS prefers yarn.lock when both exist).
 
-**pnpm does NOT work** — EAS Build only detects npm and yarn, not pnpm. pnpm-lock.yaml is ignored.
+**Why yarn, not npm:** npm 10.x on `macos-sequoia-15.6-xcode-26.2` crashes with "Exit handler never called!" during `npm install`. yarn doesn't have this bug.
 
-**Priority when both lockfiles present:** EAS prefers yarn.lock over package-lock.json when both are committed.
+**pnpm does NOT work** — EAS Build only detects npm and yarn, not pnpm.
+
+**EAS file inclusion rules:** committed files + working-tree modifications of tracked files are included. Untracked (`??`) files are NOT included regardless of .gitignore.
 
 ## Hook: curl-based npm upgrade (belt-and-suspenders)
 The hook at `eas-hooks/eas-build-pre-install.sh` now uses `curl` to download npm@10.9.2 directly rather than `npm install -g npm@10`. This avoids the chicken-and-egg problem.
