@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
@@ -68,7 +68,7 @@ export function ProWineCard({ entry, compact = false }: Props) {
   const [photoModal, setPhotoModal] = useState(false);
   const [photoModalIdx, setPhotoModalIdx] = useState(0);
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const popoverSize = Math.min(screenW, screenH) * 0.78;
+  const popoverSize = Math.min(screenW * 0.88, screenH * 0.62, 380);
 
   const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
@@ -173,7 +173,7 @@ export function ProWineCard({ entry, compact = false }: Props) {
           {hasAromas ? (
             <TouchableOpacity
               onPress={() => setWheelOpen(true)}
-              activeOpacity={0.75}
+              activeOpacity={0.72}
               style={styles.wheelTouchable}
             >
               <Text style={[styles.colLabel, compact && styles.smallLabel]}>Aroma Profile</Text>
@@ -183,7 +183,9 @@ export function ProWineCard({ entry, compact = false }: Props) {
                 size={colSize}
                 showLegend={false}
               />
-              <Text style={styles.tapHint}>tap to expand ↗</Text>
+              <View style={styles.expandBtn}>
+                <Text style={styles.expandBtnText}>⊕ Expand wheel</Text>
+              </View>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -254,10 +256,10 @@ export function ProWineCard({ entry, compact = false }: Props) {
           statusBarTranslucent
         >
           <Pressable style={styles.overlay} onPress={() => setWheelOpen(false)}>
-            <Pressable style={styles.popover} onPress={() => {}}>
+            <Pressable style={[styles.popover, { maxHeight: screenH * 0.9 }]} onPress={() => {}}>
               {/* Title row */}
               <View style={styles.popoverHeader}>
-                <Text style={styles.popoverTitle}>Aroma Profile</Text>
+                <Text style={styles.popoverTitle}>Aroma Wheel</Text>
                 <TouchableOpacity onPress={() => setWheelOpen(false)} style={styles.closeBtn}>
                   <Text style={styles.closeBtnText}>✕</Text>
                 </TouchableOpacity>
@@ -269,14 +271,20 @@ export function ProWineCard({ entry, compact = false }: Props) {
                 {entry.vintage ? `  ·  ${entry.vintage}` : ''}
               </Text>
 
-              {/* Large wheel with legend */}
-              <AromaDonutChart
-                aromasL1={entry.aromas_l1}
-                aromasL2={entry.aromas_l2}
-                size={popoverSize}
-                showLegend
-                pinchable
-              />
+              {/* Scrollable wheel + legend */}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+                contentContainerStyle={styles.popoverScroll}
+              >
+                <AromaDonutChart
+                  aromasL1={entry.aromas_l1}
+                  aromasL2={entry.aromas_l2}
+                  size={popoverSize}
+                  showLegend
+                  pinchable
+                />
+              </ScrollView>
             </Pressable>
           </Pressable>
         </Modal>
@@ -456,22 +464,23 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
   },
 
-  // Wheel touchable + tap hint
+  // Wheel touchable + expand button
   wheelTouchable: {
     alignItems: 'center',
     gap: 4,
   },
-  tapHint: {
+  expandBtn: {
+    marginTop: 6,
+    backgroundColor: Colors.ink,
+    borderRadius: Radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  expandBtnText: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 10,
-    color: Colors.inkMid,
+    color: Colors.white,
     letterSpacing: 0.2,
-    marginTop: 4,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    borderRadius: 4,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
   },
 
   // Popover modal
@@ -490,8 +499,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     ...Shadows.lg,
-    maxWidth: 420,
-    width: '90%',
+    maxWidth: 440,
+    width: '92%',
+  },
+  popoverScroll: {
+    alignItems: 'center',
+    paddingBottom: Spacing.md,
   },
   popoverHeader: {
     flexDirection: 'row',
