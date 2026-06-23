@@ -39,8 +39,14 @@ echo "npm version: $(npm --version)"
 
 **What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images, adding `hooks` key to `eas.json` (that key is not valid — EAS rejects it).
 
+## Preferred package manager: pnpm (June 2026+)
+Use `pnpm-lock.yaml` so EAS runs `pnpm install` instead of `npm install`. This completely bypasses the npm "Exit handler" bug.
+
+**How to generate:** `pnpm import` converts `package-lock.json` → `pnpm-lock.yaml` in seconds.
+**Why:** The npm hook fix (upgrading npm via `npm install -g npm@10`) fails because the buggy npm crashes when trying to upgrade itself (chicken-and-egg). pnpm sidesteps the entire issue.
+
 ## Deprecated packages to remove before EAS builds
-- `@types/react-native` — stub types definition; react-native provides its own. Remove from devDependencies. May contribute to npm install instability.
+- `@types/react-native` — stub types definition; react-native provides its own. Remove from devDependencies.
 
 ## Dependency hygiene — keep it React Native only
 Web-only devDependencies (vite, rollup, framer-motion, tailwindcss, lucide-react, tesseract.js) cause npm install failures on EAS macOS servers because their lockfile entries are Linux-platform-specific binaries.
