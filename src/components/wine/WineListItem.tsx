@@ -3,6 +3,7 @@ import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
+import { useLazyBlurhashBackfill } from '@/hooks/useLazyBlurhashBackfill';
 import { WineEntry } from '@/types';
 
 interface WineListItemProps {
@@ -26,6 +27,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 export const WineListItem = React.memo(function WineListItem({ entry, onPress, style }: WineListItemProps) {
+  useLazyBlurhashBackfill(entry);
   const flag = COUNTRY_FLAGS[entry.country] ?? '🍷';
   const scoreLabel = entry.technical_score >= 85 ? 'Outstanding' : entry.technical_score >= 70 ? 'Very Good' : 'Good';
 

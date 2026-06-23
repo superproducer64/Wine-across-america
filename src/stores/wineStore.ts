@@ -30,6 +30,7 @@ interface WineStore {
   removeEntry: (id: string) => Promise<void>;
   search: (userId: string, query: string, filters?: Record<string, unknown>) => Promise<void>;
   clearSearch: () => void;
+  patchEntryBlurhash: (id: string, blurhash: string) => void;
 }
 
 export const useWineStore = create<WineStore>((set, get) => ({
@@ -199,4 +200,15 @@ export const useWineStore = create<WineStore>((set, get) => ({
   },
 
   clearSearch: () => set({ searchResults: [] }),
+
+  patchEntryBlurhash: (id, blurhash) => {
+    set((state) => ({
+      entries: state.entries.map((e) =>
+        e.id === id ? { ...e, label_photo_blurhash: blurhash } : e
+      ),
+      searchResults: state.searchResults.map((e) =>
+        e.id === id ? { ...e, label_photo_blurhash: blurhash } : e
+      ),
+    }));
+  },
 }));
