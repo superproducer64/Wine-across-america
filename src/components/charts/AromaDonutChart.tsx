@@ -474,7 +474,7 @@ export function AromaDonutChart({
 
           {/* Outer ring text labels (subcategory names) */}
           {show3 && outerSegs.map((s, i) => {
-            if (s.sweep < 9) return null;
+            if (s.sweep < 4) return null;
             const tr = (midEdge + outerR) / 2;
             const pos = polar(cx, cy, tr, s.mid);
             const rot = labelRotation(s.mid);
@@ -553,13 +553,16 @@ export function AromaDonutChart({
                   <View style={[styles.legendDot, { backgroundColor: g.color }]} />
                   <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
                 </View>
-                <View style={styles.catPills}>
-                  {gd.cats.map(cd => (
-                    <View key={cd.cat.id} style={[styles.pill, { borderColor: g.color + '55' }]}>
-                      <Text style={styles.pillText}>{cd.cat.emoji} {cd.cat.label}</Text>
-                    </View>
-                  ))}
-                </View>
+                {gd.cats.map(cd => (
+                  <View key={cd.cat.id} style={styles.legendCatRow}>
+                    <Text style={[styles.legendCatName, { color: g.color }]}>
+                      {cd.cat.emoji} {cd.cat.label}
+                    </Text>
+                    <Text style={styles.legendSubcats}>
+                      {cd.cat.subcategories.join(' · ')}
+                    </Text>
+                  </View>
+                ))}
               </View>
             );
           })}
@@ -702,22 +705,19 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     letterSpacing: 0.2,
   },
-  catPills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
+  legendCatRow: {
     paddingLeft: 14,
+    gap: 1,
   },
-  pill: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    backgroundColor: '#FDF8F4',
-  },
-  pillText: {
-    fontFamily: Fonts.dmSansRegular,
+  legendCatName: {
+    fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
-    color: Colors.inkMid,
+  },
+  legendSubcats: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 10,
+    color: Colors.inkMuted,
+    paddingLeft: 2,
+    lineHeight: 15,
   },
 });
