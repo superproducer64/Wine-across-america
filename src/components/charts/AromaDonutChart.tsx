@@ -155,6 +155,20 @@ function labelRotation(midAngle: number) {
   return midAngle;
 }
 
+// Radial rotation for outer-ring labels: text runs along the radius (in/out)
+// so it uses the ring WIDTH (~42px) instead of the narrow arc length (~12px).
+function outerLabelRot(midAngle: number): number {
+  // polar 0=top clockwise → SVG rotation: subtract 90
+  let r = midAngle - 90;
+  // normalise to (-180, 180]
+  r = ((r % 360) + 360) % 360;
+  if (r > 180) r -= 360;
+  // clamp so text never appears upside-down
+  if (r > 90) r -= 180;
+  if (r < -90) r += 180;
+  return r;
+}
+
 type SelectedInfo = {
   color: string;
   title: string;
@@ -472,12 +486,13 @@ export function AromaDonutChart({
             );
           })}
 
-          {/* Outer ring text labels (subcategory names) */}
+          {/* Outer ring text labels — radial orientation so text uses ring
+               WIDTH (~42px) instead of narrow arc length (~12px).           */}
           {show3 && outerSegs.map((s, i) => {
             if (s.sweep < 4) return null;
             const tr = (midEdge + outerR) / 2;
             const pos = polar(cx, cy, tr, s.mid);
-            const rot = labelRotation(s.mid);
+            const rot = outerLabelRot(s.mid);
             const raw = s.note;
             const label = raw.length > 10 ? raw.slice(0, 9) + '…' : raw;
             return (
@@ -488,7 +503,7 @@ export function AromaDonutChart({
                   fontSize={outerFontSize}
                   fontFamily={Fonts.dmSans}
                   fill="#1F1518"
-                  fillOpacity={0.78}
+                  fillOpacity={0.80}
                 >
                   {label}
                 </SvgText>
