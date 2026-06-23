@@ -103,7 +103,7 @@ export interface AromaDonutChartProps {
   pinchable?: boolean;
 }
 
-const GAP = 1.5;
+const GAP = 0.8;
 
 // Module-level note→category lookup (built once)
 const NOTE_TO_CATEGORY: Record<string, string> = {};
@@ -248,7 +248,7 @@ export function AromaDonutChart({
     gd.cats.forEach((cd, ci) => {
       const cStart = cAngle;
       const cEnd = cStart + perCat;
-      const shade = ci % 2 === 0 ? lightenHex(g.color, 0.30) : lightenHex(g.color, 0.13);
+      const shade = ci % 2 === 0 ? lightenHex(g.color, 0.38) : lightenHex(g.color, 0.20);
 
       midSegs.push({
         path: arcPath(cx, cy, show3 ? midEdge : outerR, innerEdge + 1, cStart, cEnd),
@@ -270,7 +270,7 @@ export function AromaDonutChart({
         cd.notes.forEach((note, ni) => {
           outerSegs.push({
             path: arcPath(cx, cy, outerR, midEdge + 1, nAngle, nAngle + perNote),
-            color: ni % 2 === 0 ? lightenHex(g.color, 0.55) : lightenHex(g.color, 0.40),
+            color: ni % 2 === 0 ? lightenHex(g.color, 0.64) : lightenHex(g.color, 0.50),
             mid: nAngle + perNote / 2,
             sweep: perNote,
             rMin: midEdge + 1, rMax: outerR,
