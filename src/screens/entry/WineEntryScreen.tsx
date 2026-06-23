@@ -40,6 +40,7 @@ export function WineEntryScreen(_props: Props) {
   const [error, setError] = useState('');
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [confirmBlend, setConfirmBlend] = useState(false);
+  const [confirmBlendNext, setConfirmBlendNext] = useState(false);
   const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
   const { draft, reset } = useEntryDraftStore();
   const { user, profile } = useAuthStore();
@@ -57,6 +58,17 @@ export function WineEntryScreen(_props: Props) {
     if (step === 0 && !draft.name.trim()) {
       setError('Please enter at least the wine name before continuing.');
       return;
+    }
+    if (step === 0) {
+      const blends = draft.grape_blends ?? [];
+      const hasAnyPct = blends.some((e) => e.percentage !== null);
+      if (hasAnyPct) {
+        const total = blends.reduce((sum, e) => sum + (e.percentage ?? 0), 0);
+        if (total !== 100) {
+          setConfirmBlendNext(true);
+          return;
+        }
+      }
     }
     setStep((s) => s + 1);
   };
@@ -152,6 +164,35 @@ export function WineEntryScreen(_props: Props) {
               label="Discard"
               onPress={handleDiscard}
               variant="destructive"
+              style={styles.confirmBtn}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Blend-at-step-advance confirmation state
+  if (confirmBlendNext) {
+    const blends = draft.grape_blends ?? [];
+    const total = blends.reduce((sum, e) => sum + (e.percentage ?? 0), 0);
+    return (
+      <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
+        <View style={styles.confirmContainer}>
+          <Text style={styles.confirmTitle}>Incomplete blend</Text>
+          <Text style={styles.confirmSub}>
+            Your grape blend adds up to {total}% — not 100%. You can fix it now or continue and adjust later.
+          </Text>
+          <View style={styles.confirmActions}>
+            <Button
+              label="Fix Blend"
+              onPress={() => setConfirmBlendNext(false)}
+              style={styles.confirmBtn}
+            />
+            <Button
+              label="Continue Anyway"
+              onPress={() => { setConfirmBlendNext(false); setStep((s) => s + 1); }}
+              variant="secondary"
               style={styles.confirmBtn}
             />
           </View>
