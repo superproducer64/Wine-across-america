@@ -202,8 +202,8 @@ export const AROMA_GROUPS: AromaGroup[] = [
     label: 'Fruit',
     emoji: '🍎',
     color: '#DC2626',
-    categoryIds: ['red-fruit', 'black-fruit', 'stone-fruit', 'tropical-fruit', 'orchard-fruit'],
-    description: 'Red fruit, black fruit, stone fruit, tropical fruit, orchard fruit',
+    categoryIds: ['citrus', 'orchard-fruit', 'stone-fruit', 'tropical-fruit', 'red-fruit', 'black-fruit'],
+    description: 'Citrus, orchard fruit, stone fruit, tropical fruit, red fruit, black fruit',
   },
   {
     id: 'floral',
@@ -218,8 +218,8 @@ export const AROMA_GROUPS: AromaGroup[] = [
     label: 'Herbal',
     emoji: '🌿',
     color: '#16A34A',
-    categoryIds: ['herbal-green', 'citrus'],
-    description: 'Grass, bell pepper, herbs · Lemon, lime, grapefruit',
+    categoryIds: ['herbal-green'],
+    description: 'Grass, bell pepper, mint, fresh herbs',
   },
   {
     id: 'spice',

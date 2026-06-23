@@ -17,7 +17,11 @@ import {
   WineShortcut,
   getCategorySubcategories,
 } from '@/types';
+
 import { useResponsive } from '@/hooks/useResponsive';
+
+const CAT_TO_GROUP: Record<string, typeof AROMA_GROUPS[0]> = {};
+AROMA_GROUPS.forEach(g => g.categoryIds.forEach(cid => { CAT_TO_GROUP[cid] = g; }));
 
 const MAX_CUSTOM_TAGS = 20;
 const MAX_TAG_LENGTH = 40;
@@ -149,7 +153,7 @@ export function Step3Aromas() {
         </View>
       </ScrollView>
 
-      {/* Groups */}
+      {/* Flat category list in Appendix I order */}
       <View style={styles.groupsHeader}>
         <Text style={styles.sectionLabel}>Aroma Categories</Text>
         {isSommelier && (
@@ -159,125 +163,101 @@ export function Step3Aromas() {
         )}
       </View>
 
-      {AROMA_GROUPS.map((group) => {
-        const groupCats = AROMA_CATEGORIES.filter((c) => group.categoryIds.includes(c.id));
-        const groupHasSelection = groupCats.some((c) => draft.aromas_l1.includes(c.id));
+      <View style={styles.flatCatList}>
+        {AROMA_CATEGORIES.map((cat) => {
+          const group = CAT_TO_GROUP[cat.id];
+          const color = group?.color ?? Colors.gold;
+          const selected = draft.aromas_l1.includes(cat.id);
+          const isExpanded = expandedCategory === cat.id;
+          const subcategories = getCategorySubcategories(cat, isSommelier);
 
-        return (
-          <View key={group.id} style={styles.group}>
-            {/* Group Header */}
-            <View style={[styles.groupHeader, { borderLeftColor: group.color }]}>
-              <Text style={styles.groupEmoji}>{group.emoji}</Text>
-              <View style={styles.groupHeaderText}>
-                <Text style={[styles.groupLabel, { color: group.color }]}>{group.label}</Text>
-                <Text style={styles.groupDesc}>{group.description}</Text>
-              </View>
-              {groupHasSelection && (
-                <View style={[styles.groupBadge, { backgroundColor: group.color + '22', borderColor: group.color + '55' }]}>
-                  <Text style={[styles.groupBadgeText, { color: group.color }]}>
-                    {groupCats.filter((c) => draft.aromas_l1.includes(c.id)).length}
-                  </Text>
-                </View>
-              )}
-            </View>
+          return (
+            <View key={cat.id} style={styles.categoryBlock}>
+              <Pressable
+                style={[
+                  styles.catChip,
+                  selected && { backgroundColor: color + '1A', borderColor: color },
+                ]}
+                onPress={() => toggleL1(cat.id)}
+              >
+                <Text style={styles.catEmoji}>{cat.emoji}</Text>
+                <Text style={[styles.catLabel, selected && { color: Colors.ink, fontFamily: Fonts.dmSansMedium }]}>
+                  {cat.label}
+                </Text>
+                {selected && (
+                  <Text style={[styles.catCheck, { color }]}>✓</Text>
+                )}
+              </Pressable>
 
-            {/* Category chips inside group */}
-            <View style={styles.groupCats}>
-              {groupCats.map((cat) => {
-                const selected = draft.aromas_l1.includes(cat.id);
-                const isExpanded = expandedCategory === cat.id;
-                const subcategories = getCategorySubcategories(cat, isSommelier);
+              {/* L2 drill-down — inline below the chip when expanded */}
+              {selected && isExpanded && (
+                <View style={styles.l2Container}>
+                  <View style={[styles.l2Indent, { borderLeftColor: color + '55' }]}>
+                    <View style={styles.l2Grid}>
+                      {subcategories.map((aroma) => {
+                        const isSommelierSub =
+                          isSommelier && (cat.sommelierSubcategories ?? []).includes(aroma);
+                        const isSelected = draft.aromas_l2.includes(aroma);
+                        return (
+                          <Pressable
+                            key={aroma}
+                            style={[
+                              styles.l2Chip,
+                              isSelected && { backgroundColor: color + '28', borderColor: color },
+                              isSommelierSub && !isSelected && styles.l2ChipSommelier,
+                            ]}
+                            onPress={() => toggleL2(aroma)}
+                          >
+                            <Text style={[styles.l2Text, isSelected && { color: Colors.inkMid, fontFamily: Fonts.dmSansRegular }]}>
+                              {aroma}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
 
-                return (
-                  <View key={cat.id} style={styles.categoryBlock}>
-                    <Pressable
-                      style={[
-                        styles.catChip,
-                        selected && { backgroundColor: group.color + '1A', borderColor: group.color },
-                      ]}
-                      onPress={() => toggleL1(cat.id)}
-                    >
-                      <Text style={styles.catEmoji}>{cat.emoji}</Text>
-                      <Text style={[styles.catLabel, selected && { color: Colors.ink, fontFamily: Fonts.dmSansMedium }]}>
-                        {cat.label}
-                      </Text>
-                      {selected && (
-                        <Text style={[styles.catCheck, { color: group.color }]}>✓</Text>
-                      )}
-                    </Pressable>
-
-                    {/* L2 drill-down — inline below the chip when expanded */}
-                    {selected && isExpanded && (
-                      <View style={styles.l2Container}>
-                        <View style={[styles.l2Indent, { borderLeftColor: group.color + '55' }]}>
-                          <View style={styles.l2Grid}>
-                            {subcategories.map((aroma) => {
-                              const isSommelierSub =
-                                isSommelier && (cat.sommelierSubcategories ?? []).includes(aroma);
-                              const isSelected = draft.aromas_l2.includes(aroma);
-                              return (
-                                <Pressable
-                                  key={aroma}
-                                  style={[
-                                    styles.l2Chip,
-                                    isSelected && { backgroundColor: group.color + '28', borderColor: group.color },
-                                    isSommelierSub && !isSelected && styles.l2ChipSommelier,
-                                  ]}
-                                  onPress={() => toggleL2(aroma)}
-                                >
-                                  <Text style={[styles.l2Text, isSelected && { color: Colors.inkMid, fontFamily: Fonts.dmSansRegular }]}>
-                                    {aroma}
-                                  </Text>
-                                </Pressable>
-                              );
-                            })}
-                          </View>
-
-                          {cat.id === 'other' && (
-                            <View style={styles.otherNoteWrapper}>
-                              <Text style={styles.otherNoteLabel}>Describe further</Text>
-                              <RNTextInput
-                                style={styles.otherNoteInput}
-                                value={draft.aromas_other_note ?? ''}
-                                onChangeText={setAromasOtherNote}
-                                placeholder="e.g. wet slate, incense, beeswax…"
-                                placeholderTextColor={Colors.inkFaint}
-                                multiline
-                                numberOfLines={2}
-                                textAlignVertical="top"
-                              />
-                            </View>
-                          )}
-                        </View>
-
-                        <Pressable onPress={() => setExpandedCategory(null)} style={styles.collapseBtn}>
-                          <Text style={[styles.collapseBtnText, { color: group.color }]}>Done ↑</Text>
-                        </Pressable>
+                    {cat.id === 'other' && (
+                      <View style={styles.otherNoteWrapper}>
+                        <Text style={styles.otherNoteLabel}>Describe further</Text>
+                        <RNTextInput
+                          style={styles.otherNoteInput}
+                          value={draft.aromas_other_note ?? ''}
+                          onChangeText={setAromasOtherNote}
+                          placeholder="e.g. wet slate, incense, beeswax…"
+                          placeholderTextColor={Colors.inkFaint}
+                          multiline
+                          numberOfLines={2}
+                          textAlignVertical="top"
+                        />
                       </View>
                     )}
-
-                    {selected && !isExpanded && (
-                      <Pressable onPress={() => setExpandedCategory(cat.id)} style={styles.expandRow}>
-                        <Text style={[styles.expandHint, { color: group.color }]}>
-                          {draft.aromas_l2.filter((l2) =>
-                            getCategorySubcategories(cat, isSommelier).includes(l2)
-                          ).length > 0
-                            ? `${draft.aromas_l2.filter((l2) =>
-                                getCategorySubcategories(cat, isSommelier).includes(l2)
-                              ).length} note${draft.aromas_l2.filter((l2) =>
-                                getCategorySubcategories(cat, isSommelier).includes(l2)
-                              ).length > 1 ? 's' : ''} · Edit ↓`
-                            : '+ Add specific notes'}
-                        </Text>
-                      </Pressable>
-                    )}
                   </View>
-                );
-              })}
+
+                  <Pressable onPress={() => setExpandedCategory(null)} style={styles.collapseBtn}>
+                    <Text style={[styles.collapseBtnText, { color }]}>Done ↑</Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {selected && !isExpanded && (
+                <Pressable onPress={() => setExpandedCategory(cat.id)} style={styles.expandRow}>
+                  <Text style={[styles.expandHint, { color }]}>
+                    {draft.aromas_l2.filter((l2) =>
+                      getCategorySubcategories(cat, isSommelier).includes(l2)
+                    ).length > 0
+                      ? `${draft.aromas_l2.filter((l2) =>
+                          getCategorySubcategories(cat, isSommelier).includes(l2)
+                        ).length} note${draft.aromas_l2.filter((l2) =>
+                          getCategorySubcategories(cat, isSommelier).includes(l2)
+                        ).length > 1 ? 's' : ''} · Edit ↓`
+                      : '+ Add specific notes'}
+                  </Text>
+                </Pressable>
+              )}
             </View>
-          </View>
-        );
-      })}
+          );
+        })}
+      </View>
     </>
   );
 
@@ -472,52 +452,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  group: {
-    marginBottom: Spacing.lg,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    backgroundColor: Colors.surfaceAlt,
-    borderLeftWidth: 3,
-  },
-  groupEmoji: { fontSize: 18 },
-  groupHeaderText: { flex: 1 },
-  groupLabel: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 13,
-  },
-  groupDesc: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 11,
-    color: Colors.inkFaint,
-    lineHeight: 15,
-    marginTop: 1,
-  },
-  groupBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  groupBadgeText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-  },
-
-  groupCats: {
-    padding: Spacing.md,
+  flatCatList: {
     gap: 6,
-    backgroundColor: Colors.surface,
+    marginTop: 4,
   },
   categoryBlock: { gap: 4 },
   catChip: {
