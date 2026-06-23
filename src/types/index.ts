@@ -86,7 +86,7 @@ export function getCategorySubcategories(
 }
 
 export const AROMA_CATEGORIES: AromaCategory[] = [
-  // ── Fresh & Bright ──────────────────────────────────────────────────────────
+  // ── Order matches Appendix I (left column → right column) ───────────────────
   {
     id: 'citrus',
     label: 'Citrus',
@@ -94,14 +94,6 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     subcategories: ['Lemon', 'Lime', 'Grapefruit', 'Orange'],
     sommelierSubcategories: ['Mandarin', 'Lemon zest', 'Orange peel'],
   },
-  {
-    id: 'herbal-green',
-    label: 'Herbal / Green',
-    emoji: '🌿',
-    subcategories: ['Grass', 'Bell pepper', 'Mint', 'Fresh herbs'],
-    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Green pepper', 'Thyme', 'Tomato leaf'],
-  },
-  // ── Fruit Core ──────────────────────────────────────────────────────────────
   {
     id: 'orchard-fruit',
     label: 'Orchard Fruit',
@@ -137,7 +129,6 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     subcategories: ['Blackberry', 'Blackcurrant', 'Black cherry', 'Plum'],
     sommelierSubcategories: ['Ripe plum'],
   },
-  // ── Aromatic Layer ──────────────────────────────────────────────────────────
   {
     id: 'floral',
     label: 'Floral',
@@ -145,22 +136,13 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     subcategories: ['Rose', 'Violet', 'Jasmine', 'White flowers'],
     sommelierSubcategories: ['Orange blossom', 'Lavender'],
   },
-  // ── Earth & Complexity ───────────────────────────────────────────────────────
   {
-    id: 'earthy',
-    label: 'Earthy',
-    emoji: '🌍',
-    subcategories: ['Mushroom', 'Wet leaves', 'Leather', 'Tobacco'],
-    sommelierSubcategories: ['Forest floor', 'Truffle', 'Tobacco leaf', 'Dusty earth', 'Game'],
+    id: 'herbal-green',
+    label: 'Herbal / Green',
+    emoji: '🌿',
+    subcategories: ['Grass', 'Bell pepper', 'Mint', 'Fresh herbs'],
+    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Green pepper', 'Thyme', 'Tomato leaf'],
   },
-  {
-    id: 'mineral',
-    label: 'Mineral / Saline',
-    emoji: '🪨',
-    subcategories: ['Chalk', 'Wet stone', 'Saline'],
-    sommelierSubcategories: ['Flint', 'Slate', 'Oyster shell', 'Iron', 'Graphite'],
-  },
-  // ── Structure & Winemaking ──────────────────────────────────────────────────
   {
     id: 'spice',
     label: 'Spice',
@@ -176,19 +158,32 @@ export const AROMA_CATEGORIES: AromaCategory[] = [
     sommelierSubcategories: ['Coffee', 'Espresso', 'Mocha', 'Caramelized wood', 'Charred wood'],
   },
   {
-    id: 'other',
-    label: 'Other',
-    emoji: '🍞',
-    subcategories: ['Butter', 'Cream', 'Yeast', 'Brioche', 'Bread', 'Petrol'],
-    sommelierSubcategories: ['Yogurt', 'Wax', 'Rubber', 'Almond', 'Hazelnut', 'Walnut', 'Lees'],
+    id: 'earthy',
+    label: 'Earthy',
+    emoji: '🌍',
+    subcategories: ['Mushroom', 'Wet leaves', 'Leather', 'Tobacco'],
+    sommelierSubcategories: ['Forest floor', 'Truffle', 'Tobacco leaf', 'Dusty earth', 'Game'],
   },
-  // ── Evolution / Style ───────────────────────────────────────────────────────
+  {
+    id: 'mineral',
+    label: 'Mineral / Saline',
+    emoji: '🪨',
+    subcategories: ['Chalk', 'Wet stone', 'Saline'],
+    sommelierSubcategories: ['Flint', 'Slate', 'Oyster shell', 'Iron', 'Graphite'],
+  },
   {
     id: 'sweet-ripe',
     label: 'Sweet / Ripe',
     emoji: '🍯',
     subcategories: ['Honey', 'Jam', 'Dried fruit', 'Raisin', 'Prune'],
     sommelierSubcategories: ['Fig', 'Caramel', 'Toffee', 'Molasses', 'Date'],
+  },
+  {
+    id: 'other',
+    label: 'Other',
+    emoji: '🍞',
+    subcategories: ['Butter', 'Cream', 'Yeast', 'Brioche', 'Bread', 'Petrol'],
+    sommelierSubcategories: ['Yogurt', 'Wax', 'Rubber', 'Almond', 'Hazelnut', 'Walnut', 'Lees'],
   },
 ];
 
