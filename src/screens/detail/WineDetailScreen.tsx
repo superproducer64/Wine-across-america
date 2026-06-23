@@ -13,7 +13,8 @@ import {
   Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
+import * as ImagePicker from 'expo-image-picker';
+import { LABEL_PHOTO_PLACEHOLDER, computeLabelPhotoPlaceholder } from '@/utils/imagePlaceholder';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
@@ -22,7 +23,7 @@ import { ProWineCard } from '@/components/wine/ProWineCard';
 import { TechnicalScoreDisplay } from '@/components/wine/TechnicalScoreDisplay';
 import { Button } from '@/components/ui/Button';
 import { DatePickerInput } from '@/components/ui/DatePickerInput';
-import { getWineEntry } from '@/lib/supabase';
+import { getWineEntry, uploadLabelPhoto } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
@@ -154,6 +155,8 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesBanner, setNotesBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [photoModal, setPhotoModal] = useState(false);
+  const [replacingPhoto, setReplacingPhoto] = useState(false);
+  const [photoBanner, setPhotoBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   const handleEditNotes = () => {
     setNotesText(entry?.free_notes ?? '');
@@ -171,6 +174,61 @@ export function WineDetailScreen({ route, navigation }: Props) {
     setNotesBanner({ type: 'success', msg: 'Notes saved!' });
     setSavingNotes(false);
     setTimeout(() => { setEditingNotes(false); setNotesBanner(null); }, 1200);
+  };
+
+  const handleReplacePhoto = async () => {
+    if (!entry || !user) return;
+    setPhotoBanner(null);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      setPhotoBanner({ type: 'error', msg: 'Photo library permission denied.' });
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+      base64: false,
+    });
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+    const localUri = result.assets[0].uri;
+    setReplacingPhoto(true);
+    try {
+      const [uploadResult, blurhash] = await Promise.all([
+        uploadLabelPhoto(user.id, localUri),
+        computeLabelPhotoPlaceholder(localUri),
+      ]);
+      if (uploadResult.error || !uploadResult.url) {
+        setPhotoBanner({ type: 'error', msg: uploadResult.error ?? 'Upload failed.' });
+        return;
+      }
+      await updateEntry(entryId, {
+        label_photo_url: uploadResult.url,
+        label_photo_blurhash: blurhash ?? null,
+      });
+      setEntry({ ...entry, label_photo_url: uploadResult.url, label_photo_blurhash: blurhash ?? null });
+      setPhotoBanner({ type: 'success', msg: 'Photo updated!' });
+      setTimeout(() => setPhotoBanner(null), 2500);
+    } catch {
+      setPhotoBanner({ type: 'error', msg: 'Failed to replace photo.' });
+    } finally {
+      setReplacingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!entry) return;
+    setReplacingPhoto(true);
+    setPhotoBanner(null);
+    try {
+      await updateEntry(entryId, { label_photo_url: null, label_photo_blurhash: null });
+      setEntry({ ...entry, label_photo_url: null as unknown as string, label_photo_blurhash: null });
+      setPhotoBanner({ type: 'success', msg: 'Photo removed.' });
+      setTimeout(() => setPhotoBanner(null), 2500);
+    } catch {
+      setPhotoBanner({ type: 'error', msg: 'Failed to remove photo.' });
+    } finally {
+      setReplacingPhoto(false);
+    }
   };
 
   useEffect(() => {
@@ -511,9 +569,32 @@ export function WineDetailScreen({ route, navigation }: Props) {
         )}
 
         {/* Label photo */}
-        {entry.label_photo_url ? (
-          <View style={styles.labelPhotoBlock}>
+        <View style={styles.labelPhotoBlock}>
+          <View style={styles.labelPhotoHeader}>
             <Text style={styles.labelPhotoLabel}>Label Photo</Text>
+            <View style={styles.labelPhotoActions}>
+              {replacingPhoto ? (
+                <ActivityIndicator size="small" color={Colors.gold} />
+              ) : (
+                <>
+                  <Pressable onPress={handleReplacePhoto} hitSlop={8} disabled={replacingPhoto}>
+                    <Text style={styles.editLink}>{entry.label_photo_url ? 'Replace' : '+ Add photo'}</Text>
+                  </Pressable>
+                  {entry.label_photo_url ? (
+                    <Pressable onPress={handleRemovePhoto} hitSlop={8} disabled={replacingPhoto}>
+                      <Text style={styles.removePhotoLink}>Remove</Text>
+                    </Pressable>
+                  ) : null}
+                </>
+              )}
+            </View>
+          </View>
+          {photoBanner ? (
+            <Text style={photoBanner.type === 'success' ? styles.successBanner : styles.errorBanner}>
+              {photoBanner.msg}
+            </Text>
+          ) : null}
+          {entry.label_photo_url ? (
             <Pressable onPress={() => setPhotoModal(true)} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
               <Image
                 source={{ uri: entry.label_photo_url }}
@@ -526,8 +607,8 @@ export function WineDetailScreen({ route, navigation }: Props) {
               />
               <Text style={styles.labelPhotoHint}>tap to enlarge</Text>
             </Pressable>
-          </View>
-        ) : null}
+          ) : null}
+        </View>
 
         {/* Share buttons at bottom */}
         <View style={styles.shareButtons}>
@@ -925,13 +1006,28 @@ const styles = StyleSheet.create({
   labelPhotoBlock: {
     marginTop: Spacing.xl,
   },
+  labelPhotoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  labelPhotoActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
   labelPhotoLabel: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 12,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: Colors.inkMuted,
-    marginBottom: Spacing.sm,
+  },
+  removePhotoLink: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 13,
+    color: Colors.red,
   },
   labelPhotoHint: {
     fontFamily: Fonts.dmSansRegular,
