@@ -295,6 +295,7 @@ export function AromaDonutChart({
 
   const innerFontSize = Math.max(7, Math.min(11, size * 0.042));
   const midFontSize   = Math.max(6, Math.min(9,  size * 0.032));
+  const outerFontSize = Math.max(5, Math.min(7,  size * 0.023));
   const centerLabel   = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
 
   // ── Coordinate-based tap detection ────────────────────────────────────────
@@ -466,6 +467,30 @@ export function AromaDonutChart({
                   fillOpacity={0.82}
                 >
                   {s.label}
+                </SvgText>
+              </G>
+            );
+          })}
+
+          {/* Outer ring text labels (subcategory names) */}
+          {show3 && outerSegs.map((s, i) => {
+            if (s.sweep < 9) return null;
+            const tr = (midEdge + outerR) / 2;
+            const pos = polar(cx, cy, tr, s.mid);
+            const rot = labelRotation(s.mid);
+            const raw = s.note;
+            const label = raw.length > 10 ? raw.slice(0, 9) + '…' : raw;
+            return (
+              <G key={`ol${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
+                <SvgText
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  fontSize={outerFontSize}
+                  fontFamily={Fonts.dmSans}
+                  fill="#1F1518"
+                  fillOpacity={0.78}
+                >
+                  {label}
                 </SvgText>
               </G>
             );
