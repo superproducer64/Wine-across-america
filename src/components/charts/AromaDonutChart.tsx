@@ -186,8 +186,7 @@ export function AromaDonutChart({
     const catId = NOTE_TO_CATEGORY[note.toLowerCase()];
     if (catId && aromasL1.includes(catId)) noteToCat[note] = catId;
   });
-  const hasNotes = Object.keys(noteToCat).length > 0;
-  const show3 = hasNotes && size >= 180;
+  const show3 = size >= 180;
 
   // Ring boundary radii
   const holeR     = outerR * (show3 ? 0.27 : 0.34);
@@ -263,23 +262,29 @@ export function AromaDonutChart({
         notes: cd.notes,
       });
 
-      if (show3 && cd.notes.length > 0) {
-        const noteSpan = perCat - GAP * cd.notes.length;
-        const perNote = cd.notes.length > 0 ? noteSpan / cd.notes.length : 0;
-        let nAngle = cStart;
-        cd.notes.forEach((note, ni) => {
-          outerSegs.push({
-            path: arcPath(cx, cy, outerR, midEdge + 1, nAngle, nAngle + perNote),
-            color: ni % 2 === 0 ? lightenHex(g.color, 0.64) : lightenHex(g.color, 0.50),
-            mid: nAngle + perNote / 2,
-            sweep: perNote,
-            rMin: midEdge + 1, rMax: outerR,
-            note,
-            catId: cd.cat.id,
-            groupId: g.id,
+      if (show3) {
+        const displayNotes = cd.cat.subcategories;
+        if (displayNotes.length > 0) {
+          const noteSpan = perCat - GAP * displayNotes.length;
+          const perNote = noteSpan / displayNotes.length;
+          let nAngle = cStart;
+          displayNotes.forEach((note, ni) => {
+            const isSelected = cd.notes.includes(note);
+            outerSegs.push({
+              path: arcPath(cx, cy, outerR, midEdge + 1, nAngle, nAngle + perNote),
+              color: isSelected
+                ? (ni % 2 === 0 ? lightenHex(g.color, 0.22) : lightenHex(g.color, 0.10))
+                : (ni % 2 === 0 ? lightenHex(g.color, 0.64) : lightenHex(g.color, 0.50)),
+              mid: nAngle + perNote / 2,
+              sweep: perNote,
+              rMin: midEdge + 1, rMax: outerR,
+              note,
+              catId: cd.cat.id,
+              groupId: g.id,
+            });
+            nAngle += perNote + GAP;
           });
-          nAngle += perNote + GAP;
-        });
+        }
       }
 
       cAngle += perCat + GAP;
