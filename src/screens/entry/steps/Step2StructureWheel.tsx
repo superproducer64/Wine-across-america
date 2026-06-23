@@ -265,7 +265,7 @@ export function Step2StructureWheel() {
       >
         <Text style={styles.stepTitle}>Structure</Text>
         <Text style={styles.intro}>
-          Tap any dimension to expand and rate it. Pinch the screen to zoom in or out.
+          Tap any dimension to expand and rate it. Tap a spoke on the chart to see its score. Pinch to zoom.
         </Text>
 
         <GestureDetector gesture={pinchGesture}>

@@ -1,6 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Polygon, Line, Circle, Text as SvgText } from 'react-native-svg';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import Svg, {
+  Polygon,
+  Line,
+  Circle,
+  Text as SvgText,
+  Rect,
+  G,
+} from 'react-native-svg';
 import { Colors, Fonts } from '@/theme';
 
 interface RadarChartProps {
@@ -27,6 +34,8 @@ const DIMENSIONS = [
   { key: 'finish_length', label: 'Finish' },
 ] as const;
 
+type DimKey = (typeof DIMENSIONS)[number]['key'];
+
 function polarToCartesian(angle: number, radius: number, cx: number, cy: number) {
   const rad = (angle - 90) * (Math.PI / 180);
   return {
@@ -35,7 +44,17 @@ function polarToCartesian(angle: number, radius: number, cx: number, cy: number)
   };
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+const TOOLTIP_W = 68;
+const TOOLTIP_H = 36;
+const TOOLTIP_MARGIN = 6;
+
 export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProps) {
+  const [selected, setSelected] = useState<DimKey | null>(null);
+
   const labelPad = 22;
   const totalSize = size + labelPad * 2;
   const cx = totalSize / 2;
@@ -45,7 +64,6 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
   const n = DIMENSIONS.length;
   const levels = [0.25, 0.5, 0.75, 1.0];
 
-  // Grid polygon points at each level
   const gridPolygons = levels.map((level) => {
     const pts = DIMENSIONS.map((_, i) => {
       const angle = (i * 360) / n;
@@ -55,7 +73,6 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
     return pts.join(' ');
   });
 
-  // Score polygon
   const scorePoints = DIMENSIONS.map((dim, i) => {
     const angle = (i * 360) / n;
     const val = scores[dim.key] ?? 0;
@@ -63,6 +80,33 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
     const { x, y } = polarToCartesian(angle, r, cx, cy);
     return `${x},${y}`;
   });
+
+  const handleSpokePress = (key: DimKey) => {
+    setSelected((prev) => (prev === key ? null : key));
+  };
+
+  const selectedIndex = selected ? DIMENSIONS.findIndex((d) => d.key === selected) : -1;
+  let tooltip: {
+    x: number;
+    y: number;
+    label: string;
+    value: number;
+  } | null = null;
+
+  if (selected !== null && selectedIndex >= 0) {
+    const angle = (selectedIndex * 360) / n;
+    const val = scores[selected] ?? 0;
+    const r = (val / maxValue) * radius;
+    const { x: dx, y: dy } = polarToCartesian(angle, r, cx, cy);
+
+    const raw = { x: dx - TOOLTIP_W / 2, y: dy - TOOLTIP_H - TOOLTIP_MARGIN };
+    tooltip = {
+      x: clamp(raw.x, 2, totalSize - TOOLTIP_W - 2),
+      y: clamp(raw.y, 2, totalSize - TOOLTIP_H - 2),
+      label: DIMENSIONS[selectedIndex].label,
+      value: val,
+    };
+  }
 
   return (
     <View style={{ width: totalSize, height: totalSize, alignSelf: 'center' }}>
@@ -79,9 +123,10 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
         ))}
 
         {/* Axis lines */}
-        {DIMENSIONS.map((_, i) => {
+        {DIMENSIONS.map((dim, i) => {
           const angle = (i * 360) / n;
           const { x, y } = polarToCartesian(angle, radius, cx, cy);
+          const isActive = selected === dim.key;
           return (
             <Line
               key={i}
@@ -89,8 +134,8 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
               y1={cy}
               x2={x}
               y2={y}
-              stroke={Colors.border}
-              strokeWidth={0.5}
+              stroke={isActive ? Colors.gold : Colors.border}
+              strokeWidth={isActive ? 1.2 : 0.5}
             />
           );
         })}
@@ -103,22 +148,38 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
           strokeWidth={1.5}
         />
 
-        {/* Score dots */}
+        {/* Score dots + invisible tap targets */}
         {DIMENSIONS.map((dim, i) => {
           const angle = (i * 360) / n;
           const val = scores[dim.key] ?? 0;
           const r = (val / maxValue) * radius;
           const { x, y } = polarToCartesian(angle, r, cx, cy);
+          const isActive = selected === dim.key;
           return (
-            <Circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={3.5}
-              fill={Colors.gold}
-              stroke={Colors.surface}
-              strokeWidth={1.5}
-            />
+            <G key={i} onPress={() => handleSpokePress(dim.key)}>
+              {/* Invisible large hit target */}
+              <Circle cx={x} cy={y} r={16} fill="transparent" />
+              {/* Highlight ring */}
+              {isActive && (
+                <Circle
+                  cx={x}
+                  cy={y}
+                  r={9}
+                  fill={Colors.gold + '30'}
+                  stroke={Colors.gold}
+                  strokeWidth={1}
+                />
+              )}
+              {/* Score dot */}
+              <Circle
+                cx={x}
+                cy={y}
+                r={isActive ? 5 : 3.5}
+                fill={isActive ? Colors.gold : Colors.gold}
+                stroke={Colors.surface}
+                strokeWidth={1.5}
+              />
+            </G>
           );
         })}
 
@@ -128,20 +189,60 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
           const { x, y } = polarToCartesian(angle, labelRadius, cx, cy);
           const textAnchor =
             x < cx - 5 ? 'end' : x > cx + 5 ? 'start' : 'middle';
+          const isActive = selected === dim.key;
           return (
             <SvgText
               key={i}
               x={x}
               y={y + 4}
               textAnchor={textAnchor}
-              fontSize={9.5}
-              fill={Colors.inkMuted}
-              fontFamily={Fonts.dmSansMedium}
+              fontSize={isActive ? 10.5 : 9.5}
+              fill={isActive ? Colors.gold : Colors.inkMuted}
+              fontFamily={isActive ? Fonts.dmSansMedium : Fonts.dmSansMedium}
+              fontWeight={isActive ? 'bold' : 'normal'}
             >
               {dim.label}
             </SvgText>
           );
         })}
+
+        {/* Tooltip */}
+        {tooltip && (
+          <G>
+            <Rect
+              x={tooltip.x}
+              y={tooltip.y}
+              width={TOOLTIP_W}
+              height={TOOLTIP_H}
+              rx={7}
+              ry={7}
+              fill={Colors.ink}
+              opacity={0.88}
+            />
+            <SvgText
+              x={tooltip.x + TOOLTIP_W / 2}
+              y={tooltip.y + 13}
+              textAnchor="middle"
+              fontSize={10}
+              fill="#FFFFFF"
+              fontFamily={Fonts.dmSans}
+              opacity={0.8}
+            >
+              {tooltip.label}
+            </SvgText>
+            <SvgText
+              x={tooltip.x + TOOLTIP_W / 2}
+              y={tooltip.y + 27}
+              textAnchor="middle"
+              fontSize={13}
+              fill={Colors.goldLight}
+              fontFamily={Fonts.dmSansMedium}
+              fontWeight="bold"
+            >
+              {tooltip.value.toFixed(1)} / {maxValue}
+            </SvgText>
+          </G>
+        )}
       </Svg>
     </View>
   );
