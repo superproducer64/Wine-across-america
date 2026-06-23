@@ -307,11 +307,45 @@ export function Step3Aromas() {
     </View>
   );
 
+  if (isWide) {
+    return (
+      <View style={styles.wideContainer}>
+        {/* Fixed header */}
+        <View style={styles.wideHeader}>
+          <View style={styles.titleRow}>
+            <Text style={styles.stepTitle}>Aroma Profile</Text>
+          </View>
+          <Text style={styles.intro}>
+            Select the aromas you detect. Tap a category then pick specific notes.
+          </Text>
+        </View>
+
+        {/* Split two-column body */}
+        <View style={styles.wideTwoCol}>
+          {/* Left: scrollable categories */}
+          <ScrollView
+            style={styles.wideScrollCol}
+            contentContainerStyle={styles.wideScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {categoriesPanel}
+            {personalNotesPanel}
+          </ScrollView>
+
+          {/* Right: pinned summary */}
+          <View style={styles.widePinnedCol}>
+            {summaryPanel}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+        contentContainerStyle={styles.content}
       >
         <View style={styles.titleRow}>
           <Text style={styles.stepTitle}>Aroma Profile</Text>
@@ -319,26 +353,10 @@ export function Step3Aromas() {
         <Text style={styles.intro}>
           Select the aromas you detect. Tap a category then pick specific notes.
         </Text>
-
-        {isWide ? (
-          <View style={styles.twoColRow}>
-            <View style={styles.leftCol}>
-              {categoriesPanel}
-              {personalNotesPanel}
-            </View>
-            <View style={styles.rightCol}>
-              {summaryPanel}
-            </View>
-          </View>
-        ) : (
-          <>
-            {categoriesPanel}
-            {personalNotesPanel}
-            {summaryPanel}
-          </>
-        )}
+        {categoriesPanel}
+        {personalNotesPanel}
+        {summaryPanel}
       </ScrollView>
-
     </>
   );
 }
@@ -349,8 +367,29 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     paddingBottom: Spacing.huge,
   },
-  contentWide: {
-    padding: Spacing.xxl,
+  // ─── Wide split-ScrollView layout ──────────────────────────────────────────
+  wideContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.xxl,
+  },
+  wideHeader: {
+    marginBottom: Spacing.md,
+  },
+  wideTwoCol: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+  },
+  wideScrollCol: {
+    flex: 3,
+  },
+  wideScrollContent: {
+    paddingBottom: Spacing.huge,
+  },
+  widePinnedCol: {
+    flex: 2,
+    minWidth: 160,
   },
   titleRow: {
     flexDirection: 'row',
@@ -370,14 +409,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     lineHeight: 19,
   },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: Spacing.xxl,
-    alignItems: 'flex-start',
-  },
-  leftCol: { flex: 3 },
-  rightCol: { flex: 2, minWidth: 160 },
-
   sectionLabel: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,

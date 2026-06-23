@@ -257,11 +257,56 @@ export function Step2StructureWheel() {
     </View>
   );
 
+  if (isWide) {
+    return (
+      <>
+        <View style={styles.wideContainer}>
+          {/* Fixed header */}
+          <View style={styles.wideHeader}>
+            <Text style={styles.stepTitle}>Structure</Text>
+            <Text style={styles.intro}>
+              Tap any dimension to expand and rate it. Pinch the screen to zoom in or out.
+            </Text>
+          </View>
+
+          {/* Split two-column body */}
+          <GestureDetector gesture={pinchGesture}>
+            <Animated.View style={[styles.wideTwoCol, animatedStyle]}>
+              {/* Left: pinned radar panel */}
+              <View style={styles.widePinnedCol}>
+                {radarPanel}
+              </View>
+
+              {/* Right: scrollable sliders */}
+              <ScrollView
+                style={styles.wideScrollCol}
+                contentContainerStyle={styles.wideScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {slidersPanel}
+              </ScrollView>
+            </Animated.View>
+          </GestureDetector>
+        </View>
+
+        {openInfo && PARAMETER_CAROUSEL_INDEX[openInfo] !== undefined && (
+          <ImageInfoSheet
+            visible
+            onClose={() => setOpenInfo(null)}
+            title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
+            sources={SPEC_CAROUSEL_PAGES}
+            initialIndex={PARAMETER_CAROUSEL_INDEX[openInfo]}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={[styles.content, isWide && styles.contentWide]}
+        contentContainerStyle={styles.content}
       >
         <Text style={styles.stepTitle}>Structure</Text>
         <Text style={styles.intro}>
@@ -270,17 +315,8 @@ export function Step2StructureWheel() {
 
         <GestureDetector gesture={pinchGesture}>
           <Animated.View style={animatedStyle}>
-            {isWide ? (
-              <View style={styles.twoColRow}>
-                <View style={styles.leftCol}>{radarPanel}</View>
-                <View style={styles.rightCol}>{slidersPanel}</View>
-              </View>
-            ) : (
-              <>
-                {radarPanel}
-                {slidersPanel}
-              </>
-            )}
+            {radarPanel}
+            {slidersPanel}
           </Animated.View>
         </GestureDetector>
       </ScrollView>
@@ -306,8 +342,30 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.huge,
     gap: 4,
   },
-  contentWide: {
-    padding: Spacing.xxl,
+  // ─── Wide split-ScrollView layout ──────────────────────────────────────────
+  wideContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.xxl,
+  },
+  wideHeader: {
+    marginBottom: Spacing.md,
+  },
+  wideTwoCol: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+  },
+  widePinnedCol: {
+    flex: 5,
+    minWidth: 200,
+  },
+  wideScrollCol: {
+    flex: 7,
+  },
+  wideScrollContent: {
+    paddingBottom: Spacing.huge,
+    gap: 4,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -322,13 +380,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     lineHeight: 19,
   },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: Spacing.xxl,
-    alignItems: 'flex-start',
-  },
-  leftCol:  { flex: 5, minWidth: 200 },
-  rightCol: { flex: 7 },
   radarWrap: {
     alignItems: 'center',
     marginBottom: Spacing.xl,

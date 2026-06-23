@@ -127,33 +127,62 @@ export function Step4TechnicalScore() {
     </View>
   );
 
-  return (
-    <>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, isWide && styles.contentWide]}
-    >
-      <Text style={styles.stepTitle}>Technical Score</Text>
-      <Text style={styles.intro}>
-        Rate each quality dimension from 0–20. They sum to a maximum of 100.
-      </Text>
-
-      {isWide ? (
-        <View style={styles.twoColRow}>
-          <View style={styles.leftCol}>
-            {scoreCard}
+  if (isWide) {
+    return (
+      <>
+        <View style={styles.wideContainer}>
+          {/* Fixed header */}
+          <View style={styles.wideHeader}>
+            <Text style={styles.stepTitle}>Technical Score</Text>
+            <Text style={styles.intro}>
+              Rate each quality dimension from 0–20. They sum to a maximum of 100.
+            </Text>
           </View>
-          <View style={styles.rightCol}>
-            {sliders}
+
+          {/* Split two-column body */}
+          <View style={styles.wideTwoCol}>
+            {/* Left: pinned score card */}
+            <View style={styles.widePinnedCol}>
+              {scoreCard}
+            </View>
+
+            {/* Right: scrollable sliders */}
+            <ScrollView
+              style={styles.wideScrollCol}
+              contentContainerStyle={styles.wideScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {sliders}
+            </ScrollView>
           </View>
         </View>
-      ) : (
-        <>
-          {scoreCard}
-          {sliders}
-        </>
-      )}
-    </ScrollView>
+
+        {openInfo && PARAMETER_CAROUSEL_INDEX[openInfo] !== undefined && (
+          <ImageInfoSheet
+            visible
+            onClose={() => setOpenInfo(null)}
+            title={PARAMETER_INFO[openInfo]?.title ?? openInfo}
+            sources={SPEC_CAROUSEL_PAGES}
+            initialIndex={PARAMETER_CAROUSEL_INDEX[openInfo]}
+          />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Text style={styles.stepTitle}>Technical Score</Text>
+        <Text style={styles.intro}>
+          Rate each quality dimension from 0–20. They sum to a maximum of 100.
+        </Text>
+        {scoreCard}
+        {sliders}
+      </ScrollView>
 
       {openInfo && PARAMETER_CAROUSEL_INDEX[openInfo] !== undefined && (
         <ImageInfoSheet
@@ -176,8 +205,30 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.huge,
     gap: 4,
   },
-  contentWide: {
-    padding: Spacing.xxl,
+  // ─── Wide split-ScrollView layout ──────────────────────────────────────────
+  wideContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.xxl,
+  },
+  wideHeader: {
+    marginBottom: Spacing.md,
+  },
+  wideTwoCol: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.xxl,
+  },
+  widePinnedCol: {
+    flex: 5,
+    minWidth: 200,
+  },
+  wideScrollCol: {
+    flex: 7,
+  },
+  wideScrollContent: {
+    paddingBottom: Spacing.huge,
+    gap: 4,
   },
   stepTitle: {
     fontFamily: Fonts.playfair,
@@ -191,18 +242,6 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     marginBottom: Spacing.lg,
     lineHeight: 19,
-  },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: Spacing.xxl,
-    alignItems: 'flex-start',
-  },
-  leftCol: {
-    flex: 5,
-    minWidth: 200,
-  },
-  rightCol: {
-    flex: 7,
   },
   totalCard: {
     backgroundColor: Colors.ink,
