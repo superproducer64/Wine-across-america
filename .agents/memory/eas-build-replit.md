@@ -27,17 +27,20 @@ Builds on `macos-sequoia-15.6-xcode-26.2` consistently fail at "Install dependen
 
 **Fix (both parts required):**
 1. Regenerate a fresh `package-lock.json` locally: `npm install --legacy-peer-deps --package-lock-only`
-2. Add `eas-hooks/eas-build-pre-install.sh` to upgrade npm before EAS runs install:
+2. `eas-hooks/eas-build-pre-install.sh` upgrades npm before EAS runs install. Use `npm@10` (latest stable 10.x), NOT a pinned version like `npm@10.8.1` which may no longer be reliably installable:
 ```bash
 #!/bin/bash
 set -eo pipefail
-npm install -g npm@10.8.1
+npm install -g npm@10
 echo "npm version: $(npm --version)"
 ```
 
-**Why:** The default npm version shipped with the xcode-26.2 image triggers the "Exit handler never called" bug mid-install. Upgrading to npm 10.8.1 (stable) in the pre-install hook fixes it. A fresh lockfile rules out lockfile corruption as a secondary cause.
+**Why:** The default npm version on xcode-26.2 image triggers the "Exit handler" bug. The hook is auto-discovered by EAS (file must be `100755` in git — verify with `git ls-files --stage`). Pinning `npm@10.8.1` failed on June 2026 builds; switching to `npm@10` (floating latest 10.x) fixed it.
 
-**What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images — none of these address the npm version bug.
+**What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images, adding `hooks` key to `eas.json` (that key is not valid — EAS rejects it).
+
+## Deprecated packages to remove before EAS builds
+- `@types/react-native` — stub types definition; react-native provides its own. Remove from devDependencies. May contribute to npm install instability.
 
 ## Dependency hygiene — keep it React Native only
 Web-only devDependencies (vite, rollup, framer-motion, tailwindcss, lucide-react, tesseract.js) cause npm install failures on EAS macOS servers because their lockfile entries are Linux-platform-specific binaries.
