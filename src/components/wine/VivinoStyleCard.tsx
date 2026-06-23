@@ -448,27 +448,36 @@ export function VivinoStyleCard({ entry }: Props) {
             <View style={styles.section}>
               <SectionHeader label="Grape Varieties" />
               {hasBlends ? (
-                <View style={styles.blendList}>
-                  {entry.grape_blends!.map((g) => (
-                    <View key={g.name} style={styles.blendRow}>
-                      <View style={styles.blendBarWrap}>
-                        <Text style={styles.blendName}>{g.name}</Text>
-                        {blendTotal > 0 && g.percentage != null && (
-                          <View style={styles.blendTrack}>
-                            <View
-                              style={[
-                                styles.blendFill,
-                                { width: `${(g.percentage / blendTotal) * 100}%` as any },
-                              ]}
-                            />
-                          </View>
+                <View>
+                  <View style={styles.blendList}>
+                    {entry.grape_blends!.map((g) => (
+                      <View key={g.name} style={styles.blendRow}>
+                        <View style={styles.blendBarWrap}>
+                          <Text style={styles.blendName}>{g.name}</Text>
+                          {blendTotal > 0 && g.percentage != null && (
+                            <View style={styles.blendTrack}>
+                              <View
+                                style={[
+                                  styles.blendFill,
+                                  { width: `${(g.percentage / blendTotal) * 100}%` as any },
+                                ]}
+                              />
+                            </View>
+                          )}
+                        </View>
+                        {g.percentage != null && (
+                          <Text style={styles.blendPct}>{g.percentage}%</Text>
                         )}
                       </View>
-                      {g.percentage != null && (
-                        <Text style={styles.blendPct}>{g.percentage}%</Text>
-                      )}
+                    ))}
+                  </View>
+                  {blendTotal > 0 && blendTotal !== 100 && (
+                    <View style={styles.blendIncompleteRow}>
+                      <Text style={styles.blendIncompleteText}>
+                        ⚠️ Blend incomplete – adds up to {Math.round(blendTotal)}%
+                      </Text>
                     </View>
-                  ))}
+                  )}
                 </View>
               ) : (
                 <View style={styles.pillsRow}>
@@ -742,6 +751,18 @@ const styles = StyleSheet.create({
     color: Colors.gold,
     width: 38,
     textAlign: 'right',
+  },
+  blendIncompleteRow: {
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: Colors.redLight,
+    borderRadius: Radius.sm,
+  },
+  blendIncompleteText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 12,
+    color: Colors.red,
   },
 
   // Footer
