@@ -156,7 +156,9 @@ export function ProWineCard({ entry, compact = false }: Props) {
               size={colSize}
               color={Colors.ink}
             />
-            <Text style={styles.tapHint}>tap to expand ↗</Text>
+            <View style={styles.expandBtn}>
+              <Text style={styles.expandBtnText}>⊕ Expand chart</Text>
+            </View>
           </TouchableOpacity>
           {entry.free_notes ? (
             <Text
