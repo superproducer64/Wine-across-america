@@ -39,11 +39,21 @@ echo "npm version: $(npm --version)"
 
 **What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images, adding `hooks` key to `eas.json` (that key is not valid — EAS rejects it).
 
-## Preferred package manager: pnpm (June 2026+)
-Use `pnpm-lock.yaml` so EAS runs `pnpm install` instead of `npm install`. This completely bypasses the npm "Exit handler" bug.
+## Preferred package manager: yarn (to bypass npm Exit Handler bug)
+Use `yarn.lock` so EAS runs `yarn install` instead of `npm install`. This completely bypasses the npm "Exit Handler never called" bug.
 
-**How to generate:** `pnpm import` converts `package-lock.json` → `pnpm-lock.yaml` in seconds.
-**Why:** The npm hook fix (upgrading npm via `npm install -g npm@10`) fails because the buggy npm crashes when trying to upgrade itself (chicken-and-egg). pnpm sidesteps the entire issue.
+**How to generate:** `npx synp --source-file package-lock.json` converts package-lock.json → yarn.lock in ~5 seconds. Do NOT use `yarn install` — it times out in the Replit sandbox.
+
+**Critical:** `yarn.lock` must be **committed to git** before triggering the EAS build. EAS uses `git archive` which only includes tracked (committed) files. Untracked files are never in the EAS archive even if they appear in the working directory. Generate yarn.lock, then `mark_task_complete` to commit it, then trigger the next build.
+
+**pnpm does NOT work** — EAS Build only detects npm and yarn, not pnpm. pnpm-lock.yaml is ignored.
+
+**Priority when both lockfiles present:** EAS prefers yarn.lock over package-lock.json when both are committed.
+
+## Hook: curl-based npm upgrade (belt-and-suspenders)
+The hook at `eas-hooks/eas-build-pre-install.sh` now uses `curl` to download npm@10.9.2 directly rather than `npm install -g npm@10`. This avoids the chicken-and-egg problem.
+
+**Why curl:** Running `npm install -g npm@10` uses the buggy npm to upgrade itself — it crashes with "Exit handler" too. Curl downloads the tarball without invoking npm, then `cp -rf` replaces the npm module in place.
 
 ## Deprecated packages to remove before EAS builds
 - `@types/react-native` — stub types definition; react-native provides its own. Remove from devDependencies.
