@@ -69,6 +69,7 @@
   "private": true,
   "overrides": {
     "@xmldom/xmldom": "^0.8.12",
-    "tar": "^6.2.1"
+    "tar": "^6.2.1",
+    "shell-quote": "^1.8.4"
   }
 }
