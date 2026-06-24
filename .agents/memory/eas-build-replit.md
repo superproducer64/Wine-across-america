@@ -15,6 +15,13 @@ Use `GIT_INDEX_FILE=/tmp/eas-git-index` as an env prefix when running `eas build
 GIT_INDEX_FILE=/tmp/eas-git-index EAS_BUILD_NO_EXPO_GO_WARNING=1 npx eas-cli build --platform ios --profile production --non-interactive
 ```
 
+## Alternative: disable autoIncrement (confirmed working as of June 2026)
+Set `"autoIncrement": false` in `eas.json` `build.production`. This prevents EAS from attempting the git commit for the build number bump entirely.
+
+**Tradeoff:** You must manually increment `ios.buildNumber` in `app.json` before each build. EAS will still use git archive (read-only) without issue.
+
+**When to use:** If `GIT_INDEX_FILE` trick doesn't fully resolve the lock issue, `autoIncrement: false` is the reliable fallback. The `eas.json` currently uses `autoIncrement: false` after build #27.
+
 ## iOS build image (as of June 2026)
 Use `macos-sequoia-15.6-xcode-26.2` — Apple requires Xcode 26+ for ALL App Store/TestFlight submissions since April 28, 2026. Xcode 15 builds are rejected.
 
@@ -48,6 +55,8 @@ echo "npm version: $(npm --version)"
 3. Ensure yarn.lock is committed to git (EAS uses `git archive` — untracked files are NOT included, but modifications to tracked files ARE included).
 4. Keep `package-lock.json` in the archive (EAS prefers yarn.lock when both exist).
 
+**Caveat (June 2026):** If `package-lock.json` was already modified to have clean URLs (from a previous sed run), synp generates a malformed yarn.lock with just version numbers in `resolved` fields instead of full URLs. Workaround: restore yarn.lock from git HEAD (`git show HEAD:yarn.lock > yarn.lock`) — it's valid as long as no new packages were added.
+
 **Why yarn, not npm:** npm 10.x on `macos-sequoia-15.6-xcode-26.2` crashes with "Exit handler never called!" during `npm install`. yarn doesn't have this bug.
 
 **pnpm does NOT work** — EAS Build only detects npm and yarn, not pnpm.
@@ -72,5 +81,8 @@ Web-only devDependencies (vite, rollup, framer-motion, tailwindcss, lucide-react
 - Set `postinstall` to `npx patch-package || true` so a patch version mismatch doesn't abort the build
 - Add `.easignore` to exclude `dist/`, `.expo/`, `.local/`, `attached_assets/` (reduces archive from ~250MB to ~140MB)
 
-## Build number note
-EAS `autoIncrement: true` bumps `app.json` `buildNumber` on every build attempt, even failed ones. Failed attempts still increment the counter. Keep track accordingly.
+## Build number management
+- `autoIncrement: false` in eas.json (current setting after build #27) — manually set `ios.buildNumber` in `app.json` before each build
+- EAS `autoIncrement: true` (old setting) bumps `app.json` `buildNumber` on every build attempt, even failed ones. Failed attempts still increment the counter.
+- Current buildNumber in app.json: `"27"` (submitted June 2026, EAS build dc20e318-778d-4e2d-adeb-8f371573594c)
+- For next build: increment to `"28"` in app.json before triggering
