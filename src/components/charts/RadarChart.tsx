@@ -55,11 +55,15 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 const TOOLTIP_W = 68;
 const TOOLTIP_H = 36;
 const TOOLTIP_MARGIN = 6;
 const FADE_IN_MS = 180;
 const FADE_OUT_MS = 120;
+const RING_FADE_OUT_MS = 120;
+const RING_RADIUS = 9;
 
 export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.gold }: RadarChartProps) {
   const [selected, setSelected] = useState<DimKey | null>(null);
@@ -111,9 +115,8 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
     };
   }
 
-  // What should be shown (the intent)
+  // ── Tooltip animation ──────────────────────────────────────────────────────
   const targetTooltipRef = useRef<TooltipData | null>(null);
-  // What is currently rendered (updated during transitions)
   const [renderedTooltip, setRenderedTooltip] = useState<TooltipData | null>(null);
   const renderedTooltipRef = useRef<TooltipData | null>(null);
 
@@ -155,32 +158,99 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
     });
   }
 
+  // ── Ring animation ─────────────────────────────────────────────────────────
+  const ringAnim = useRef(new Animated.Value(0)).current;
+  const ringAnimRef = useRef<Animated.CompositeAnimation | null>(null);
+  const [renderedRingKey, setRenderedRingKey] = useState<DimKey | null>(null);
+  const renderedRingKeyRef = useRef<DimKey | null>(null);
+  const targetRingKeyRef = useRef<DimKey | null>(null);
+
+  function stopRing() {
+    if (ringAnimRef.current) {
+      ringAnimRef.current.stop();
+      ringAnimRef.current = null;
+    }
+  }
+
+  function ringSpringIn(key: DimKey) {
+    renderedRingKeyRef.current = key;
+    setRenderedRingKey(key);
+    ringAnim.setValue(0);
+    const anim = Animated.spring(ringAnim, {
+      toValue: 1,
+      tension: 200,
+      friction: 12,
+      useNativeDriver: false,
+    });
+    ringAnimRef.current = anim;
+    anim.start(({ finished }) => {
+      if (finished) ringAnimRef.current = null;
+    });
+  }
+
+  function ringFadeOut(onDone: () => void) {
+    const anim = Animated.timing(ringAnim, {
+      toValue: 0,
+      duration: RING_FADE_OUT_MS,
+      useNativeDriver: false,
+    });
+    ringAnimRef.current = anim;
+    anim.start(({ finished }) => {
+      ringAnimRef.current = null;
+      if (finished) onDone();
+    });
+  }
+
+  // ── Combined selection effect ───────────────────────────────────────────────
   useEffect(() => {
+    // Tooltip
     const nextTooltip = computeTooltip(selected);
     targetTooltipRef.current = nextTooltip;
     const currentlyShowing = renderedTooltipRef.current;
 
     if (!currentlyShowing && nextTooltip) {
-      // Nothing shown → fade in
       fadeIn(nextTooltip);
     } else if (currentlyShowing && !nextTooltip) {
-      // Shown → dismissed: fade out then unmount
       stopCurrent();
       fadeOut(() => {
         renderedTooltipRef.current = null;
         setRenderedTooltip(null);
       });
     } else if (currentlyShowing && nextTooltip) {
-      // Spoke-to-spoke: fade out current, then fade in new
       stopCurrent();
       fadeOut(() => {
-        // Use the latest target in case selection changed again mid-flight
         const latestTarget = targetTooltipRef.current;
         if (latestTarget) {
           fadeIn(latestTarget);
         } else {
           renderedTooltipRef.current = null;
           setRenderedTooltip(null);
+        }
+      });
+    }
+
+    // Ring
+    const nextKey = selected;
+    targetRingKeyRef.current = nextKey;
+    const currentRing = renderedRingKeyRef.current;
+
+    if (!currentRing && nextKey) {
+      ringSpringIn(nextKey);
+    } else if (currentRing && !nextKey) {
+      stopRing();
+      ringFadeOut(() => {
+        renderedRingKeyRef.current = null;
+        setRenderedRingKey(null);
+      });
+    } else if (currentRing && nextKey) {
+      stopRing();
+      ringFadeOut(() => {
+        const latest = targetRingKeyRef.current;
+        if (latest) {
+          ringSpringIn(latest);
+        } else {
+          renderedRingKeyRef.current = null;
+          setRenderedRingKey(null);
         }
       });
     }
@@ -197,6 +267,11 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
       },
     ],
   };
+
+  const ringR = ringAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, RING_RADIUS],
+  });
 
   return (
     <View style={{ width: totalSize, height: totalSize, alignSelf: 'center' }}>
@@ -249,15 +324,16 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
             <G key={i} onPress={() => handleSpokePress(dim.key)}>
               {/* Invisible large hit target */}
               <Circle cx={x} cy={y} r={16} fill="transparent" />
-              {/* Highlight ring */}
-              {isActive && (
-                <Circle
+              {/* Animated highlight ring — spring in, fade out */}
+              {renderedRingKey === dim.key && (
+                <AnimatedCircle
                   cx={x}
                   cy={y}
-                  r={9}
+                  r={ringR}
                   fill={Colors.gold + '30'}
                   stroke={Colors.gold}
                   strokeWidth={1}
+                  opacity={ringAnim}
                 />
               )}
               {/* Score dot */}
