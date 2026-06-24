@@ -179,6 +179,19 @@ export async function createWineEntry(entry: Omit<Parameters<typeof supabase.fro
   return supabase.from('wine_entries').insert(entry).select().single();
 }
 
+export async function findRecentWineEntry(userId: string, name: string, withinMs = 30_000) {
+  const cutoff = new Date(Date.now() - withinMs).toISOString();
+  return supabase
+    .from('wine_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('name', name)
+    .gte('created_at', cutoff)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+}
+
 export async function updateWineEntry(id: string, updates: Record<string, unknown>) {
   return supabase.from('wine_entries').update(updates).eq('id', id).select().single();
 }

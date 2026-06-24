@@ -3,6 +3,7 @@ import { WineEntry, WineEntryDraft, computeTechnicalScore } from '@/types';
 import {
   listWineEntries,
   createWineEntry,
+  findRecentWineEntry,
   updateWineEntry,
   deleteWineEntry,
   searchWineEntries,
@@ -147,6 +148,22 @@ export const useWineStore = create<WineStore>((set, get) => ({
     };
     const { data, error } = await createWineEntry(payload);
     if (error || !data) {
+      // On iOS a brief network blip can drop the response after the INSERT
+      // already committed on the server. Detect this by attempting a recovery
+      // query for an entry with the same name created in the last 30 s.
+      const isNetworkError = (error?.message ?? '').includes('Network request failed');
+      if (isNetworkError) {
+        const { data: recovered } = await findRecentWineEntry(userId, draft.name);
+        if (recovered) {
+          set({ lastSaveError: null });
+          const entry = recovered as WineEntry;
+          set((state) => ({
+            entries: [entry, ...state.entries],
+            totalCount: state.totalCount + 1,
+          }));
+          return entry;
+        }
+      }
       const msg = [error?.code, error?.message, error?.details, error?.hint].filter(Boolean).join(' | ') || 'Unknown error';
       console.warn('[wineStore] addEntry FAILED:', msg, '| payload keys:', Object.keys(payload).join(', '));
       set({ lastSaveError: msg });
