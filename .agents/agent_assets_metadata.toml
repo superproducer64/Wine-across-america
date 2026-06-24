@@ -335,3 +335,9 @@ id = "ZefnJBqVCuJmAzOrUsJOI"
 uri = "file://public/images/vineyard.jpg"
 type = "image"
 title = "beautiful vineyard at golden hour"
+
+[[outputs]]
+id = "DwHwW1wy1ighpnkffbQeD"
+uri = "file://PourAcrossAmerica_build30.zip"
+type = "unspecified"
+title = "Pour Across America — Build #30 IPA (zipped)"
