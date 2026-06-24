@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
-import { WineRadarChart } from './WineRadarChart';
+import { RadarChart } from '@/components/charts/RadarChart';
 import { AromaDonutChart } from '@/components/charts/AromaDonutChart';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
@@ -137,29 +137,32 @@ export function ProWineCard({ entry, compact = false }: Props) {
 
       {/* ── Body: Radar (left) + Flavor Wheel (right) ── */}
       <View style={styles.body}>
-        {/* Left: PROFILE label + Radar + notes (tap to expand) */}
+        {/* Left: PROFILE label + Radar + notes (tap spoke to highlight; button expands) */}
         <View style={styles.leftCol}>
-          <TouchableOpacity
-            onPress={() => setRadarOpen(true)}
-            activeOpacity={0.75}
-            style={styles.wheelTouchable}
-          >
+          <View style={styles.wheelTouchable}>
             <Text style={[styles.colLabel, compact && styles.smallLabel]}>Profile</Text>
-            <WineRadarChart
-              sweetness={entry.sweetness ?? 5}
-              acidity={entry.acidity}
-              body={entry.body}
-              alcohol={entry.alcohol}
-              tannin={entry.tannin}
-              intensity={entry.intensity}
-              finish_length={entry.finish_length ?? 5}
+            <RadarChart
+              scores={{
+                sweetness: entry.sweetness ?? 5,
+                acidity: entry.acidity,
+                body: entry.body,
+                alcohol: entry.alcohol,
+                tannin: entry.tannin,
+                intensity: entry.intensity,
+                finish_length: entry.finish_length ?? 5,
+              }}
               size={colSize}
               color={Colors.ink}
             />
-            <View style={styles.expandBtn}>
-              <Text style={styles.expandBtnText}>⊕ Expand chart</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setRadarOpen(true)}
+              activeOpacity={0.75}
+            >
+              <View style={styles.expandBtn}>
+                <Text style={styles.expandBtnText}>⊕ Expand chart</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
           {entry.free_notes ? (
             <Text
               style={[styles.profileText, compact && styles.profileTextCompact]}
@@ -221,14 +224,16 @@ export function ProWineCard({ entry, compact = false }: Props) {
           {entry.producer || entry.name || ''}
           {entry.vintage ? `  ·  ${entry.vintage}` : ''}
         </Text>
-        <WineRadarChart
-          sweetness={entry.sweetness ?? 5}
-          acidity={entry.acidity}
-          body={entry.body}
-          alcohol={entry.alcohol}
-          tannin={entry.tannin}
-          intensity={entry.intensity}
-          finish_length={entry.finish_length ?? 5}
+        <RadarChart
+          scores={{
+            sweetness: entry.sweetness ?? 5,
+            acidity: entry.acidity,
+            body: entry.body,
+            alcohol: entry.alcohol,
+            tannin: entry.tannin,
+            intensity: entry.intensity,
+            finish_length: entry.finish_length ?? 5,
+          }}
           size={Math.min(popoverSize, 260)}
           color={Colors.ink}
         />

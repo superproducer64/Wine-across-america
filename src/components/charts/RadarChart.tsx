@@ -22,6 +22,7 @@ interface RadarChartProps {
   };
   size?: number;
   maxValue?: number;
+  color?: string;
 }
 
 const DIMENSIONS = [
@@ -52,7 +53,7 @@ const TOOLTIP_W = 68;
 const TOOLTIP_H = 36;
 const TOOLTIP_MARGIN = 6;
 
-export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProps) {
+export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.gold }: RadarChartProps) {
   const [selected, setSelected] = useState<DimKey | null>(null);
 
   const labelPad = 22;
@@ -143,8 +144,8 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
         {/* Score polygon fill */}
         <Polygon
           points={scorePoints.join(' ')}
-          fill={Colors.gold + '28'}
-          stroke={Colors.gold}
+          fill={color + '28'}
+          stroke={color}
           strokeWidth={1.5}
         />
 
@@ -175,7 +176,7 @@ export function RadarChart({ scores, size = 220, maxValue = 10 }: RadarChartProp
                 cx={x}
                 cy={y}
                 r={isActive ? 5 : 3.5}
-                fill={isActive ? Colors.gold : Colors.gold}
+                fill={color}
                 stroke={Colors.surface}
                 strokeWidth={1.5}
               />
