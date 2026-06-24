@@ -1821,7 +1821,7 @@
 
 "@zeit/schemas@2.36.0":
   version "2.36.0"
-  resolved "http://package-firewall.replit.local/npm/@zeit/schemas/-/schemas-2.36.0.tgz"
+  resolved "https://registry.npmjs.org/@zeit/schemas/-/schemas-2.36.0.tgz"
   integrity sha512-7kjMwcChYEzMKjeex9ZFXkt1AyNov9R5HZtjBKVsmVpw7pa7ZtlCGvCBC2vnnXctaYN+aRI61HjIqeetZW5ROg==
 
 abort-controller@^3.0.0:
@@ -1874,7 +1874,7 @@ anser@^1.4.9:
 
 ansi-align@^3.0.1:
   version "3.0.1"
-  resolved "http://package-firewall.replit.local/npm/ansi-align/-/ansi-align-3.0.1.tgz"
+  resolved "https://registry.npmjs.org/ansi-align/-/ansi-align-3.0.1.tgz"
   integrity sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==
   dependencies:
     string-width "^4.1.0"
@@ -1912,7 +1912,7 @@ ansi-regex@^5.0.1:
 
 ansi-regex@^6.2.2:
   version "6.2.2"
-  resolved "http://package-firewall.replit.local/npm/ansi-regex/-/ansi-regex-6.2.2.tgz"
+  resolved "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.2.2.tgz"
   integrity sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==
 
 ansi-styles@^3.2.0:
@@ -1943,7 +1943,7 @@ ansi-styles@^5.0.0:
 
 ansi-styles@^6.1.0:
   version "6.2.3"
-  resolved "http://package-firewall.replit.local/npm/ansi-styles/-/ansi-styles-6.2.3.tgz"
+  resolved "https://registry.npmjs.org/ansi-styles/-/ansi-styles-6.2.3.tgz"
   integrity sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==
 
 any-promise@^1.0.0:
@@ -1966,7 +1966,7 @@ appdirsjs@^1.2.4:
 
 arch@^2.2.0:
   version "2.2.0"
-  resolved "http://package-firewall.replit.local/npm/arch/-/arch-2.2.0.tgz"
+  resolved "https://registry.npmjs.org/arch/-/arch-2.2.0.tgz"
   integrity sha512-Of/R0wqp83cgHozfIYLbBMnej79U/SVGOOyuB3VVFv1NRM/PSFMK12x9KVtiYzJqmnU5WR2qp0Z5rHb7sWGnFQ==
 
 arg@5.0.2:
@@ -2199,7 +2199,7 @@ boolbase@^1.0.0:
 
 boxen@7.0.0:
   version "7.0.0"
-  resolved "http://package-firewall.replit.local/npm/boxen/-/boxen-7.0.0.tgz"
+  resolved "https://registry.npmjs.org/boxen/-/boxen-7.0.0.tgz"
   integrity sha512-j//dBVuyacJbvW+tvZ9HuH03fZ46QcaKvvhZickZqtB271DxJ7SNRSNxrV/dZX0085m7hISRZWbzWlJvx/rHSg==
   dependencies:
     ansi-align "^3.0.1"
@@ -2316,7 +2316,7 @@ builtins@^1.0.3:
 
 bytes@3.0.0:
   version "3.0.0"
-  resolved "http://package-firewall.replit.local/npm/bytes/-/bytes-3.0.0.tgz"
+  resolved "https://registry.npmjs.org/bytes/-/bytes-3.0.0.tgz"
   integrity sha512-pMhOfFDPiv9t5jjIXkHosWmkSyQbvsgEVNkz0ERHbuLh2T/7j4Mqqpz523Fe8MVY89KC6Sh/QfS2sM+SjgFDcw==
 
 bytes@3.1.2:
@@ -2399,7 +2399,7 @@ camelcase@^6.2.0:
 
 camelcase@^7.0.0:
   version "7.0.1"
-  resolved "http://package-firewall.replit.local/npm/camelcase/-/camelcase-7.0.1.tgz"
+  resolved "https://registry.npmjs.org/camelcase/-/camelcase-7.0.1.tgz"
   integrity sha512-xlx1yCK2Oc1APsPXDL2LdlNP6+uu8OCDdhOBSVT279M/S+y75O30C2VuD8T2ogdePBBl7PfPF4504tnLgX3zfw==
 
 caniuse-lite@^1.0.30001782:
@@ -2407,7 +2407,7 @@ caniuse-lite@^1.0.30001782:
 
 chalk-template@0.4.0:
   version "0.4.0"
-  resolved "http://package-firewall.replit.local/npm/chalk-template/-/chalk-template-0.4.0.tgz"
+  resolved "https://registry.npmjs.org/chalk-template/-/chalk-template-0.4.0.tgz"
   integrity sha512-/ghrgmhfY8RaSdeo43hNXxpoHAtxdbskUHjPpfqUWGttFgycUhYPGx3YZBCnUCvOa7Doivn1IZec3DEGFoMgLg==
   dependencies:
     chalk "^4.1.2"
@@ -2440,12 +2440,12 @@ chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.2, chalk@4:
 
 chalk@^5.0.1:
   version "5.6.2"
-  resolved "http://package-firewall.replit.local/npm/chalk/-/chalk-5.6.2.tgz"
+  resolved "https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz"
   integrity sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==
 
 chalk@5.0.1:
   version "5.0.1"
-  resolved "http://package-firewall.replit.local/npm/chalk/-/chalk-5.0.1.tgz"
+  resolved "https://registry.npmjs.org/chalk/-/chalk-5.0.1.tgz"
   integrity sha512-Fo07WOYGqMfCWHOzSXOt2CxDbC6skS/jO9ynEcmpANMoPrD+W1r1K6Vx7iNm+AQmETU1Xr2t+n8nzkV9t6xh3w==
 
 charenc@~0.0.1, charenc@0.0.2:
@@ -2485,7 +2485,7 @@ clean-stack@^2.0.0:
 
 cli-boxes@^3.0.0:
   version "3.0.0"
-  resolved "http://package-firewall.replit.local/npm/cli-boxes/-/cli-boxes-3.0.0.tgz"
+  resolved "https://registry.npmjs.org/cli-boxes/-/cli-boxes-3.0.0.tgz"
   integrity sha512-/lzGpEWL/8PfI0BmBOPRwp0c/wFNX1RdUML3jK/RcSBA9T8mZDdQpqYBKtCFTOfQbwPqWEOpjqW+Fnayc0969g==
 
 cli-cursor@^2.1.0:
@@ -2509,7 +2509,7 @@ cli-spinners@^2.0.0, cli-spinners@^2.5.0:
 
 clipboardy@3.0.0:
   version "3.0.0"
-  resolved "http://package-firewall.replit.local/npm/clipboardy/-/clipboardy-3.0.0.tgz"
+  resolved "https://registry.npmjs.org/clipboardy/-/clipboardy-3.0.0.tgz"
   integrity sha512-Su+uU5sr1jkUy1sGRpLKjKrvEOVXgSgiSInwa/qeID6aJ07yh+5NWc3h2QfjHjBnfX4LhtFcuAWKUsJ3r+fjbg==
   dependencies:
     arch "^2.2.0"
@@ -2682,7 +2682,7 @@ connect@^3.6.5, connect@^3.7.0:
 
 content-disposition@0.5.2:
   version "0.5.2"
-  resolved "http://package-firewall.replit.local/npm/content-disposition/-/content-disposition-0.5.2.tgz"
+  resolved "https://registry.npmjs.org/content-disposition/-/content-disposition-0.5.2.tgz"
   integrity sha512-kRGRZw3bLlFISDBgwTSA1TMBFN6J6GWDeubmDE3AF+3+yXL8hTWv8r5rkLbqYXY4RjPk/EzHnClI3zQf1cFmHA==
 
 convert-source-map@^2.0.0:
@@ -3042,7 +3042,7 @@ emoji-regex@^8.0.0:
 
 emoji-regex@^9.2.2:
   version "9.2.2"
-  resolved "http://package-firewall.replit.local/npm/emoji-regex/-/emoji-regex-9.2.2.tgz"
+  resolved "https://registry.npmjs.org/emoji-regex/-/emoji-regex-9.2.2.tgz"
   integrity sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==
 
 encodeurl@~1.0.2:
@@ -3261,7 +3261,7 @@ execa@^5.0.0:
 
 execa@^5.1.1:
   version "5.1.1"
-  resolved "http://package-firewall.replit.local/npm/execa/-/execa-5.1.1.tgz"
+  resolved "https://registry.npmjs.org/execa/-/execa-5.1.1.tgz"
   integrity sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==
   dependencies:
     cross-spawn "^7.0.3"
@@ -3808,7 +3808,7 @@ get-stream@^4.0.0:
 
 get-stream@^6.0.0:
   version "6.0.1"
-  resolved "http://package-firewall.replit.local/npm/get-stream/-/get-stream-6.0.1.tgz"
+  resolved "https://registry.npmjs.org/get-stream/-/get-stream-6.0.1.tgz"
   integrity sha512-ts6Wi+2j3jQjqi70w5AlN8DFnkSwC+MqmxEzdEALB2qXZYV3X/b1CTfgPLGJNMeAWxdPfU8FO1ms3NUfaHCPYg==
 
 get-symbol-description@^1.1.0:
@@ -4368,7 +4368,7 @@ is-plain-object@^2.0.4:
 
 is-port-reachable@4.0.0:
   version "4.0.0"
-  resolved "http://package-firewall.replit.local/npm/is-port-reachable/-/is-port-reachable-4.0.0.tgz"
+  resolved "https://registry.npmjs.org/is-port-reachable/-/is-port-reachable-4.0.0.tgz"
   integrity sha512-9UoipoxYmSk6Xy7QFgRv2HDyaysmgSG75TFQs6S+3pDM7ZhKTF/bskZV+0UlABHzKjNVhPjYCLfeZUEg1wXxig==
 
 is-regex@^1.2.1:
@@ -5167,7 +5167,7 @@ micromatch@^4.0.2, micromatch@^4.0.4, micromatch@^4.0.8:
 
 mime-db@~1.33.0:
   version "1.33.0"
-  resolved "http://package-firewall.replit.local/npm/mime-db/-/mime-db-1.33.0.tgz"
+  resolved "https://registry.npmjs.org/mime-db/-/mime-db-1.33.0.tgz"
   integrity sha512-BHJ/EKruNIqJf/QahvxwQZXKygOQ256myeN/Ew+THcAa5q+PjyTTMMeNQC4DZw5AwfvelsUrA6B67NKMqXDbzQ==
 
 mime-types@^2.1.27, mime-types@^2.1.35, mime-types@~2.1.34:
@@ -5179,7 +5179,7 @@ mime-types@^2.1.27, mime-types@^2.1.35, mime-types@~2.1.34:
 
 mime-types@2.1.18:
   version "2.1.18"
-  resolved "http://package-firewall.replit.local/npm/mime-types/-/mime-types-2.1.18.tgz"
+  resolved "https://registry.npmjs.org/mime-types/-/mime-types-2.1.18.tgz"
   integrity sha512-lc/aahn+t4/SWV/qcmumYjymLsWfN3ELhpmVuUFjgsORruuZPVSwAQryq+HHGvO/SI2KVX26bx+En+zhM8g8hQ==
   dependencies:
     mime-db "~1.33.0"
@@ -5201,7 +5201,7 @@ mimic-fn@^1.0.0:
 
 mimic-fn@^2.1.0:
   version "2.1.0"
-  resolved "http://package-firewall.replit.local/npm/mimic-fn/-/mimic-fn-2.1.0.tgz"
+  resolved "https://registry.npmjs.org/mimic-fn/-/mimic-fn-2.1.0.tgz"
   integrity sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==
 
 minimatch@^3.0.2, minimatch@^3.0.4, minimatch@^3.1.1, minimatch@3.1.5:
@@ -5416,7 +5416,7 @@ npm-run-path@^2.0.0:
 
 npm-run-path@^4.0.1:
   version "4.0.1"
-  resolved "http://package-firewall.replit.local/npm/npm-run-path/-/npm-run-path-4.0.1.tgz"
+  resolved "https://registry.npmjs.org/npm-run-path/-/npm-run-path-4.0.1.tgz"
   integrity sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==
   dependencies:
     path-key "^3.0.0"
@@ -5517,7 +5517,7 @@ onetime@^2.0.0:
 
 onetime@^5.1.0, onetime@^5.1.2:
   version "5.1.2"
-  resolved "http://package-firewall.replit.local/npm/onetime/-/onetime-5.1.2.tgz"
+  resolved "https://registry.npmjs.org/onetime/-/onetime-5.1.2.tgz"
   integrity sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==
   dependencies:
     mimic-fn "^2.1.0"
@@ -5732,7 +5732,7 @@ path-is-absolute@^1.0.0:
 
 path-is-inside@1.0.2:
   version "1.0.2"
-  resolved "http://package-firewall.replit.local/npm/path-is-inside/-/path-is-inside-1.0.2.tgz"
+  resolved "https://registry.npmjs.org/path-is-inside/-/path-is-inside-1.0.2.tgz"
   integrity sha512-DUWJr3+ULp4zXmol/SZkFf3JGsS9/SIv+Y3Rt93/UjPpDpklB5f1er4O3POIbUuUJ3FXgqte2Q7SrU6zAqwk8w==
 
 path-key@^2.0.0:
@@ -5765,7 +5765,7 @@ path-scurry@^1.11.1, path-scurry@^1.6.1:
 
 path-to-regexp@3.3.0:
   version "3.3.0"
-  resolved "http://package-firewall.replit.local/npm/path-to-regexp/-/path-to-regexp-3.3.0.tgz"
+  resolved "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-3.3.0.tgz"
   integrity sha512-qyCH421YQPS2WFDxDjftfc1ZR5WKQzVzqsp4n9M2kQhVOo/ByahFoUNJfl58kOcEGfQ//7weFTDhm+ss8Ecxgw==
 
 path-type@^4.0.0:
@@ -5995,7 +5995,7 @@ range-parser@~1.2.1:
 
 range-parser@1.2.0:
   version "1.2.0"
-  resolved "http://package-firewall.replit.local/npm/range-parser/-/range-parser-1.2.0.tgz"
+  resolved "https://registry.npmjs.org/range-parser/-/range-parser-1.2.0.tgz"
   integrity sha512-kA5WQoNVo4t9lNx2kQNFCxKeBl5IbbSNBl1M/tLkw9WCn+hxNBAW5Qh8gdhs63CJnhjJ2zQWFoqPJP2sK1AV5A==
 
 rc@^1.0.1, rc@^1.1.6, rc@~1.2.7:
@@ -6273,7 +6273,7 @@ regexpu-core@^6.3.1:
 
 registry-auth-token@3.3.2:
   version "3.3.2"
-  resolved "http://package-firewall.replit.local/npm/registry-auth-token/-/registry-auth-token-3.3.2.tgz"
+  resolved "https://registry.npmjs.org/registry-auth-token/-/registry-auth-token-3.3.2.tgz"
   integrity sha512-JL39c60XlzCVgNrO+qq68FoNb56w/m7JYvGR2jT5iR1xBrUA3Mfx5Twk5rqTThPmQKMWydGmq8oFtDlxfrmxnQ==
   dependencies:
     rc "^1.1.6"
@@ -6281,7 +6281,7 @@ registry-auth-token@3.3.2:
 
 registry-url@3.1.0:
   version "3.1.0"
-  resolved "http://package-firewall.replit.local/npm/registry-url/-/registry-url-3.1.0.tgz"
+  resolved "https://registry.npmjs.org/registry-url/-/registry-url-3.1.0.tgz"
   integrity sha512-ZbgR5aZEdf4UKZVBPYIgaglBmSF2Hi94s2PcIHhRGFjKYu+chjJdYfHn4rt3hB6eCKLJ8giVIIfgMa1ehDfZKA==
   dependencies:
     rc "^1.0.1"
@@ -6547,7 +6547,7 @@ serialize-error@^2.1.0:
 
 serve-handler@6.1.7:
   version "6.1.7"
-  resolved "http://package-firewall.replit.local/npm/serve-handler/-/serve-handler-6.1.7.tgz"
+  resolved "https://registry.npmjs.org/serve-handler/-/serve-handler-6.1.7.tgz"
   integrity sha512-CinAq1xWb0vR3twAv9evEU8cNWkXCb9kd5ePAHUKJBkOsUpR1wt/CvGdeca7vqumL1U5cSaeVQ6zZMxiJ3yWsg==
   dependencies:
     bytes "3.0.0"
@@ -6570,7 +6570,7 @@ serve-static@^1.13.1:
 
 serve@^14.2.6:
   version "14.2.6"
-  resolved "http://package-firewall.replit.local/npm/serve/-/serve-14.2.6.tgz"
+  resolved "https://registry.npmjs.org/serve/-/serve-14.2.6.tgz"
   integrity sha512-QEjUSA+sD4Rotm1znR8s50YqA3kYpRGPmtd5GlFxbaL9n/FdUNbqMhxClqdditSk0LlZyA/dhud6XNRTOC9x2Q==
   dependencies:
     "@zeit/schemas" "2.36.0"
@@ -6664,7 +6664,7 @@ shebang-regex@^3.0.0:
 
 shell-quote@^1.8.4:
   version "1.8.4"
-  resolved "http://package-firewall.replit.local/npm/shell-quote/-/shell-quote-1.8.4.tgz"
+  resolved "https://registry.npmjs.org/shell-quote/-/shell-quote-1.8.4.tgz"
   integrity sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==
 
 side-channel-list@^1.0.0:
@@ -6897,7 +6897,7 @@ string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
 
 string-width@^5.0.1, string-width@^5.1.2:
   version "5.1.2"
-  resolved "http://package-firewall.replit.local/npm/string-width/-/string-width-5.1.2.tgz"
+  resolved "https://registry.npmjs.org/string-width/-/string-width-5.1.2.tgz"
   integrity sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==
   dependencies:
     eastasianwidth "^0.2.0"
@@ -6962,7 +6962,7 @@ strip-ansi@^6.0.1:
 
 strip-ansi@^7.0.1:
   version "7.2.0"
-  resolved "http://package-firewall.replit.local/npm/strip-ansi/-/strip-ansi-7.2.0.tgz"
+  resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.2.0.tgz"
   integrity sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==
   dependencies:
     ansi-regex "^6.2.2"
@@ -7232,7 +7232,7 @@ type-fest@^0.7.1:
 
 type-fest@^2.13.0:
   version "2.19.0"
-  resolved "http://package-firewall.replit.local/npm/type-fest/-/type-fest-2.19.0.tgz"
+  resolved "https://registry.npmjs.org/type-fest/-/type-fest-2.19.0.tgz"
   integrity sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==
 
 typed-array-buffer@^1.0.3:
@@ -7401,7 +7401,7 @@ update-browserslist-db@^1.2.3:
 
 update-check@1.5.4:
   version "1.5.4"
-  resolved "http://package-firewall.replit.local/npm/update-check/-/update-check-1.5.4.tgz"
+  resolved "https://registry.npmjs.org/update-check/-/update-check-1.5.4.tgz"
   integrity sha512-5YHsflzHP4t1G+8WGPlvKbJEbAJGCgw+Em+dGR1KmBUbr1J36SJBqlHLjR7oob7sco5hWHGQVcr9B2poIVDDTQ==
   dependencies:
     registry-auth-token "3.3.2"
@@ -7610,7 +7610,7 @@ which@^2.0.1:
 
 widest-line@^4.0.1:
   version "4.0.1"
-  resolved "http://package-firewall.replit.local/npm/widest-line/-/widest-line-4.0.1.tgz"
+  resolved "https://registry.npmjs.org/widest-line/-/widest-line-4.0.1.tgz"
   integrity sha512-o0cyEG0e8GPzT4iGHphIOh0cJOV8fivsXxddQasHPHfoZf1ZexrfeA21w2NaEN1RHE+fXlfISmOE8R9N3u3Qig==
   dependencies:
     string-width "^5.0.1"
@@ -7649,7 +7649,7 @@ wrap-ansi@^7.0.0:
 
 wrap-ansi@^8.0.1:
   version "8.1.0"
-  resolved "http://package-firewall.replit.local/npm/wrap-ansi/-/wrap-ansi-8.1.0.tgz"
+  resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-8.1.0.tgz"
   integrity sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==
   dependencies:
     ansi-styles "^6.1.0"

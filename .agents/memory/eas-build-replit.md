@@ -46,6 +46,20 @@ echo "npm version: $(npm --version)"
 
 **What does NOT fix it:** `.npmrc` `legacy-peer-deps=true` alone, removing peer-conflicting packages alone, switching Xcode images, adding `hooks` key to `eas.json` (that key is not valid — EAS rejects it).
 
+## After any `npm install` inside Replit — ALWAYS scrub proxy URLs before EAS build
+
+Running `npm install` (even `--package-lock-only`) inside Replit rewrites ALL resolved URLs in `package-lock.json` AND `yarn.lock` to `http://package-firewall.replit.local/npm/...` — an internal proxy EAS servers cannot reach. EAS build will fail at "Install dependencies" with a 403 or resolution error.
+
+**Fix (run after every npm install, before triggering EAS):**
+```bash
+sed -i 's|http://package-firewall\.replit\.local/npm|https://registry.npmjs.org|g' package-lock.json yarn.lock
+# Verify both are clean:
+grep -c "package-firewall" package-lock.json yarn.lock
+```
+Both should return 0.
+
+**Why:** Replit routes all npm downloads through its security firewall proxy. The URLs get baked into lockfiles. EAS runs on Expo's macOS fleet which has no route to `package-firewall.replit.local`.
+
 ## WORKING fix: yarn.lock with real npm registry URLs
 
 **Full procedure (all steps required):**
