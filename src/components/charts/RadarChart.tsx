@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, {
   Polygon,
   Line,
   Circle,
   Text as SvgText,
-  Rect,
   G,
 } from 'react-native-svg';
 import { Colors, Fonts } from '@/theme';
@@ -37,6 +36,13 @@ const DIMENSIONS = [
 
 type DimKey = (typeof DIMENSIONS)[number]['key'];
 
+interface TooltipData {
+  x: number;
+  y: number;
+  label: string;
+  value: number;
+}
+
 function polarToCartesian(angle: number, radius: number, cx: number, cy: number) {
   const rad = (angle - 90) * (Math.PI / 180);
   return {
@@ -52,6 +58,8 @@ function clamp(value: number, min: number, max: number) {
 const TOOLTIP_W = 68;
 const TOOLTIP_H = 36;
 const TOOLTIP_MARGIN = 6;
+const FADE_IN_MS = 180;
+const FADE_OUT_MS = 120;
 
 export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.gold }: RadarChartProps) {
   const [selected, setSelected] = useState<DimKey | null>(null);
@@ -86,28 +94,109 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
     setSelected((prev) => (prev === key ? null : key));
   };
 
-  const selectedIndex = selected ? DIMENSIONS.findIndex((d) => d.key === selected) : -1;
-  let tooltip: {
-    x: number;
-    y: number;
-    label: string;
-    value: number;
-  } | null = null;
-
-  if (selected !== null && selectedIndex >= 0) {
-    const angle = (selectedIndex * 360) / n;
-    const val = scores[selected] ?? 0;
+  function computeTooltip(sel: DimKey | null): TooltipData | null {
+    if (sel === null) return null;
+    const idx = DIMENSIONS.findIndex((d) => d.key === sel);
+    if (idx < 0) return null;
+    const angle = (idx * 360) / n;
+    const val = scores[sel] ?? 0;
     const r = (val / maxValue) * radius;
     const { x: dx, y: dy } = polarToCartesian(angle, r, cx, cy);
-
     const raw = { x: dx - TOOLTIP_W / 2, y: dy - TOOLTIP_H - TOOLTIP_MARGIN };
-    tooltip = {
+    return {
       x: clamp(raw.x, 2, totalSize - TOOLTIP_W - 2),
       y: clamp(raw.y, 2, totalSize - TOOLTIP_H - 2),
-      label: DIMENSIONS[selectedIndex].label,
+      label: DIMENSIONS[idx].label,
       value: val,
     };
   }
+
+  // What should be shown (the intent)
+  const targetTooltipRef = useRef<TooltipData | null>(null);
+  // What is currently rendered (updated during transitions)
+  const [renderedTooltip, setRenderedTooltip] = useState<TooltipData | null>(null);
+  const renderedTooltipRef = useRef<TooltipData | null>(null);
+
+  const animProgress = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  function stopCurrent() {
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current = null;
+    }
+  }
+
+  function fadeIn(data: TooltipData) {
+    renderedTooltipRef.current = data;
+    setRenderedTooltip(data);
+    animProgress.setValue(0);
+    const anim = Animated.timing(animProgress, {
+      toValue: 1,
+      duration: FADE_IN_MS,
+      useNativeDriver: true,
+    });
+    animationRef.current = anim;
+    anim.start(({ finished }) => {
+      if (finished) animationRef.current = null;
+    });
+  }
+
+  function fadeOut(onDone: () => void) {
+    const anim = Animated.timing(animProgress, {
+      toValue: 0,
+      duration: FADE_OUT_MS,
+      useNativeDriver: true,
+    });
+    animationRef.current = anim;
+    anim.start(({ finished }) => {
+      animationRef.current = null;
+      if (finished) onDone();
+    });
+  }
+
+  useEffect(() => {
+    const nextTooltip = computeTooltip(selected);
+    targetTooltipRef.current = nextTooltip;
+    const currentlyShowing = renderedTooltipRef.current;
+
+    if (!currentlyShowing && nextTooltip) {
+      // Nothing shown → fade in
+      fadeIn(nextTooltip);
+    } else if (currentlyShowing && !nextTooltip) {
+      // Shown → dismissed: fade out then unmount
+      stopCurrent();
+      fadeOut(() => {
+        renderedTooltipRef.current = null;
+        setRenderedTooltip(null);
+      });
+    } else if (currentlyShowing && nextTooltip) {
+      // Spoke-to-spoke: fade out current, then fade in new
+      stopCurrent();
+      fadeOut(() => {
+        // Use the latest target in case selection changed again mid-flight
+        const latestTarget = targetTooltipRef.current;
+        if (latestTarget) {
+          fadeIn(latestTarget);
+        } else {
+          renderedTooltipRef.current = null;
+          setRenderedTooltip(null);
+        }
+      });
+    }
+  }, [selected]);
+
+  const tooltipAnimStyle = {
+    opacity: animProgress,
+    transform: [
+      {
+        scale: animProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.82, 1],
+        }),
+      },
+    ],
+  };
 
   return (
     <View style={{ width: totalSize, height: totalSize, alignSelf: 'center' }}>
@@ -206,45 +295,61 @@ export function RadarChart({ scores, size = 220, maxValue = 10, color = Colors.g
             </SvgText>
           );
         })}
-
-        {/* Tooltip */}
-        {tooltip && (
-          <G>
-            <Rect
-              x={tooltip.x}
-              y={tooltip.y}
-              width={TOOLTIP_W}
-              height={TOOLTIP_H}
-              rx={7}
-              ry={7}
-              fill={Colors.ink}
-              opacity={0.88}
-            />
-            <SvgText
-              x={tooltip.x + TOOLTIP_W / 2}
-              y={tooltip.y + 13}
-              textAnchor="middle"
-              fontSize={10}
-              fill="#FFFFFF"
-              fontFamily={Fonts.dmSans}
-              opacity={0.8}
-            >
-              {tooltip.label}
-            </SvgText>
-            <SvgText
-              x={tooltip.x + TOOLTIP_W / 2}
-              y={tooltip.y + 27}
-              textAnchor="middle"
-              fontSize={13}
-              fill={Colors.goldLight}
-              fontFamily={Fonts.dmSansMedium}
-              fontWeight="bold"
-            >
-              {tooltip.value.toFixed(1)} / {maxValue}
-            </SvgText>
-          </G>
-        )}
       </Svg>
+
+      {/* Animated tooltip overlay (outside SVG so RN Animated can drive it) */}
+      {renderedTooltip && (
+        <Animated.View
+          style={[
+            styles.tooltip,
+            {
+              left: renderedTooltip.x,
+              top: renderedTooltip.y,
+              width: TOOLTIP_W,
+              height: TOOLTIP_H,
+            },
+            tooltipAnimStyle,
+          ]}
+          pointerEvents="none"
+        >
+          <Text style={styles.tooltipLabel}>{renderedTooltip.label}</Text>
+          <Text style={styles.tooltipValue}>
+            {renderedTooltip.value.toFixed(1)}
+            <Text style={styles.tooltipMax}> / {maxValue}</Text>
+          </Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: Colors.ink,
+    borderRadius: 7,
+    opacity: 0.88,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 3,
+  },
+  tooltipLabel: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    opacity: 0.8,
+    fontFamily: Fonts.dmSans,
+    lineHeight: 13,
+  },
+  tooltipValue: {
+    color: Colors.goldLight,
+    fontSize: 13,
+    fontFamily: Fonts.dmSansMedium,
+    fontWeight: 'bold',
+    lineHeight: 16,
+  },
+  tooltipMax: {
+    color: Colors.goldLight,
+    fontSize: 10,
+    fontWeight: 'normal',
+  },
+});
