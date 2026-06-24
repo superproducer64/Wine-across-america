@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
+import { Animated, View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -186,9 +186,12 @@ export function AromaDonutChart({
   if (!aromasL1.length) return null;
 
   const [selected, setSelected] = useState<SelectedInfo>(null);
-  const [scale, setScale] = useState(1);
-  const lastDistRef = useRef<number | null>(null);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const scaleRef = useRef(1);
+  const panAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const panRef = useRef({ x: 0, y: 0 });
+  const lastDistRef = useRef<number | null>(null);
+  const lastSingleRef = useRef<{ x: number; y: number } | null>(null);
 
   const cx = size / 2;
   const cy = size / 2;
@@ -358,32 +361,62 @@ export function AromaDonutChart({
     }
   };
 
-  // Pinch-to-zoom (native only)
+  // Pinch-to-zoom + 1-finger pan (native only)
   const panResponder = pinchable ? PanResponder.create({
+    // Immediately claim 2-finger touches; let taps pass through on start
     onStartShouldSetPanResponder: e => e.nativeEvent.touches.length === 2,
-    onMoveShouldSetPanResponder:  e => e.nativeEvent.touches.length === 2,
+    // Claim 1-finger moves only when already zoomed in
+    onMoveShouldSetPanResponder: e => {
+      const t = e.nativeEvent.touches;
+      return t.length === 2 || (t.length === 1 && scaleRef.current > 1.05);
+    },
     onPanResponderMove: e => {
       const t = e.nativeEvent.touches;
       if (t.length === 2) {
+        // Pinch — update scale
         const dx = t[0].pageX - t[1].pageX;
         const dy = t[0].pageY - t[1].pageY;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (lastDistRef.current !== null) {
           scaleRef.current = Math.min(Math.max(scaleRef.current * (dist / lastDistRef.current), 0.7), 3.5);
-          setScale(scaleRef.current);
+          scaleAnim.setValue(scaleRef.current);
+          // Reset translation when zoomed fully back out
+          if (scaleRef.current <= 1) {
+            panRef.current = { x: 0, y: 0 };
+            panAnim.setValue({ x: 0, y: 0 });
+          }
         }
         lastDistRef.current = dist;
+        lastSingleRef.current = null;
+      } else if (t.length === 1 && scaleRef.current > 1.05) {
+        // 1-finger pan — only when zoomed in
+        const touch = { x: t[0].pageX, y: t[0].pageY };
+        if (lastSingleRef.current !== null) {
+          panRef.current = {
+            x: panRef.current.x + (touch.x - lastSingleRef.current.x),
+            y: panRef.current.y + (touch.y - lastSingleRef.current.y),
+          };
+          panAnim.setValue(panRef.current);
+        }
+        lastSingleRef.current = touch;
       }
     },
-    onPanResponderRelease: () => { lastDistRef.current = null; },
+    onPanResponderRelease: () => {
+      lastDistRef.current = null;
+      lastSingleRef.current = null;
+    },
+    onPanResponderTerminate: () => {
+      lastDistRef.current = null;
+      lastSingleRef.current = null;
+    },
   }) : { panHandlers: {} };
 
   return (
     <View style={styles.wrapper}>
       {/* ── Wheel ── */}
-      <View
+      <Animated.View
         {...(pinchable ? panResponder.panHandlers : {})}
-        style={{ transform: [{ scale }] }}
+        style={{ transform: [{ scale: scaleAnim }, { translateX: panAnim.x }, { translateY: panAnim.y }] }}
       >
         {/* Single Pressable over the whole wheel — coordinate hit-testing handles
             which segment was tapped. This is the only reliable approach on
@@ -512,7 +545,7 @@ export function AromaDonutChart({
           })}
         </Svg>
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* ── Segment Detail Popover ── */}
       {/* Web: portal renders at document.body — escapes all RN stacking contexts */}
