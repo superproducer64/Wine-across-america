@@ -53,45 +53,39 @@ const SCORE_ZONES: Record<string, SliderZone[]> = {
   ],
 };
 
-function getZoneForValue(zones: SliderZone[], value: number): SliderZone | null {
+function getActiveZone(zones: SliderZone[], value: number): SliderZone | null {
   return zones.find((z) => value >= z.min && value <= z.max) ?? null;
 }
 
-// ─── Pinchable card wrapper ────────────────────────────────────────────────────
-function PinchableCard({ children, style }: { children: React.ReactNode; style?: object }) {
+// ─── Pinchable wrapper ─────────────────────────────────────────────────────────
+// Wraps content in a PinchGestureHandler. Scale accumulates across gestures,
+// clamped to 0.7×–2.5×. useNativeDriver:false so it works on both web and native
+// without conflicting with PanResponder inside ScoreSlider.
+function PinchableCard({ children }: { children: React.ReactNode }) {
   const baseScale = useRef(new Animated.Value(1)).current;
-  const currentPinch = useRef(new Animated.Value(1)).current;
+  const pinchDelta = useRef(new Animated.Value(1)).current;
   const lastScale = useRef(1);
-  const composedScale = Animated.multiply(baseScale, currentPinch);
+  const composed = Animated.multiply(baseScale, pinchDelta);
 
   const onPinchEvent = Animated.event<PinchGestureHandlerGestureEvent>(
-    [{ nativeEvent: { scale: currentPinch } }],
-    { useNativeDriver: true }
+    [{ nativeEvent: { scale: pinchDelta } }],
+    { useNativeDriver: false }
   );
 
   const onPinchStateChange = (
     e: HandlerStateChangeEvent<PinchGestureHandlerEventPayload>
   ) => {
     if (e.nativeEvent.oldState === State.ACTIVE) {
-      const rawScale = lastScale.current * e.nativeEvent.scale;
-      const clamped = Math.min(2.5, Math.max(0.7, rawScale));
-      lastScale.current = clamped;
-      baseScale.setValue(clamped);
-      currentPinch.setValue(1);
+      const next = Math.min(2.5, Math.max(0.7, lastScale.current * e.nativeEvent.scale));
+      lastScale.current = next;
+      baseScale.setValue(next);
+      pinchDelta.setValue(1);
     }
   };
 
   return (
-    <PinchGestureHandler
-      onGestureEvent={onPinchEvent}
-      onHandlerStateChange={onPinchStateChange}
-    >
-      <Animated.View
-        style={[
-          style,
-          { transform: [{ scale: composedScale }] },
-        ]}
-      >
+    <PinchGestureHandler onGestureEvent={onPinchEvent} onHandlerStateChange={onPinchStateChange}>
+      <Animated.View style={[styles.dimCard, { transform: [{ scale: composed }] }]}>
         {children}
       </Animated.View>
     </PinchGestureHandler>
@@ -109,47 +103,47 @@ interface ScoreDimCardProps {
 
 function ScoreDimCard({ cat, value, isAutoFilled, onChange, onInfo }: ScoreDimCardProps) {
   const zones = SCORE_ZONES[cat.key] ?? [];
-  const zone = getZoneForValue(zones, value);
+  const zone = getActiveZone(zones, value);
 
   return (
-    <PinchableCard style={styles.dimCard}>
-      {/* Card header row */}
-      <View style={styles.dimCardHeader}>
-        <Text style={styles.dimLabel}>{cat.label}</Text>
-        <View style={styles.dimValueRow}>
+    <PinchableCard>
+      {/* Header: name + auto badge + score */}
+      <View style={styles.dimHeader}>
+        <View style={styles.dimLabelRow}>
+          <Text style={styles.dimLabel}>{cat.label}</Text>
           {isAutoFilled && (
             <View style={styles.autoBadge}>
               <Text style={styles.autoBadgeText}>Auto</Text>
             </View>
           )}
-          <Text style={styles.dimValue}>{value}<Text style={styles.dimValueMax}>/20</Text></Text>
         </View>
+        <Text style={styles.dimValue}>
+          {value}<Text style={styles.dimValueMax}>/20</Text>
+        </Text>
       </View>
 
       {/* Zone pill */}
       {zone && (
         <View style={[styles.zonePill, { backgroundColor: zone.color + '28', borderColor: zone.color + '90' }]}>
           <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
-          <Text style={[styles.zoneLabel, { color: zone.color }]}>{zone.label}</Text>
+          <Text style={[styles.zoneText, { color: zone.color }]}>{zone.label}</Text>
         </View>
       )}
 
       {/* Description */}
       <Text style={styles.dimDesc}>{cat.description}</Text>
 
-      {/* Slider */}
-      <View style={styles.dimSliderWrap}>
-        <ScoreSlider
-          label={cat.label}
-          value={value}
-          min={0}
-          max={20}
-          step={1}
-          zones={zones}
-          onChange={onChange}
-          onInfo={onInfo}
-        />
-      </View>
+      {/* Slider — rendered last so it gets full card width */}
+      <ScoreSlider
+        label={cat.label}
+        value={value}
+        min={0}
+        max={20}
+        step={1}
+        zones={zones}
+        onChange={onChange}
+        onInfo={onInfo}
+      />
     </PinchableCard>
   );
 }
@@ -168,18 +162,12 @@ export function Step4TechnicalScore() {
 
   const total = computeTechnicalScore(draft);
   const pct = (total / 100) * 100;
-
-  const tierColor =
-    total >= 85 ? Colors.green :
-    total >= 70 ? Colors.gold :
-    Colors.inkMuted;
-
+  const tierColor = total >= 85 ? Colors.green : total >= 70 ? Colors.gold : Colors.inkMuted;
   const tierLabel =
     total >= 90 ? 'Outstanding' :
     total >= 80 ? 'Excellent' :
     total >= 70 ? 'Very Good' :
-    total >= 60 ? 'Good' :
-    'Fair';
+    total >= 60 ? 'Good' : 'Fair';
 
   const autofilledValue = Math.min(20, Math.round(draft.intensity * 2));
 
@@ -224,7 +212,7 @@ export function Step4TechnicalScore() {
         <View style={styles.wideContainer}>
           <View style={styles.wideHeader}>
             <Text style={styles.stepTitle}>Technical Score</Text>
-            <Text style={styles.intro}>Rate each quality dimension from 0–20. Pinch any card to zoom in.</Text>
+            <Text style={styles.intro}>Rate each quality dimension from 0–20. Pinch any card to zoom.</Text>
           </View>
           <View style={styles.wideTwoCol}>
             <View style={styles.widePinnedCol}>{totalCard}</View>
@@ -244,9 +232,13 @@ export function Step4TechnicalScore() {
 
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.stepTitle}>Technical Score</Text>
-        <Text style={styles.intro}>Rate each quality dimension from 0–20. Pinch any card to zoom in.</Text>
+        <Text style={styles.intro}>Rate each quality dimension from 0–20. Pinch any card to zoom.</Text>
         {totalCard}
         {dimCards}
       </ScrollView>
@@ -260,6 +252,7 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.xl,
     paddingBottom: Spacing.huge,
+    flexDirection: 'column',
     gap: Spacing.md,
   },
   // ─── Wide layout ──────────────────────────────────────────────────────────
@@ -278,6 +271,7 @@ const styles = StyleSheet.create({
   wideScrollCol: { flex: 7 },
   wideScrollContent: {
     paddingBottom: Spacing.huge,
+    flexDirection: 'column',
     gap: Spacing.md,
   },
   // ─── Header text ──────────────────────────────────────────────────────────
@@ -299,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.ink,
     borderRadius: Radius.md,
     padding: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     gap: 6,
   },
   totalCardWide: { marginBottom: 0 },
@@ -342,22 +336,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.lg,
-    gap: Spacing.sm,
+    width: '100%',
+    alignSelf: 'stretch',
   },
-  dimCardHeader: {
+  dimHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  dimLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
   },
   dimLabel: {
     fontFamily: Fonts.playfair,
     fontSize: 18,
     color: Colors.ink,
-  },
-  dimValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
   },
   dimValue: {
     fontFamily: Fonts.playfair,
@@ -378,13 +375,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     gap: 5,
+    marginBottom: Spacing.xs,
   },
   zoneDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
   },
-  zoneLabel: {
+  zoneText: {
     fontFamily: Fonts.dmSansMedium,
     fontSize: 12,
     letterSpacing: 0.3,
@@ -395,9 +393,7 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     fontStyle: 'italic',
     lineHeight: 17,
-  },
-  dimSliderWrap: {
-    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   // ─── Auto badge ────────────────────────────────────────────────────────────
   autoBadge: {
