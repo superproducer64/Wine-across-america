@@ -163,6 +163,11 @@ export const useWineStore = create<WineStore>((set, get) => ({
           }));
           return entry;
         }
+        // Recovery also failed — show a clean message, not the raw native stack trace
+        const cleanMsg = 'Network connection lost. Please check your connection and try again.';
+        console.warn('[wineStore] addEntry FAILED (network):', error?.message, '| payload keys:', Object.keys(payload).join(', '));
+        set({ lastSaveError: cleanMsg });
+        return null;
       }
       const msg = [error?.code, error?.message, error?.details, error?.hint].filter(Boolean).join(' | ') || 'Unknown error';
       console.warn('[wineStore] addEntry FAILED:', msg, '| payload keys:', Object.keys(payload).join(', '));
