@@ -1,3 +1,4 @@
 - [EAS iOS build from Replit](eas-build-replit.md) — GIT_INDEX_FILE workaround + pre-install hook to upgrade npm@10.8.1 fixes "Exit handler never called" bug on xcode-26.2 image.
 - [Tailwind v4 Vite setup](tailwind-v4-vite.md) — Tailwind v4 breaks standard postcss.config.js; use @tailwindcss/vite plugin instead, CSS must use `@import "tailwindcss"`.
 - [Video marketing app](video-app.md) — standalone Vite app at video.html on port 5000; AnimatePresence must use mode="wait" (not "popLayout") since scene components lack forwardRef.
+- [Expo ASC credential fix](expo-asc-credential-fix.md) — fix EAS submit failures from corrupted stored ASC key; bypass broken expo.dev UI via GraphQL with Origin header.
