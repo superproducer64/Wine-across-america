@@ -1,16 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Animated,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
-import {
-  PinchGestureHandler,
-  State,
-} from 'react-native-gesture-handler';
-import type {
-  PinchGestureHandlerGestureEvent,
-  HandlerStateChangeEvent,
-  PinchGestureHandlerEventPayload,
-} from 'react-native-gesture-handler';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { ScoreSlider, SliderZone } from '@/components/ui/ScoreSlider';
 import { ImageInfoSheet } from '@/components/ui/ImageInfoSheet';
@@ -57,42 +48,8 @@ function getActiveZone(zones: SliderZone[], value: number): SliderZone | null {
   return zones.find((z) => value >= z.min && value <= z.max) ?? null;
 }
 
-// ─── Pinchable wrapper ─────────────────────────────────────────────────────────
-// Wraps content in a PinchGestureHandler. Scale accumulates across gestures,
-// clamped to 0.7×–2.5×. useNativeDriver:false so it works on both web and native
-// without conflicting with PanResponder inside ScoreSlider.
-function PinchableCard({ children }: { children: React.ReactNode }) {
-  const baseScale = useRef(new Animated.Value(1)).current;
-  const pinchDelta = useRef(new Animated.Value(1)).current;
-  const lastScale = useRef(1);
-  const composed = Animated.multiply(baseScale, pinchDelta);
-
-  const onPinchEvent = Animated.event<PinchGestureHandlerGestureEvent>(
-    [{ nativeEvent: { scale: pinchDelta } }],
-    { useNativeDriver: false }
-  );
-
-  const onPinchStateChange = (
-    e: HandlerStateChangeEvent<PinchGestureHandlerEventPayload>
-  ) => {
-    if (e.nativeEvent.oldState === State.ACTIVE) {
-      const next = Math.min(2.5, Math.max(0.7, lastScale.current * e.nativeEvent.scale));
-      lastScale.current = next;
-      baseScale.setValue(next);
-      pinchDelta.setValue(1);
-    }
-  };
-
-  return (
-    <PinchGestureHandler onGestureEvent={onPinchEvent} onHandlerStateChange={onPinchStateChange}>
-      <Animated.View style={[styles.dimCard, { transform: [{ scale: composed }] }]}>
-        {children}
-      </Animated.View>
-    </PinchGestureHandler>
-  );
-}
-
 // ─── Individual score dimension card ──────────────────────────────────────────
+// Tap the header to collapse/expand the slider. Default: expanded.
 interface ScoreDimCardProps {
   cat: TechnicalCategory;
   value: number;
@@ -102,13 +59,18 @@ interface ScoreDimCardProps {
 }
 
 function ScoreDimCard({ cat, value, isAutoFilled, onChange, onInfo }: ScoreDimCardProps) {
+  const [expanded, setExpanded] = useState(true);
   const zones = SCORE_ZONES[cat.key] ?? [];
   const zone = getActiveZone(zones, value);
 
   return (
-    <PinchableCard>
-      {/* Header: name + auto badge + score */}
-      <View style={styles.dimHeader}>
+    <View style={styles.dimCard}>
+      {/* Tappable header: tap to collapse / expand */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setExpanded((e) => !e)}
+        style={styles.dimHeader}
+      >
         <View style={styles.dimLabelRow}>
           <Text style={styles.dimLabel}>{cat.label}</Text>
           {isAutoFilled && (
@@ -116,35 +78,38 @@ function ScoreDimCard({ cat, value, isAutoFilled, onChange, onInfo }: ScoreDimCa
               <Text style={styles.autoBadgeText}>Auto</Text>
             </View>
           )}
+          {zone && (
+            <View style={[styles.zonePill, { backgroundColor: zone.color + '28', borderColor: zone.color + '90' }]}>
+              <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
+              <Text style={[styles.zoneText, { color: zone.color }]}>{zone.label}</Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.dimValue}>
-          {value}<Text style={styles.dimValueMax}>/20</Text>
-        </Text>
-      </View>
+        <View style={styles.dimRightRow}>
+          <Text style={styles.dimValue}>
+            {value}<Text style={styles.dimValueMax}>/20</Text>
+          </Text>
+          <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
+        </View>
+      </TouchableOpacity>
 
-      {/* Zone pill */}
-      {zone && (
-        <View style={[styles.zonePill, { backgroundColor: zone.color + '28', borderColor: zone.color + '90' }]}>
-          <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
-          <Text style={[styles.zoneText, { color: zone.color }]}>{zone.label}</Text>
-        </View>
+      {/* Expandable body */}
+      {expanded && (
+        <>
+          <Text style={styles.dimDesc}>{cat.description}</Text>
+          <ScoreSlider
+            label={cat.label}
+            value={value}
+            min={0}
+            max={20}
+            step={1}
+            zones={zones}
+            onChange={onChange}
+            onInfo={onInfo}
+          />
+        </>
       )}
-
-      {/* Description */}
-      <Text style={styles.dimDesc}>{cat.description}</Text>
-
-      {/* Slider — rendered last so it gets full card width */}
-      <ScoreSlider
-        label={cat.label}
-        value={value}
-        min={0}
-        max={20}
-        step={1}
-        zones={zones}
-        onChange={onChange}
-        onInfo={onInfo}
-      />
-    </PinchableCard>
+    </View>
   );
 }
 
@@ -350,6 +315,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     flex: 1,
+    flexWrap: 'wrap',
+  },
+  dimRightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  chevron: {
+    fontSize: 10,
+    color: Colors.inkMuted,
+    marginTop: 2,
   },
   dimLabel: {
     fontFamily: Fonts.playfair,
