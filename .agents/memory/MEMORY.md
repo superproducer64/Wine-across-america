@@ -2,3 +2,4 @@
 - [Tailwind v4 Vite setup](tailwind-v4-vite.md) — Tailwind v4 breaks standard postcss.config.js; use @tailwindcss/vite plugin instead, CSS must use `@import "tailwindcss"`.
 - [Video marketing app](video-app.md) — standalone Vite app at video.html on port 5000; AnimatePresence must use mode="wait" (not "popLayout") since scene components lack forwardRef.
 - [Expo ASC credential fix](expo-asc-credential-fix.md) — fix EAS submit failures from corrupted stored ASC key; bypass broken expo.dev UI via GraphQL with Origin header.
+- [Supabase RLS self-referencing recursion](supabase-rls-recursion.md) — never check a privilege flag by querying the same table from its own RLS policy; use a separate small admin table instead.
