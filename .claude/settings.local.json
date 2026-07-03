@@ -3,7 +3,8 @@
     "allow": [
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__execute_sql",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx expo *)"
     ]
   }
 }
