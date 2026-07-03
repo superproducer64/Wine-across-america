@@ -24,6 +24,7 @@ export type MainStackParamList = {
   SharedWineDetail: { snapshot: Record<string, unknown>; senderName: string };
   Comparison: undefined;
   Admin: undefined;
+  Insights: undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

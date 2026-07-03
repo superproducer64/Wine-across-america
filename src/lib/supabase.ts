@@ -263,6 +263,107 @@ export async function searchWineEntries(userId: string, searchQuery: string, fil
   return query.order('created_at', { ascending: false });
 }
 
+// ─── Usage Insights (aggregate-only, derived from existing operational data) ───
+// No new tracking/instrumentation is added here — this reads data the app
+// already stores to function (signups, entries, shares) and aggregates it
+// for the admin Insights dashboard. See migration 017 for the read policy.
+
+export type UsageInsights = {
+  totalUsers: number;
+  usersWithAtLeastOneEntry: number;
+  totalEntries: number;
+  entriesLast7Days: number;
+  entriesLast30Days: number;
+  avgEntriesPerActiveUser: number;
+  entriesWithPhoto: number;
+  entriesWithNotes: number;
+  entriesWithTerroir: number;
+  customGrapeVarietiesAdded: number;
+  proUsers: number;
+  sommelierApproved: number;
+  totalShares: number;
+  sharesSeen: number;
+  signupsLast30Days: number;
+};
+
+export async function fetchUsageInsights(): Promise<{ data: UsageInsights | null; error: string | null }> {
+  try {
+    const now = Date.now();
+    const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const since30d = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [
+      profiles,
+      entries,
+      entriesLast7,
+      entriesLast30,
+      entriesWithPhoto,
+      entriesWithNotes,
+      entriesWithTerroir,
+      customGrapes,
+      shares,
+      sharesSeen,
+      signupsLast30,
+    ] = await Promise.all([
+      supabase.from('user_profiles').select('id, user_id:id, subscription_tier, user_role, sommelier_status', { count: 'exact' }),
+      supabase.from('wine_entries').select('user_id', { count: 'exact' }),
+      supabase.from('wine_entries').select('id', { count: 'exact', head: true }).gte('created_at', since7d),
+      supabase.from('wine_entries').select('id', { count: 'exact', head: true }).gte('created_at', since30d),
+      supabase.from('wine_entries').select('id', { count: 'exact', head: true }).not('label_photo_url', 'is', null),
+      supabase.from('wine_entries').select('id', { count: 'exact', head: true }).not('free_notes', 'is', null),
+      supabase.from('wine_entries').select('id', { count: 'exact', head: true }).not('terroir_soil', 'is', null),
+      supabase.from('grape_varieties').select('id', { count: 'exact', head: true }).eq('is_custom', true),
+      supabase.from('shared_wines').select('id', { count: 'exact', head: true }),
+      supabase.from('shared_wines').select('id', { count: 'exact', head: true }).eq('seen', true),
+      supabase.from('user_profiles').select('id', { count: 'exact', head: true }).gte('created_at', since30d),
+    ]);
+
+    const firstError = [
+      profiles, entries, entriesLast7, entriesLast30, entriesWithPhoto,
+      entriesWithNotes, entriesWithTerroir, customGrapes, shares, sharesSeen, signupsLast30,
+    ].find((r) => r.error)?.error;
+
+    if (firstError) {
+      console.error('[fetchUsageInsights] error:', JSON.stringify(firstError));
+      return { data: null, error: firstError.message };
+    }
+
+    const totalUsers = profiles.count ?? 0;
+    const totalEntries = entries.count ?? 0;
+    const uniqueActiveUsers = new Set((entries.data ?? []).map((e: { user_id: string }) => e.user_id));
+    const usersWithAtLeastOneEntry = uniqueActiveUsers.size;
+    const proUsers = (profiles.data ?? []).filter((p: { subscription_tier: string }) => p.subscription_tier === 'pro').length;
+    const sommelierApproved = (profiles.data ?? []).filter(
+      (p: { user_role: string; sommelier_status: string | null }) =>
+        p.user_role === 'sommelier' && p.sommelier_status === 'approved'
+    ).length;
+
+    return {
+      data: {
+        totalUsers,
+        usersWithAtLeastOneEntry,
+        totalEntries,
+        entriesLast7Days: entriesLast7.count ?? 0,
+        entriesLast30Days: entriesLast30.count ?? 0,
+        avgEntriesPerActiveUser: usersWithAtLeastOneEntry > 0 ? totalEntries / usersWithAtLeastOneEntry : 0,
+        entriesWithPhoto: entriesWithPhoto.count ?? 0,
+        entriesWithNotes: entriesWithNotes.count ?? 0,
+        entriesWithTerroir: entriesWithTerroir.count ?? 0,
+        customGrapeVarietiesAdded: customGrapes.count ?? 0,
+        proUsers,
+        sommelierApproved,
+        totalShares: shares.count ?? 0,
+        sharesSeen: sharesSeen.count ?? 0,
+        signupsLast30Days: signupsLast30.count ?? 0,
+      },
+      error: null,
+    };
+  } catch (e) {
+    console.error('[fetchUsageInsights] unexpected error:', e);
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to load insights' };
+  }
+}
+
 // ─── User Profile ─────────────────────────────────────────────────────────────
 
 export async function getUserProfile(userId: string) {

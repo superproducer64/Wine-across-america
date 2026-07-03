@@ -12,6 +12,7 @@ import { WineDetailScreen } from '@/screens/detail/WineDetailScreen';
 import { SharedWineDetailScreen } from '@/screens/detail/SharedWineDetailScreen';
 import { ComparisonScreen } from '@/screens/comparison/ComparisonScreen';
 import { AdminScreen } from '@/screens/admin/AdminScreen';
+import { InsightsScreen } from '@/screens/admin/InsightsScreen';
 import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -151,6 +152,11 @@ export function MainNavigator() {
       <Stack.Screen
         name="Admin"
         component={AdminScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="Insights"
+        component={InsightsScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>
