@@ -36,6 +36,14 @@ export function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (user) {
+        loadProfile(user.id);
+      }
+    }, [user, loadProfile])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
       if (profile?.is_creator) {
         getPendingSommelierCount().then(setPendingCount);
       }
