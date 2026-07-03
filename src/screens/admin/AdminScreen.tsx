@@ -263,9 +263,6 @@ export function AdminScreen() {
             <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backText}>← Back</Text>
             </Pressable>
-            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.insightsLink}>
-              <Text style={styles.insightsLinkText}>Usage Insights ›</Text>
-            </Pressable>
           </View>
 
           <Text style={styles.title}>Sommelier Applications</Text>
@@ -307,6 +304,19 @@ export function AdminScreen() {
               ))}
             </View>
           )}
+
+          <Pressable
+            style={styles.insightsCard}
+            onPress={() => navigation.navigate('Insights')}
+          >
+            <View style={styles.insightsCardInner}>
+              <View style={styles.insightsCardLeft}>
+                <Text style={styles.insightsCardTitle}>Usage Insights</Text>
+                <Text style={styles.insightsCardSub}>Adoption, engagement & feature reach</Text>
+              </View>
+              <Text style={styles.insightsCardArrow}>›</Text>
+            </View>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -323,7 +333,6 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
   backBtn: { paddingVertical: Spacing.xs },
@@ -332,11 +341,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.gold,
   },
-  insightsLink: { paddingVertical: Spacing.xs },
-  insightsLinkText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 14,
+  insightsCard: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  insightsCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  insightsCardLeft: { flex: 1 },
+  insightsCardTitle: {
+    fontFamily: Fonts.playfairSemiBold,
+    fontSize: 15,
+    color: Colors.ink,
+    marginBottom: 2,
+  },
+  insightsCardSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+  },
+  insightsCardArrow: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 22,
     color: Colors.gold,
+    lineHeight: 26,
   },
   title: {
     fontFamily: Fonts.playfair,
