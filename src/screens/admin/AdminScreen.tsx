@@ -263,6 +263,9 @@ export function AdminScreen() {
             <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backText}>← Back</Text>
             </Pressable>
+            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.insightsLink}>
+              <Text style={styles.insightsLinkText}>Usage Insights ›</Text>
+            </Pressable>
           </View>
 
           <Text style={styles.title}>Sommelier Applications</Text>
@@ -320,11 +323,18 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
   backBtn: { paddingVertical: Spacing.xs },
   backText: {
     fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.gold,
+  },
+  insightsLink: { paddingVertical: Spacing.xs },
+  insightsLinkText: {
+    fontFamily: Fonts.dmSansMedium,
     fontSize: 14,
     color: Colors.gold,
   },

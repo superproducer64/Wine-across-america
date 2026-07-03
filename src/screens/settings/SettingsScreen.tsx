@@ -349,24 +349,6 @@ export function SettingsScreen() {
           </Pressable>
         )}
 
-        {/* Usage Insights — visible to is_creator users only */}
-        {profile?.is_creator && (
-          <Pressable
-            style={styles.adminCard}
-            onPress={() => navigation.navigate('Insights')}
-          >
-            <View style={styles.adminCardInner}>
-              <View style={styles.adminCardLeft}>
-                <Text style={styles.adminCardTitle}>Usage Insights</Text>
-                <Text style={styles.adminCardSub}>Adoption, engagement & feature reach</Text>
-              </View>
-              <View style={styles.adminCardRight}>
-                <Text style={styles.adminCardArrow}>›</Text>
-              </View>
-            </View>
-          </Pressable>
-        )}
-
         {/* App info */}
         <View style={styles.infoSection}>
           <Text style={styles.infoSectionTitle}>App Info</Text>
