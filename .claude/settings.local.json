@@ -4,7 +4,16 @@
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__execute_sql",
       "Bash(npx tsc *)",
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(npx eas-cli *)",
+      "Bash(curl *)",
+      "Bash(xxd \"/tmp/claude-1000/-home-runner-workspace/74ff2ce3-fc32-40ed-8f8a-7751f097a7a7/scratchpad/eas_build_log.txt\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['logFiles'][0]\\)\")",
+      "Bash(env)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
