@@ -364,6 +364,38 @@ export async function fetchUsageInsights(): Promise<{ data: UsageInsights | null
   }
 }
 
+export type AppAdmin = {
+  id: string;
+  email: string;
+  display_name: string | null;
+};
+
+export async function fetchAdmins(): Promise<{ data: AppAdmin[] | null; error: string | null }> {
+  const { data: adminRows, error: adminError } = await supabase
+    .from('app_admins')
+    .select('user_id');
+
+  if (adminError) {
+    return { data: null, error: adminError.message };
+  }
+
+  const ids = (adminRows ?? []).map((r: { user_id: string }) => r.user_id);
+  if (ids.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const { data: profiles, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('id, email, display_name')
+    .in('id', ids);
+
+  if (profileError) {
+    return { data: null, error: profileError.message };
+  }
+
+  return { data: (profiles ?? []) as AppAdmin[], error: null };
+}
+
 // ─── User Profile ─────────────────────────────────────────────────────────────
 
 export async function getUserProfile(userId: string) {

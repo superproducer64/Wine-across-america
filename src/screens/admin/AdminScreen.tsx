@@ -15,9 +15,11 @@ import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
 import {
+  fetchAdmins,
   fetchPendingSommelierApplications,
   getSommelierCertSignedUrl,
   updateSommelierStatus,
+  AppAdmin,
 } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -202,6 +204,9 @@ export function AdminScreen() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [admins, setAdmins] = useState<AppAdmin[]>([]);
+  const [adminsLoading, setAdminsLoading] = useState(true);
+  const [adminsError, setAdminsError] = useState('');
 
   const loadApplications = useCallback(async () => {
     setLoading(true);
@@ -215,9 +220,22 @@ export function AdminScreen() {
     setLoading(false);
   }, []);
 
+  const loadAdmins = useCallback(async () => {
+    setAdminsLoading(true);
+    setAdminsError('');
+    const { data, error: fetchError } = await fetchAdmins();
+    if (fetchError) {
+      setAdminsError(fetchError);
+    } else {
+      setAdmins(data ?? []);
+    }
+    setAdminsLoading(false);
+  }, []);
+
   useEffect(() => {
     loadApplications();
-  }, [loadApplications]);
+    loadAdmins();
+  }, [loadApplications, loadAdmins]);
 
   const handleDecision = async (
     userId: string,
@@ -317,6 +335,37 @@ export function AdminScreen() {
               <Text style={styles.insightsCardArrow}>›</Text>
             </View>
           </Pressable>
+
+          <View style={styles.adminsSection}>
+            <Text style={styles.adminsSectionTitle}>Admins</Text>
+            {adminsError ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>{adminsError}</Text>
+              </View>
+            ) : adminsLoading ? (
+              <Text style={styles.emptyText}>Loading admins…</Text>
+            ) : admins.length === 0 ? (
+              <Text style={styles.emptyText}>No admins found.</Text>
+            ) : (
+              <View style={styles.adminsList}>
+                {admins.map((admin) => (
+                  <View key={admin.id} style={styles.adminRow}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>
+                        {(admin.display_name ?? admin.email).charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.appMeta}>
+                      {admin.display_name ? (
+                        <Text style={styles.appName}>{admin.display_name}</Text>
+                      ) : null}
+                      <Text style={styles.appEmail}>{admin.email}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -426,6 +475,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.inkMuted,
     textAlign: 'center',
+  },
+  adminsSection: {
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.lg,
+    gap: Spacing.md,
+  },
+  adminsSectionTitle: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: Colors.gold,
+  },
+  adminsList: { gap: Spacing.md },
+  adminRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
   },
   list: { gap: Spacing.lg },
   appCard: {
