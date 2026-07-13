@@ -347,3 +347,9 @@ id = "Yp-ba68RnoA1PyBdhl7kY"
 uri = "file://billing/session-billing-jun29-jul13-2026.md"
 type = "text"
 title = "Pour Across America — Session Billing Jun 29 – Jul 13, 2026"
+
+[[outputs]]
+id = "UybjDaipl3M0skppgRUkr"
+uri = "file://billing/complete-build-billing-apr10-jul13-2026.md"
+type = "text"
+title = "Pour Across America — Complete Build Billing Apr 10 – Jul 13, 2026"
