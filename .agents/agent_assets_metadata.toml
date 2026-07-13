@@ -341,3 +341,9 @@ id = "DwHwW1wy1ighpnkffbQeD"
 uri = "file://PourAcrossAmerica_build30.zip"
 type = "unspecified"
 title = "Pour Across America — Build #30 IPA (zipped)"
+
+[[outputs]]
+id = "Yp-ba68RnoA1PyBdhl7kY"
+uri = "file://billing/session-billing-jun29-jul13-2026.md"
+type = "text"
+title = "Pour Across America — Session Billing Jun 29 – Jul 13, 2026"
