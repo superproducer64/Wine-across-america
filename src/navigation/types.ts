@@ -5,6 +5,8 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
+  ResetRequest: undefined;
+  NewPassword: { error?: string } | undefined;
 };
 
 // ─── Tab Navigator (no modals) ────────────────────────────────────────────────

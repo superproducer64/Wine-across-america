@@ -173,6 +173,37 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
+// ─── Password Recovery ────────────────────────────────────────────────────────
+
+export async function requestPasswordReset(email: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'pouracrossamerica://reset-password',
+  });
+  // Intentionally not surfaced to the caller for unknown-email cases — the
+  // screen shows a generic confirmation regardless, to avoid leaking whether
+  // an account exists. Only used for logging here.
+  if (error) {
+    console.warn('[requestPasswordReset]', error.message);
+  }
+  return { error: error?.message ?? null };
+}
+
+export async function setRecoverySession(
+  accessToken: string,
+  refreshToken: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+  return { error: error?.message ?? null };
+}
+
+export async function updateUserPassword(newPassword: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return { error: error?.message ?? null };
+}
+
 // ─── Wine Entry CRUD ──────────────────────────────────────────────────────────
 
 export async function createWineEntry(entry: Omit<Parameters<typeof supabase.from>[0] extends 'wine_entries' ? never : object, never>) {

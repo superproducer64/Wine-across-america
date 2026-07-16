@@ -157,6 +157,10 @@ export function LoginScreen({ navigation }: Props) {
             placeholder="••••••••"
           />
 
+          <Pressable onPress={() => navigation.navigate('ResetRequest')}>
+            <Text style={styles.forgotPassword}>Forgot password?</Text>
+          </Pressable>
+
           <Button
             label="Sign In"
             onPress={handleLogin}
@@ -241,6 +245,14 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     textAlign: 'center',
+  },
+  forgotPassword: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.gold,
+    textAlign: 'right',
+    marginTop: 2,
+    marginBottom: 4,
   },
   submitBtn: {
     marginTop: Spacing.sm,
