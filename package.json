@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "postinstall": "npx patch-package || true"
+    "postinstall": "npx patch-package || true",
+    "eas-build-pre-install": "bash ./eas-build-pre-install.sh"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.2.3",
