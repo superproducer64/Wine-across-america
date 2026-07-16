@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,25 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { signUpWithEmail, uploadSommelierCert, submitSommelierApplication } from '@/lib/supabase';
+import {
+  signUpWithEmail,
+  uploadSommelierCert,
+  submitSommelierApplication,
+  validateInviteCode,
+  redeemInvite,
+} from '@/lib/supabase';
 import { AuthStackParamList } from '@/navigation/types';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
 import { UserRole } from '@/types';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useInviteStore } from '@/stores/inviteStore';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
-export function SignupScreen({ navigation }: Props) {
+type InviteStatus = 'none' | 'checking' | 'valid' | 'invalid';
+
+export function SignupScreen({ navigation, route }: Props) {
+  const inviteCode = route.params?.inviteCode;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,10 +42,39 @@ export function SignupScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [inviteStatus, setInviteStatus] = useState<InviteStatus>(inviteCode ? 'checking' : 'none');
+  const [inviteError, setInviteError] = useState('');
+
+  useEffect(() => {
+    // The pending-code store's only job was steering the initial route here —
+    // route.params is the source of truth from this point on.
+    useInviteStore.getState().setPendingCode(null);
+
+    if (!inviteCode) return;
+    let cancelled = false;
+    setInviteStatus('checking');
+    validateInviteCode(inviteCode).then(({ valid, error: validateError }) => {
+      if (cancelled) return;
+      if (validateError) {
+        setInviteStatus('invalid');
+        setInviteError('Could not verify this invite link. Please try again.');
+        return;
+      }
+      setInviteStatus(valid ? 'valid' : 'invalid');
+      if (!valid) {
+        setInviteError('This invite link is invalid or has already been used.');
+      }
+    });
+    return () => { cancelled = true; };
+  }, [inviteCode]);
 
   const handleSignup = async () => {
     setError('');
     setSuccess('');
+    if (inviteCode && inviteStatus !== 'valid') {
+      setError(inviteError || 'This invite link is invalid or has already been used.');
+      return;
+    }
     if (!name.trim() || !email.trim() || !password) {
       setError('Please fill in all fields.');
       return;
@@ -70,6 +109,14 @@ export function SignupScreen({ navigation }: Props) {
           setError(applyError);
           Alert.alert('Submission Failed', applyError);
           return;
+        }
+      }
+
+      if (inviteCode && inviteStatus === 'valid' && data.user) {
+        // Best-effort attribution — the account is already created either way.
+        const { error: redeemError } = await redeemInvite(inviteCode);
+        if (redeemError) {
+          console.warn('[SignupScreen] redeemInvite failed:', redeemError);
         }
       }
 
@@ -111,6 +158,12 @@ export function SignupScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.form}>
+          {inviteStatus === 'checking' ? (
+            <Text style={styles.inviteCheckingBanner}>Validating invite link…</Text>
+          ) : null}
+          {inviteStatus === 'invalid' ? (
+            <Text style={styles.errorBanner}>{inviteError}</Text>
+          ) : null}
           {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
           {success ? (
             <View style={styles.successBanner}>
@@ -200,6 +253,7 @@ export function SignupScreen({ navigation }: Props) {
             label={role === 'sommelier' ? 'Create Account & Apply' : 'Create Account'}
             onPress={handleSignup}
             loading={loading}
+            disabled={inviteStatus === 'checking' || inviteStatus === 'invalid'}
             style={styles.submitBtn}
           />
         </View>
@@ -265,6 +319,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.red,
     backgroundColor: 'rgba(220,53,69,0.1)',
+    borderRadius: Radius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  inviteCheckingBanner: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.inkMuted,
+    backgroundColor: Colors.surfaceAlt,
     borderRadius: Radius.sm,
     padding: Spacing.md,
     marginBottom: Spacing.sm,

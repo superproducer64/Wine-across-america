@@ -176,6 +176,17 @@ export function SettingsScreen() {
             <Text style={styles.adminCardArrow}>›</Text>
           </Pressable>
 
+          <Pressable
+            style={[styles.adminCardInner, styles.inviteRow]}
+            onPress={() => navigation.navigate('InviteMembers')}
+          >
+            <View style={styles.adminCardLeft}>
+              <Text style={styles.adminCardTitle}>Invite Members</Text>
+              <Text style={styles.adminCardSub}>Share a personal invite link with friends</Text>
+            </View>
+            <Text style={styles.adminCardArrow}>›</Text>
+          </Pressable>
+
           <View style={styles.directoryToggleRow}>
             <View style={styles.toggleInfo}>
               <View>
@@ -846,6 +857,11 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: Colors.border,
     gap: Spacing.md,
+  },
+  inviteRow: {
+    paddingTop: Spacing.md,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
   },
   directoryToggleRow: {
     flexDirection: 'row',

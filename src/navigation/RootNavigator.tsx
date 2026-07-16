@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { supabase, setRecoverySession } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { usePasswordRecoveryStore } from '@/stores/passwordRecoveryStore';
-import { parseRecoveryParamsFromUrl } from '@/lib/deepLink';
+import { useInviteStore } from '@/stores/inviteStore';
+import { parseRecoveryParamsFromUrl, parseInviteCodeFromUrl } from '@/lib/deepLink';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { RootStackParamList } from './types';
@@ -18,6 +19,8 @@ const Root = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   const { session, loading, setSession } = useAuthStore();
   const { active: recoveryActive, error: recoveryError, start: startRecovery } = usePasswordRecoveryStore();
+  const { pendingCode: pendingInviteCode, setPendingCode: setPendingInviteCode } = useInviteStore();
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
   usePushNotifications();
   const { checkSubscription } = useSubscriptionStore();
 
@@ -47,31 +50,44 @@ export function RootNavigator() {
   }, []);
 
   useEffect(() => {
-    // Password-recovery deep links (pouracrossamerica://reset-password) land here
-    // with tokens in the URL hash. detectSessionInUrl is off for the Supabase
-    // client, so we parse and apply the session manually, then gate the app
-    // into NewPasswordScreen via passwordRecoveryStore regardless of session.
+    // Handles two deep-link families:
+    //  - pouracrossamerica://reset-password (+ tokens in the hash) — recovery
+    //  - pouracrossamerica://invite/{code} — invite signup
+    // initialRouteName/initialParams on AuthNavigator cover cold starts (state
+    // is set before it ever mounts); navigationRef.navigate covers the case
+    // where the app is already open and the navigator is already mounted, so
+    // changing initialRouteName after the fact would otherwise be a no-op.
     const handleUrl = async (url: string | null) => {
       if (!url) return;
-      const parsed = parseRecoveryParamsFromUrl(url);
-      if (!parsed) return;
 
-      if (parsed.kind === 'error') {
-        startRecovery(parsed.message);
+      const recovery = parseRecoveryParamsFromUrl(url);
+      if (recovery) {
+        if (recovery.kind === 'error') {
+          startRecovery(recovery.message);
+        } else {
+          startRecovery(null);
+          const { error } = await setRecoverySession(recovery.accessToken, recovery.refreshToken);
+          if (error) startRecovery(error);
+        }
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('Auth', { screen: 'NewPassword' });
+        }
         return;
       }
 
-      startRecovery(null);
-      const { error } = await setRecoverySession(parsed.accessToken, parsed.refreshToken);
-      if (error) {
-        startRecovery(error);
+      const inviteCode = parseInviteCodeFromUrl(url);
+      if (inviteCode && !useAuthStore.getState().session) {
+        setPendingInviteCode(inviteCode);
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('Auth', { screen: 'Signup', params: { inviteCode } });
+        }
       }
     };
 
     Linking.getInitialURL().then(handleUrl);
     const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url));
     return () => sub.remove();
-  }, [startRecovery]);
+  }, [startRecovery, setPendingInviteCode, navigationRef]);
 
   if (loading) {
     return (
@@ -82,14 +98,15 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Root.Navigator screenOptions={{ headerShown: false }}>
         {recoveryActive || !session ? (
           <Root.Screen name="Auth">
             {() => (
               <AuthNavigator
-                initialRouteName={recoveryActive ? 'NewPassword' : 'Login'}
+                initialRouteName={recoveryActive ? 'NewPassword' : pendingInviteCode ? 'Signup' : 'Login'}
                 newPasswordParams={recoveryActive && recoveryError ? { error: recoveryError } : undefined}
+                signupParams={!recoveryActive && pendingInviteCode ? { inviteCode: pendingInviteCode } : undefined}
               />
             )}
           </Root.Screen>

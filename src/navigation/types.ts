@@ -4,7 +4,7 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 
 export type AuthStackParamList = {
   Login: undefined;
-  Signup: undefined;
+  Signup: { inviteCode?: string } | undefined;
   ResetRequest: undefined;
   NewPassword: { error?: string } | undefined;
 };
@@ -28,6 +28,7 @@ export type MainStackParamList = {
   Admin: undefined;
   Insights: undefined;
   MemberDirectory: undefined;
+  InviteMembers: undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

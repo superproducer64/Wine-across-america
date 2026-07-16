@@ -204,6 +204,48 @@ export async function updateUserPassword(newPassword: string): Promise<{ error: 
   return { error: error?.message ?? null };
 }
 
+// ─── Invites ──────────────────────────────────────────────────────────────────
+
+// Excludes 0/O and 1/I/L — avoids ambiguity when a code is read off a shared
+// text message rather than tapped as a link.
+const INVITE_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function generateInviteCode(length = 8): string {
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += INVITE_CODE_CHARS[Math.floor(Math.random() * INVITE_CODE_CHARS.length)];
+  }
+  return code;
+}
+
+export async function createInvite(inviterId: string): Promise<{ code: string | null; error: string | null }> {
+  // `code` is unique-constrained; retry a few times on the astronomically
+  // unlikely chance of a collision rather than fail outright.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const code = generateInviteCode();
+    const { error } = await supabase.from('invites').insert({ inviter_id: inviterId, code });
+    if (!error) return { code, error: null };
+    if (error.code !== '23505') return { code: null, error: error.message };
+  }
+  return { code: null, error: 'Could not generate a unique invite code. Please try again.' };
+}
+
+export async function validateInviteCode(code: string): Promise<{ valid: boolean; error: string | null }> {
+  const { data, error } = await supabase
+    .from('invite_lookup')
+    .select('code')
+    .eq('code', code)
+    .maybeSingle();
+  if (error) return { valid: false, error: error.message };
+  return { valid: !!data, error: null };
+}
+
+export async function redeemInvite(code: string): Promise<{ inviterId: string | null; error: string | null }> {
+  const { data, error } = await supabase.rpc('redeem_invite', { invite_code: code });
+  if (error) return { inviterId: null, error: error.message };
+  return { inviterId: (data as string | null) ?? null, error: null };
+}
+
 // ─── Wine Entry CRUD ──────────────────────────────────────────────────────────
 
 export async function createWineEntry(entry: Omit<Parameters<typeof supabase.from>[0] extends 'wine_entries' ? never : object, never>) {

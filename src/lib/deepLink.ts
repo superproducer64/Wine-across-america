@@ -30,3 +30,10 @@ export function parseRecoveryParamsFromUrl(url: string): RecoveryLinkParams {
 
   return null;
 }
+
+// Invite links look like `pouracrossamerica://invite/{code}` — the code is a
+// plain path segment, not a query/hash param.
+export function parseInviteCodeFromUrl(url: string): string | null {
+  const match = url.match(/invite\/([^/?#]+)/i);
+  return match ? decodeURIComponent(match[1]) : null;
+}

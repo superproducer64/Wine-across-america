@@ -27,7 +27,29 @@
       "Bash(echo \"exit=$?\")",
       "Bash(brotli -d -c build_log2.xz)",
       "Bash(node -e ' *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(eas build *)",
+      "Bash(eas build:view 4ae64d60-5f58-4672-8bce-473b62d16237 --json)",
+      "Bash(gunzip -c /tmp/claude-1000/-home-runner-workspace/2e03bebf-482b-4331-85b2-917e852c8c2a/scratchpad/eas_build_log.txt2)",
+      "Bash(xxd /tmp/claude-1000/-home-runner-workspace/2e03bebf-482b-4331-85b2-917e852c8c2a/scratchpad/eas_build_log.txt)",
+      "Bash(eas build:view --help)",
+      "Bash(eas --help)",
+      "Bash(python3 -c \"import brotli\")",
+      "Bash(eas submit *)",
+      "Bash(eas submission:view bfb254d3-d6da-4eaf-b96b-5a65ed0dec8c --json)",
+      "Bash(eas build:submit --help)",
+      "Bash(find / -maxdepth 0)",
+      "Bash(eas)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(Object.keys\\(j\\)\\);console.log\\(j.auth?Object.keys\\(j.auth\\):'no auth key'\\)}catch\\(e\\){console.log\\('parse err',e.message\\)}}\\)\")",
+      "WebFetch(domain:expo.dev)",
+      "Bash(eas build:view 111f3132-39ff-43fb-b108-206823b4bd60 --json)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d.split\\('\\\\n'\\).filter\\(l=>l.trim\\(\\).startsWith\\('{'\\)\\).join\\('\\\\n'\\)\\);console.log\\(j.logFiles\\)}\\)\")",
+      "Bash(npx patch-package *)",
+      "Bash(npx eslint *)",
+      "Bash(yarn lint *)",
+      "mcp__claude_ai_Supabase__list_migrations",
+      "mcp__claude_ai_Supabase__get_advisors",
+      "mcp__claude_ai_Supabase__apply_migration"
     ]
   }
 }

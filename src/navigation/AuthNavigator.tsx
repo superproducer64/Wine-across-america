@@ -11,13 +11,14 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 interface AuthNavigatorProps {
   initialRouteName?: keyof AuthStackParamList;
   newPasswordParams?: AuthStackParamList['NewPassword'];
+  signupParams?: AuthStackParamList['Signup'];
 }
 
-export function AuthNavigator({ initialRouteName = 'Login', newPasswordParams }: AuthNavigatorProps) {
+export function AuthNavigator({ initialRouteName = 'Login', newPasswordParams, signupParams }: AuthNavigatorProps) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRouteName}>
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} initialParams={signupParams} />
       <Stack.Screen name="ResetRequest" component={ResetRequestScreen} />
       <Stack.Screen name="NewPassword" component={NewPasswordScreen} initialParams={newPasswordParams} />
     </Stack.Navigator>
