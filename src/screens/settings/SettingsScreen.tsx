@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Pressable,
+  Switch,
   Alert,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -16,12 +17,17 @@ import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { SommelierCertUpload } from '@/components/auth/SommelierCertUpload';
-import { uploadSommelierCert, submitSommelierApplication, getPendingSommelierCount } from '@/lib/supabase';
+import {
+  uploadSommelierCert,
+  submitSommelierApplication,
+  getPendingSommelierCount,
+  updateUserProfile,
+} from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-  const { user, profile, signOut, loadProfile } = useAuthStore();
+  const { user, profile, signOut, loadProfile, setProfile } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
@@ -32,7 +38,13 @@ export function SettingsScreen() {
   const [certError, setCertError] = useState('');
   const [certSuccess, setCertSuccess] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [directoryVisible, setDirectoryVisible] = useState(profile?.directory_visible ?? true);
+  const [directorySaving, setDirectorySaving] = useState(false);
   const { isWide } = useResponsive();
+
+  useEffect(() => {
+    setDirectoryVisible(profile?.directory_visible ?? true);
+  }, [profile?.directory_visible]);
 
   useFocusEffect(
     useCallback(() => {
@@ -86,6 +98,20 @@ export function SettingsScreen() {
     setShowSommelierApply(false);
   };
 
+  const handleToggleDirectoryVisible = async (value: boolean) => {
+    if (!user) return;
+    setDirectoryVisible(value);
+    setDirectorySaving(true);
+    const { data, error: updateError } = await updateUserProfile(user.id, { directory_visible: value });
+    if (updateError) {
+      setDirectoryVisible(!value);
+      Alert.alert('Update Failed', 'Could not update your directory visibility. Please try again.');
+    } else if (data) {
+      setProfile(data);
+    }
+    setDirectorySaving(false);
+  };
+
   const roleBadge = isSommelierApproved
     ? { label: 'Sommelier', icon: '🎓', color: Colors.gold }
     : { label: 'Wine Explorer', icon: '🍷', color: Colors.inkMuted };
@@ -134,6 +160,36 @@ export function SettingsScreen() {
                 </View>
               )}
             </View>
+          </View>
+        </View>
+
+        {/* Member Directory */}
+        <View style={styles.directoryCard}>
+          <Pressable
+            style={styles.adminCardInner}
+            onPress={() => navigation.navigate('MemberDirectory')}
+          >
+            <View style={styles.adminCardLeft}>
+              <Text style={styles.adminCardTitle}>Member Directory</Text>
+              <Text style={styles.adminCardSub}>Browse fellow tasters in the community</Text>
+            </View>
+            <Text style={styles.adminCardArrow}>›</Text>
+          </Pressable>
+
+          <View style={styles.directoryToggleRow}>
+            <View style={styles.toggleInfo}>
+              <View>
+                <Text style={styles.toggleTitle}>Show me in the member directory</Text>
+                <Text style={styles.toggleSub}>Other members can see your name & avatar</Text>
+              </View>
+            </View>
+            <Switch
+              value={directoryVisible}
+              onValueChange={handleToggleDirectoryVisible}
+              disabled={directorySaving}
+              thumbColor={Colors.surface}
+              trackColor={{ false: Colors.surfaceAlt, true: Colors.gold }}
+            />
           </View>
         </View>
 
@@ -782,6 +838,39 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderWidth: 0.5,
     borderColor: Colors.border,
+  },
+  directoryCard: {
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  directoryToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Spacing.md,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
+  toggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    flex: 1,
+  },
+  toggleTitle: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 14,
+    color: Colors.ink,
+  },
+  toggleSub: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    marginTop: 2,
   },
   adminCardInner: {
     flexDirection: 'row',

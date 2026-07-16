@@ -364,6 +364,26 @@ export async function fetchUsageInsights(): Promise<{ data: UsageInsights | null
   }
 }
 
+export type UserActivitySummary = {
+  user_id: string;
+  display_name: string | null;
+  wines_logged: number;
+  last_tasting_date: string | null;
+  last_active_at: string | null;
+};
+
+export async function fetchUserActivitySummary(): Promise<{ data: UserActivitySummary[] | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('user_activity_summary')
+    .select('user_id, display_name, wines_logged, last_tasting_date, last_active_at');
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  return { data: (data ?? []) as UserActivitySummary[], error: null };
+}
+
 export type AppAdmin = {
   id: string;
   email: string;
@@ -404,6 +424,27 @@ export async function getUserProfile(userId: string) {
 
 export async function updateUserProfile(userId: string, updates: Record<string, unknown>) {
   return supabase.from('user_profiles').update(updates).eq('id', userId).select().single();
+}
+
+// ─── Member Directory ──────────────────────────────────────────────────────────
+
+export type MemberDirectoryEntry = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  is_creator: boolean;
+  user_role: string;
+  member_since: string;
+};
+
+export async function fetchMemberDirectory(): Promise<{ data: MemberDirectoryEntry[] | null; error: string | null }> {
+  const { data, error } = await supabase.from('member_directory').select('*');
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  return { data: (data ?? []) as MemberDirectoryEntry[], error: null };
 }
 
 // ─── Sommelier Certification Upload ──────────────────────────────────────────

@@ -25,6 +25,7 @@ export type MainStackParamList = {
   Comparison: undefined;
   Admin: undefined;
   Insights: undefined;
+  MemberDirectory: undefined;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

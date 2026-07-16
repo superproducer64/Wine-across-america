@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -17,9 +17,11 @@ import { Button } from '@/components/ui/Button';
 import {
   fetchAdmins,
   fetchPendingSommelierApplications,
+  fetchUserActivitySummary,
   getSommelierCertSignedUrl,
   updateSommelierStatus,
   AppAdmin,
+  UserActivitySummary,
 } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -196,6 +198,15 @@ function ApplicationRow({ app, onDecision, busy }: ApplicationRowProps) {
   );
 }
 
+function formatShortDate(value: string | null): string {
+  if (!value) return 'Never';
+  return new Date(value).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export function AdminScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { isWide } = useResponsive();
@@ -207,6 +218,11 @@ export function AdminScreen() {
   const [admins, setAdmins] = useState<AppAdmin[]>([]);
   const [adminsLoading, setAdminsLoading] = useState(true);
   const [adminsError, setAdminsError] = useState('');
+  const [activity, setActivity] = useState<UserActivitySummary[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState('');
+  const [activityExpanded, setActivityExpanded] = useState(false);
+  const [activitySort, setActivitySort] = useState<'wines_logged' | 'last_active_at'>('wines_logged');
 
   const loadApplications = useCallback(async () => {
     setLoading(true);
@@ -232,10 +248,37 @@ export function AdminScreen() {
     setAdminsLoading(false);
   }, []);
 
+  const loadActivity = useCallback(async () => {
+    setActivityLoading(true);
+    setActivityError('');
+    const { data, error: fetchError } = await fetchUserActivitySummary();
+    if (fetchError) {
+      setActivityError(fetchError);
+    } else {
+      setActivity(data ?? []);
+    }
+    setActivityLoading(false);
+  }, []);
+
   useEffect(() => {
     loadApplications();
     loadAdmins();
-  }, [loadApplications, loadAdmins]);
+    loadActivity();
+  }, [loadApplications, loadAdmins, loadActivity]);
+
+  const sortedActivity = useMemo(() => {
+    const list = [...activity];
+    if (activitySort === 'wines_logged') {
+      list.sort((a, b) => b.wines_logged - a.wines_logged);
+    } else {
+      list.sort((a, b) => {
+        const aTime = a.last_active_at ? new Date(a.last_active_at).getTime() : 0;
+        const bTime = b.last_active_at ? new Date(b.last_active_at).getTime() : 0;
+        return aTime - bTime;
+      });
+    }
+    return list;
+  }, [activity, activitySort]);
 
   const handleDecision = async (
     userId: string,
@@ -334,6 +377,91 @@ export function AdminScreen() {
               </View>
               <Text style={styles.insightsCardArrow}>›</Text>
             </View>
+          </Pressable>
+
+          <Pressable
+            style={styles.insightsCard}
+            onPress={() => setActivityExpanded((v) => !v)}
+          >
+            <View style={styles.insightsCardInner}>
+              <View style={styles.insightsCardLeft}>
+                <Text style={styles.insightsCardTitle}>User Activity</Text>
+                <Text style={styles.insightsCardSub}>Wines logged & recency, per user</Text>
+              </View>
+              <Text style={styles.insightsCardArrow}>{activityExpanded ? '⌄' : '›'}</Text>
+            </View>
+
+            {activityExpanded ? (
+              <View style={styles.activityPanel}>
+                <View style={styles.activitySortRow}>
+                  <Pressable
+                    style={[
+                      styles.activitySortPill,
+                      activitySort === 'wines_logged' && styles.activitySortPillActive,
+                    ]}
+                    onPress={() => setActivitySort('wines_logged')}
+                  >
+                    <Text
+                      style={[
+                        styles.activitySortPillText,
+                        activitySort === 'wines_logged' && styles.activitySortPillTextActive,
+                      ]}
+                    >
+                      Most Wines
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.activitySortPill,
+                      activitySort === 'last_active_at' && styles.activitySortPillActive,
+                    ]}
+                    onPress={() => setActivitySort('last_active_at')}
+                  >
+                    <Text
+                      style={[
+                        styles.activitySortPillText,
+                        activitySort === 'last_active_at' && styles.activitySortPillTextActive,
+                      ]}
+                    >
+                      Least Active
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {activityError ? (
+                  <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>{activityError}</Text>
+                  </View>
+                ) : activityLoading ? (
+                  <Text style={styles.emptyText}>Loading activity…</Text>
+                ) : sortedActivity.length === 0 ? (
+                  <Text style={styles.emptyText}>No user activity yet.</Text>
+                ) : (
+                  <View style={styles.activityTable}>
+                    <View style={styles.activityHeaderRow}>
+                      <Text style={[styles.activityHeaderCell, styles.activityNameCol]}>User</Text>
+                      <Text style={[styles.activityHeaderCell, styles.activityWinesCol]}>Wines</Text>
+                      <Text style={[styles.activityHeaderCell, styles.activityDateCol]}>Last Tasting</Text>
+                      <Text style={[styles.activityHeaderCell, styles.activityDateCol]}>Last Active</Text>
+                    </View>
+                    {sortedActivity.map((row) => (
+                      <View key={row.user_id} style={styles.activityRow}>
+                        <Text style={[styles.activityCell, styles.activityNameCol]} numberOfLines={1}>
+                          {row.display_name ?? 'Unnamed user'}
+                        </Text>
+                        <Text style={[styles.activityCell, styles.activityWinesCol]}>{row.wines_logged}</Text>
+                        <Text style={[styles.activityCell, styles.activityDateCol]}>
+                          {formatShortDate(row.last_tasting_date)}
+                        </Text>
+                        <Text style={[styles.activityCell, styles.activityDateCol]}>
+                          {formatShortDate(row.last_active_at)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : null}
           </Pressable>
 
           <View style={styles.adminsSection}>
@@ -476,6 +604,63 @@ const styles = StyleSheet.create({
     color: Colors.inkMuted,
     textAlign: 'center',
   },
+  activityPanel: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  activitySortRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  activitySortPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    backgroundColor: 'transparent',
+  },
+  activitySortPillActive: {
+    backgroundColor: Colors.gold,
+  },
+  activitySortPillText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+  activitySortPillTextActive: {
+    color: Colors.ink,
+  },
+  activityTable: { gap: Spacing.xs },
+  activityHeaderRow: {
+    flexDirection: 'row',
+    paddingBottom: Spacing.xs,
+  },
+  activityHeaderCell: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: Colors.inkFaint,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
+  activityCell: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.ink,
+  },
+  activityNameCol: { flex: 2, paddingRight: Spacing.xs },
+  activityWinesCol: { flex: 1, textAlign: 'center' },
+  activityDateCol: { flex: 1.4, textAlign: 'center', fontSize: 12, color: Colors.inkMuted },
   adminsSection: {
     borderTopWidth: 0.5,
     borderTopColor: Colors.border,

@@ -455,6 +455,7 @@ export interface UserProfile {
   sommelier_cert_url: string | null;
   sommelier_status: SommelierStatus | null;
   sommelier_rejection_reason: string | null;
+  directory_visible: boolean;
   created_at: string;
 }
 

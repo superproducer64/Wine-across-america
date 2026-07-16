@@ -14,7 +14,20 @@
       "Bash(echo \"exit: $?\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Skill(code-review)"
+      "Skill(code-review)",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(xargs -I{} echo {})",
+      "Read(//home/runner/**)",
+      "Bash(npm config *)",
+      "Bash(yarn --version)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(xz -dc --single-stream build_log2.xz)",
+      "Bash(xz -dcT0 -F auto build_log2.xz)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(brotli -d -c build_log2.xz)",
+      "Bash(node -e ' *)",
+      "Bash(git commit *)"
     ]
   }
 }
