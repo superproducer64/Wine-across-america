@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Animated, View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
-import { AROMA_CATEGORIES, AROMA_GROUPS } from '@/types';
+import { AROMA_CATEGORIES } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 
 // ── Web-only portal overlay ──────────────────────────────────────────────────
@@ -113,11 +113,27 @@ AROMA_CATEGORIES.forEach(cat => {
   });
 });
 
-// Category → accent color, inherited from the (no-longer-rendered) aroma
-// group it belongs to — keeps the wheel's existing color language without
-// drawing a group ring.
-const CAT_TO_COLOR: Record<string, string> = {};
-AROMA_GROUPS.forEach(g => g.categoryIds.forEach(cid => { CAT_TO_COLOR[cid] = g.color; }));
+// Curated per-category accent colors — each of the 14 categories gets its
+// own distinct hue (not shared across a parent group) so adjacent wedges,
+// including the Other → Citrus wrap, never read as the same color. Outer-
+// ring items are tints of their category's color (see lightenHex below),
+// which keeps the grouping cue intact.
+const CAT_TO_COLOR: Record<string, string> = {
+  'citrus':          '#B89B3D',
+  'orchard-fruit':   '#739442',
+  'stone-fruit':     '#CB804D',
+  'tropical-fruit':  '#A0B54A',
+  'red-fruit':       '#B83D52',
+  'black-fruit':     '#59346F',
+  'floral':          '#BA6DA1',
+  'herbal-green':    '#5A8943',
+  'spice':           '#9F4C38',
+  'oak-toast':       '#7D693B',
+  'earthy':          '#4D5738',
+  'mineral':         '#5C8099',
+  'sweet-ripe':      '#B86176',
+  'other':           '#938776',
+};
 
 function lightenHex(hex: string, amount: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -153,25 +169,60 @@ function arcPath(
   ].join(' ');
 }
 
-// Tangential rotation — text runs along the ring's arc (used for the
-// category ring). Flips in the bottom half so it never renders upside-down.
-function labelRotation(midAngle: number) {
-  if (midAngle > 90 && midAngle <= 270) {
-    return midAngle - 180;
-  }
-  return midAngle;
-}
-
-// Radial rotation — text runs along the radius (spoke-style, in/out) instead
-// of following the arc, so the outer ring's labels use the ring WIDTH rather
-// than the (often much narrower) arc length of an individual item's wedge.
-function outerLabelRot(midAngle: number): number {
+// Radial ("spoke") rotation — text runs along the radius, in/out from
+// center, instead of curving along the arc. Used by both rings so a
+// label's readable length is bound by the ring's radial WIDTH rather than
+// the (often much narrower, and wedge-count-dependent) arc length of an
+// individual wedge — this is what keeps category labels from colliding
+// with their neighbors as more categories get selected.
+function spokeLabelRot(midAngle: number): number {
   let r = midAngle - 90;
   r = ((r % 360) + 360) % 360;
   if (r > 180) r -= 360;
   if (r > 90) r -= 180;
   if (r < -90) r += 180;
   return r;
+}
+
+// Splits a category label into spoke-stacked lines instead of abbreviating.
+// "Herbal / Green" → ["Herbal /", "Green"]; two-word labels split on the
+// space ("Orchard Fruit" → ["Orchard", "Fruit"]); single-word labels are
+// left on one line.
+function splitCategoryLabel(label: string): string[] {
+  if (label.includes(' / ')) {
+    const [a, b] = label.split(' / ');
+    return [`${a} /`, b];
+  }
+  const words = label.split(' ');
+  if (words.length > 1) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+  }
+  return [label];
+}
+
+// Per-category label font size. Every label — one line or two — is checked
+// against the same two constraints: a gentle length-based scale (mirrors
+// outerLabelFontSize below, just calibrated to this ring's shorter labels)
+// for how much radial room a long line needs, and a tangential check for
+// how much room the wedge itself gives before bleeding into a neighbor.
+// Only over either limit does a label shrink, and only that one label, not
+// the whole ring — single-word labels (Citrus, Mineral, Earthy…) previously
+// skipped this check entirely, which is what let the longest of them
+// (Mineral, the one 7-letter single-line label with no wrap point) render
+// uncorrected while its shorter neighbors happened to still fit.
+function categoryLabelFontSize(base: number, lines: string[], sweepDeg: number, radius: number): number {
+  const maxLineLen = Math.max(...lines.map(l => l.length));
+  let scale = 1;
+  if (maxLineLen > 7) scale = 0.80;
+  else if (maxLineLen > 6) scale = 0.90;
+
+  const lineHeight = base * scale * 1.15;
+  const needed = lines.length * lineHeight;
+  const available = (sweepDeg * Math.PI / 180) * radius * 0.82;
+  if (needed > available) scale *= Math.max(available / needed, 0.6);
+
+  return Math.max(6, base * scale);
 }
 
 // Long names ("Starfruit (carambola)") get a smaller font rather than being
@@ -430,24 +481,34 @@ export function AromaDonutChart({
             {centerLabel}
           </SvgText>
 
-          {/* Category ring text labels — tangential, follows the arc */}
+          {/* Category ring text labels — radial/spoke orientation, matching
+               the outer ring. Full names, wrapped to two lines rather than
+               abbreviated; font size only shrinks for a wedge too narrow to
+               fit two lines at the shared size. */}
           {catSegs.map((s, i) => {
             if (s.sweep < 10) return null;
             const tr = (holeR + catEdge) / 2;
             const pos = polar(cx, cy, tr, s.mid);
-            const rot = labelRotation(s.mid);
+            const rot = spokeLabelRot(s.mid);
+            const lines = splitCategoryLabel(s.label);
+            const fontSize = categoryLabelFontSize(catFontSize, lines, s.sweep, tr);
+            const lineHeight = fontSize * 1.15;
             return (
               <G key={`cl${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
-                <SvgText
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                  fontSize={catFontSize}
-                  fontFamily={Fonts.dmSansMedium}
-                  fill="white"
-                  fillOpacity={0.95}
-                >
-                  {s.label}
-                </SvgText>
+                {lines.map((line, li) => (
+                  <SvgText
+                    key={li}
+                    y={(li - (lines.length - 1) / 2) * lineHeight}
+                    textAnchor="middle"
+                    alignmentBaseline="middle"
+                    fontSize={fontSize}
+                    fontFamily={Fonts.dmSansMedium}
+                    fill="white"
+                    fillOpacity={0.95}
+                  >
+                    {line}
+                  </SvgText>
+                ))}
               </G>
             );
           })}
@@ -459,7 +520,7 @@ export function AromaDonutChart({
             if (s.sweep < 2) return null;
             const tr = (catEdge + outerR) / 2;
             const pos = polar(cx, cy, tr, s.mid);
-            const rot = outerLabelRot(s.mid);
+            const rot = spokeLabelRot(s.mid);
             return (
               <G key={`il${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
                 <SvgText
