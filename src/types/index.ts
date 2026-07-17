@@ -67,11 +67,9 @@ export interface AromaCategory {
   id: string;
   label: string;
   emoji: string;
-  /** When true the entire category (and all its subcategories) is hidden from Wine Explorer */
-  sommelier_only?: boolean;
   /** Subcategories shown to all profiles */
   subcategories: string[];
-  /** Subcategories shown only to approved Sommelier users */
+  /** Subcategories shown only to Sommelier users (s: true items in AROMA_WHEEL) */
   sommelierSubcategories?: string[];
 }
 
@@ -85,107 +83,58 @@ export function getCategorySubcategories(
   return [...shared, ...(cat.sommelierSubcategories ?? [])];
 }
 
-export const AROMA_CATEGORIES: AromaCategory[] = [
+export type AromaWheelItem = string | { name: string; s: true };
+
+// Raw taxonomy — category label maps to its items. Plain strings are visible
+// to every role; { name, s: true } entries are Sommelier-only.
+export const AROMA_WHEEL: Record<string, AromaWheelItem[]> = {
+  'Citrus': ['Lemon', 'Lime', 'Grapefruit', 'Orange', { name: 'Mandarin', s: true }, { name: 'Lemon zest', s: true }, { name: 'Orange peel', s: true }],
+  'Orchard Fruit': ['Green apple', 'Red apple', 'Pear', 'Quince', { name: 'Baked apple', s: true }, { name: 'Apple skin', s: true }, { name: 'Gooseberry', s: true }],
+  'Stone Fruit': ['Peach', 'Apricot', 'Nectarine', { name: 'White peach', s: true }, { name: 'Peach skin', s: true }, { name: 'Yellow plum', s: true }],
+  'Tropical Fruit': ['Pineapple', 'Mango', 'Passion fruit', 'Melon', 'Banana', 'Lychee', { name: 'Papaya', s: true }, { name: 'Guava', s: true }, { name: 'Cantaloupe', s: true }, { name: 'Honeydew', s: true }, { name: 'Dragon fruit', s: true }, { name: 'Starfruit (carambola)', s: true }],
+  'Red Fruit': ['Strawberry', 'Raspberry', 'Red cherry', 'Red currant', { name: 'Ripe strawberry', s: true }, { name: 'Sour cherry', s: true }, { name: 'Cranberry', s: true }, { name: 'Pomegranate', s: true }, { name: 'Red plum', s: true }, { name: 'Mulberry', s: true }],
+  'Black Fruit': ['Blackberry', 'Blackcurrant', 'Black cherry', 'Plum', { name: 'Ripe plum', s: true }],
+  'Floral': ['Rose', 'Violet', 'Jasmine', 'White flowers', { name: 'Orange blossom', s: true }, { name: 'Lavender', s: true }],
+  'Herbal / Green': ['Grass', 'Bell pepper', 'Mint', 'Fresh herbs', { name: 'Eucalyptus', s: true }, { name: 'Dried herbs', s: true }, { name: 'Green pepper', s: true }, { name: 'Thyme', s: true }, { name: 'Tomato leaf', s: true }],
+  'Spice': ['Black pepper', 'White pepper', 'Clove', 'Cinnamon', { name: 'Pink pepper', s: true }, { name: 'Baking spice', s: true }, { name: 'Nutmeg', s: true }, { name: 'Anise', s: true }, { name: 'Licorice', s: true }],
+  'Oak / Toast': ['Vanilla', 'Toast', 'Smoke', 'Cedar', 'Chocolate', { name: 'Coffee', s: true }, { name: 'Espresso', s: true }, { name: 'Mocha', s: true }, { name: 'Caramelized wood', s: true }, { name: 'Charred wood', s: true }],
+  'Earthy': ['Mushroom', 'Wet leaves', 'Leather', 'Tobacco', { name: 'Forest floor', s: true }, { name: 'Truffle', s: true }, { name: 'Tobacco leaf', s: true }, { name: 'Dusty earth', s: true }, { name: 'Game', s: true }],
+  'Mineral': ['Chalk', 'Wet stone', 'Saline', { name: 'Flint', s: true }, { name: 'Slate', s: true }, { name: 'Oyster shell', s: true }, { name: 'Iron', s: true }, { name: 'Graphite', s: true }],
+  'Sweet / Ripe': ['Honey', 'Jam', 'Dried fruit', 'Raisin', 'Prune', { name: 'Fig', s: true }, { name: 'Caramel', s: true }, { name: 'Toffee', s: true }, { name: 'Molasses', s: true }, { name: 'Date', s: true }],
+  'Other': ['Butter', 'Cream', 'Yeast', 'Brioche', 'Bread', 'Petrol', { name: 'Yogurt', s: true }, { name: 'Wax', s: true }, { name: 'Rubber', s: true }, { name: 'Almond', s: true }, { name: 'Hazelnut', s: true }, { name: 'Walnut', s: true }, { name: 'Lees', s: true }],
+};
+
+// Stable id slugs + emoji per category, independent of AROMA_WHEEL's label
+// keys — existing wine_entries rows store aromas_l1 as these ids (e.g.
+// 'citrus'), so they must not change even if a display label is edited.
+const AROMA_CATEGORY_META: { label: string; id: string; emoji: string }[] = [
   // ── Order matches Appendix I (left column → right column) ───────────────────
-  {
-    id: 'citrus',
-    label: 'Citrus',
-    emoji: '🍋',
-    subcategories: ['Lemon', 'Lime', 'Grapefruit', 'Orange'],
-    sommelierSubcategories: ['Mandarin', 'Lemon zest', 'Orange peel'],
-  },
-  {
-    id: 'orchard-fruit',
-    label: 'Orchard Fruit',
-    emoji: '🍎',
-    subcategories: ['Green apple', 'Red apple', 'Pear', 'Quince'],
-    sommelierSubcategories: ['Baked apple', 'Apple skin', 'Gooseberry'],
-  },
-  {
-    id: 'stone-fruit',
-    label: 'Stone Fruit',
-    emoji: '🍑',
-    subcategories: ['Peach', 'Apricot', 'Nectarine'],
-    sommelierSubcategories: ['White peach', 'Peach skin', 'Yellow plum'],
-  },
-  {
-    id: 'tropical-fruit',
-    label: 'Tropical Fruit',
-    emoji: '🍍',
-    subcategories: ['Pineapple', 'Mango', 'Passion fruit', 'Melon', 'Banana', 'Lychee'],
-    sommelierSubcategories: ['Papaya', 'Guava', 'Cantaloupe', 'Honeydew', 'Dragon fruit', 'Starfruit (carambola)'],
-  },
-  {
-    id: 'red-fruit',
-    label: 'Red Fruit',
-    emoji: '🍓',
-    subcategories: ['Strawberry', 'Raspberry', 'Red cherry', 'Red currant'],
-    sommelierSubcategories: ['Ripe strawberry', 'Sour cherry', 'Cranberry', 'Pomegranate', 'Red plum', 'Mulberry'],
-  },
-  {
-    id: 'black-fruit',
-    label: 'Black Fruit',
-    emoji: '🫐',
-    subcategories: ['Blackberry', 'Blackcurrant', 'Black cherry', 'Plum'],
-    sommelierSubcategories: ['Ripe plum'],
-  },
-  {
-    id: 'floral',
-    label: 'Floral',
-    emoji: '🌸',
-    subcategories: ['Rose', 'Violet', 'Jasmine', 'White flowers'],
-    sommelierSubcategories: ['Orange blossom', 'Lavender'],
-  },
-  {
-    id: 'herbal-green',
-    label: 'Herbal / Green',
-    emoji: '🌿',
-    subcategories: ['Grass', 'Bell pepper', 'Mint', 'Fresh herbs'],
-    sommelierSubcategories: ['Eucalyptus', 'Dried herbs', 'Green pepper', 'Thyme', 'Tomato leaf'],
-  },
-  {
-    id: 'spice',
-    label: 'Spice',
-    emoji: '🌶️',
-    subcategories: ['Black pepper', 'White pepper', 'Clove', 'Cinnamon'],
-    sommelierSubcategories: ['Pink pepper', 'Baking spice', 'Nutmeg', 'Anise', 'Licorice'],
-  },
-  {
-    id: 'oak-toast',
-    label: 'Oak / Toast',
-    emoji: '🌰',
-    subcategories: ['Vanilla', 'Toast', 'Smoke', 'Cedar', 'Chocolate'],
-    sommelierSubcategories: ['Coffee', 'Espresso', 'Mocha', 'Caramelized wood', 'Charred wood'],
-  },
-  {
-    id: 'earthy',
-    label: 'Earthy',
-    emoji: '🌍',
-    subcategories: ['Mushroom', 'Wet leaves', 'Leather', 'Tobacco'],
-    sommelierSubcategories: ['Forest floor', 'Truffle', 'Tobacco leaf', 'Dusty earth', 'Game'],
-  },
-  {
-    id: 'mineral',
-    label: 'Mineral / Saline',
-    emoji: '🪨',
-    subcategories: ['Chalk', 'Wet stone', 'Saline'],
-    sommelierSubcategories: ['Flint', 'Slate', 'Oyster shell', 'Iron', 'Graphite'],
-  },
-  {
-    id: 'sweet-ripe',
-    label: 'Sweet / Ripe',
-    emoji: '🍯',
-    subcategories: ['Honey', 'Jam', 'Dried fruit', 'Raisin', 'Prune'],
-    sommelierSubcategories: ['Fig', 'Caramel', 'Toffee', 'Molasses', 'Date'],
-  },
-  {
-    id: 'other',
-    label: 'Other',
-    emoji: '🍞',
-    subcategories: ['Butter', 'Cream', 'Yeast', 'Brioche', 'Bread', 'Petrol'],
-    sommelierSubcategories: ['Yogurt', 'Wax', 'Rubber', 'Almond', 'Hazelnut', 'Walnut', 'Lees'],
-  },
+  { label: 'Citrus', id: 'citrus', emoji: '🍋' },
+  { label: 'Orchard Fruit', id: 'orchard-fruit', emoji: '🍎' },
+  { label: 'Stone Fruit', id: 'stone-fruit', emoji: '🍑' },
+  { label: 'Tropical Fruit', id: 'tropical-fruit', emoji: '🍍' },
+  { label: 'Red Fruit', id: 'red-fruit', emoji: '🍓' },
+  { label: 'Black Fruit', id: 'black-fruit', emoji: '🫐' },
+  { label: 'Floral', id: 'floral', emoji: '🌸' },
+  { label: 'Herbal / Green', id: 'herbal-green', emoji: '🌿' },
+  { label: 'Spice', id: 'spice', emoji: '🌶️' },
+  { label: 'Oak / Toast', id: 'oak-toast', emoji: '🌰' },
+  { label: 'Earthy', id: 'earthy', emoji: '🌍' },
+  { label: 'Mineral', id: 'mineral', emoji: '🪨' },
+  { label: 'Sweet / Ripe', id: 'sweet-ripe', emoji: '🍯' },
+  { label: 'Other', id: 'other', emoji: '🍞' },
 ];
+
+export const AROMA_CATEGORIES: AromaCategory[] = AROMA_CATEGORY_META.map(({ label, id, emoji }) => {
+  const items = AROMA_WHEEL[label] ?? [];
+  const subcategories: string[] = [];
+  const sommelierSubcategories: string[] = [];
+  items.forEach((item) => {
+    if (typeof item === 'string') subcategories.push(item);
+    else sommelierSubcategories.push(item.name);
+  });
+  return { id, label, emoji, subcategories, sommelierSubcategories };
+});
 
 export interface AromaGroup {
   id: string;

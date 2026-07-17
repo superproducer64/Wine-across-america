@@ -113,6 +113,12 @@ AROMA_CATEGORIES.forEach(cat => {
   });
 });
 
+// Category → accent color, inherited from the (no-longer-rendered) aroma
+// group it belongs to — keeps the wheel's existing color language without
+// drawing a group ring.
+const CAT_TO_COLOR: Record<string, string> = {};
+AROMA_GROUPS.forEach(g => g.categoryIds.forEach(cid => { CAT_TO_COLOR[cid] = g.color; }));
+
 function lightenHex(hex: string, amount: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -147,26 +153,33 @@ function arcPath(
   ].join(' ');
 }
 
+// Tangential rotation — text runs along the ring's arc (used for the
+// category ring). Flips in the bottom half so it never renders upside-down.
 function labelRotation(midAngle: number) {
-  // Flip text in the bottom half (90°–270°) so it never renders upside-down
   if (midAngle > 90 && midAngle <= 270) {
     return midAngle - 180;
   }
   return midAngle;
 }
 
-// Radial rotation for outer-ring labels: text runs along the radius (in/out)
-// so it uses the ring WIDTH (~42px) instead of the narrow arc length (~12px).
+// Radial rotation — text runs along the radius (spoke-style, in/out) instead
+// of following the arc, so the outer ring's labels use the ring WIDTH rather
+// than the (often much narrower) arc length of an individual item's wedge.
 function outerLabelRot(midAngle: number): number {
-  // polar 0=top clockwise → SVG rotation: subtract 90
   let r = midAngle - 90;
-  // normalise to (-180, 180]
   r = ((r % 360) + 360) % 360;
   if (r > 180) r -= 360;
-  // clamp so text never appears upside-down
   if (r > 90) r -= 180;
   if (r < -90) r += 180;
   return r;
+}
+
+// Long names ("Starfruit (carambola)") get a smaller font rather than being
+// truncated, so the full word is always legible.
+function outerLabelFontSize(base: number, label: string): number {
+  if (label.length > 16) return base * 0.72;
+  if (label.length > 11) return base * 0.86;
+  return base;
 }
 
 type SelectedInfo = {
@@ -195,7 +208,11 @@ export function AromaDonutChart({
 
   const cx = size / 2;
   const cy = size / 2;
-  const outerR = size / 2 - 4;
+  // Margin beyond the ring's outer edge — radial outer-ring labels extend
+  // outward past outerR into this space, so it needs to be generous enough
+  // that long names don't get clipped by the SVG canvas edge.
+  const margin = Math.max(16, size * 0.1);
+  const outerR = size / 2 - margin;
 
   // Determine valid L2 notes (must match a selected L1 category)
   const noteToCat: Record<string, string> = {};
@@ -203,117 +220,76 @@ export function AromaDonutChart({
     const catId = NOTE_TO_CATEGORY[note.toLowerCase()];
     if (catId && aromasL1.includes(catId)) noteToCat[note] = catId;
   });
-  const show3 = size >= 180;
+  const showItems = size >= 120;
 
-  // Ring boundary radii
-  const holeR     = outerR * (show3 ? 0.27 : 0.34);
-  const innerEdge = outerR * (show3 ? 0.47 : 0.63);
-  const midEdge   = show3 ? outerR * 0.72 : outerR;
+  // Ring boundary radii — center hole, category ring, items ring
+  const holeR    = outerR * (showItems ? 0.30 : 0.40);
+  const catEdge  = showItems ? outerR * 0.58 : outerR;
 
-  // Map category → group
-  const catToGroup: Record<string, typeof AROMA_GROUPS[0]> = {};
-  AROMA_GROUPS.forEach(g => g.categoryIds.forEach(cid => { catToGroup[cid] = g; }));
+  // Ordered list of selected categories (Appendix I order) with only the
+  // aromas actually selected for this entry — unselected notes simply don't
+  // appear, rather than being rendered greyed-out.
+  type CatData = { cat: typeof AROMA_CATEGORIES[0]; notes: string[]; color: string };
+  const catDatas: CatData[] = AROMA_CATEGORIES
+    .filter(cat => aromasL1.includes(cat.id))
+    .map(cat => ({
+      cat,
+      notes: aromasL2.filter(n => noteToCat[n] === cat.id),
+      color: CAT_TO_COLOR[cat.id] ?? Colors.gold,
+    }));
 
-  // Build: groupId → { group, cats: [{ cat, notes[] }] }
-  type GroupData = { group: typeof AROMA_GROUPS[0]; cats: { cat: typeof AROMA_CATEGORIES[0]; notes: string[] }[] };
-  const groupMap: Record<string, GroupData> = {};
-  [...new Set(aromasL1)].forEach(catId => {
-    const g = catToGroup[catId];
-    const cat = AROMA_CATEGORIES.find(c => c.id === catId);
-    if (!g || !cat) return;
-    if (!groupMap[g.id]) groupMap[g.id] = { group: g, cats: [] };
-    const notes = aromasL2.filter(n => noteToCat[n] === catId);
-    groupMap[g.id].cats.push({ cat, notes });
-  });
-
-  const activeGroups = AROMA_GROUPS.filter(g => groupMap[g.id]);
-  const totalCats = activeGroups.reduce((s, g) => s + groupMap[g.id].cats.length, 0);
-  const dataSpan = 360 - GAP * activeGroups.length;
+  const totalCats = catDatas.length;
+  const dataSpan = 360 - GAP * totalCats;
+  const perCat = totalCats > 0 ? dataSpan / totalCats : 0;
 
   // Segment types — rMin/rMax enable coordinate-based hit testing
-  type InnerSeg = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; groupId: string; label: string; emoji: string };
-  type MidSeg   = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; catId: string; groupId: string; label: string; emoji: string; notes: string[] };
-  type OuterSeg = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; note: string; catId: string; groupId: string };
+  type CatSeg   = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; catId: string; label: string; emoji: string; notes: string[] };
+  type ItemSeg  = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; note: string; catId: string };
 
-  const innerSegs: InnerSeg[] = [];
-  const midSegs: MidSeg[] = [];
-  const outerSegs: OuterSeg[] = [];
+  const catSegs: CatSeg[] = [];
+  const itemSegs: ItemSeg[] = [];
 
   let angle = 0;
-  activeGroups.forEach(g => {
-    const gd = groupMap[g.id];
-    const numCats = gd.cats.length;
-    const groupSweep = (numCats / totalCats) * dataSpan;
-    const gStart = angle;
+  catDatas.forEach(cd => {
+    const cStart = angle;
+    const cEnd = cStart + perCat;
 
-    innerSegs.push({
-      path: arcPath(cx, cy, innerEdge, holeR, gStart, gStart + groupSweep),
-      color: g.color,
-      mid: gStart + groupSweep / 2,
-      sweep: groupSweep,
-      rMin: holeR, rMax: innerEdge,
-      groupId: g.id,
-      label: g.label,
-      emoji: g.emoji,
+    catSegs.push({
+      path: arcPath(cx, cy, catEdge, holeR, cStart, cEnd),
+      color: cd.color,
+      mid: cStart + perCat / 2,
+      sweep: perCat,
+      rMin: holeR, rMax: catEdge,
+      catId: cd.cat.id,
+      label: cd.cat.label,
+      emoji: cd.cat.emoji,
+      notes: cd.notes,
     });
 
-    const catSpan = groupSweep - GAP * numCats;
-    const perCat = numCats > 0 ? catSpan / numCats : 0;
-    let cAngle = gStart;
-
-    gd.cats.forEach((cd, ci) => {
-      const cStart = cAngle;
-      const cEnd = cStart + perCat;
-      const shade = ci % 2 === 0 ? lightenHex(g.color, 0.38) : lightenHex(g.color, 0.20);
-
-      midSegs.push({
-        path: arcPath(cx, cy, show3 ? midEdge : outerR, innerEdge + 1, cStart, cEnd),
-        color: shade,
-        mid: cStart + perCat / 2,
-        sweep: perCat,
-        rMin: innerEdge + 1, rMax: show3 ? midEdge : outerR,
-        catId: cd.cat.id,
-        groupId: g.id,
-        label: cd.cat.label,
-        emoji: cd.cat.emoji,
-        notes: cd.notes,
+    if (showItems && cd.notes.length > 0) {
+      const noteSpan = perCat - GAP * cd.notes.length;
+      const perNote = noteSpan / cd.notes.length;
+      let nAngle = cStart;
+      cd.notes.forEach((note, ni) => {
+        itemSegs.push({
+          path: arcPath(cx, cy, outerR, catEdge + 1, nAngle, nAngle + perNote),
+          color: ni % 2 === 0 ? lightenHex(cd.color, 0.30) : lightenHex(cd.color, 0.16),
+          mid: nAngle + perNote / 2,
+          sweep: perNote,
+          rMin: catEdge + 1, rMax: outerR,
+          note,
+          catId: cd.cat.id,
+        });
+        nAngle += perNote + GAP;
       });
+    }
 
-      if (show3) {
-        const displayNotes = cd.cat.subcategories;
-        if (displayNotes.length > 0) {
-          const noteSpan = perCat - GAP * displayNotes.length;
-          const perNote = noteSpan / displayNotes.length;
-          let nAngle = cStart;
-          displayNotes.forEach((note, ni) => {
-            const isSelected = cd.notes.includes(note);
-            outerSegs.push({
-              path: arcPath(cx, cy, outerR, midEdge + 1, nAngle, nAngle + perNote),
-              color: isSelected
-                ? (ni % 2 === 0 ? lightenHex(g.color, 0.22) : lightenHex(g.color, 0.10))
-                : (ni % 2 === 0 ? lightenHex(g.color, 0.64) : lightenHex(g.color, 0.50)),
-              mid: nAngle + perNote / 2,
-              sweep: perNote,
-              rMin: midEdge + 1, rMax: outerR,
-              note,
-              catId: cd.cat.id,
-              groupId: g.id,
-            });
-            nAngle += perNote + GAP;
-          });
-        }
-      }
-
-      cAngle += perCat + GAP;
-    });
-
-    angle = gStart + groupSweep + GAP;
+    angle = cEnd + GAP;
   });
 
-  const innerFontSize = Math.max(7, Math.min(11, size * 0.042));
-  const midFontSize   = Math.max(6, Math.min(9,  size * 0.032));
-  const outerFontSize = Math.max(5, Math.min(7,  size * 0.023));
-  const centerLabel   = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
+  const catFontSize   = Math.max(7, Math.min(11, size * 0.042));
+  const itemFontSize  = Math.max(6, Math.min(9,  size * 0.034));
+  const centerLabel    = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
 
   // ── Coordinate-based tap detection ────────────────────────────────────────
   // Works on all platforms including mobile Safari (SVG onPress is unreliable
@@ -335,29 +311,19 @@ export function AromaDonutChart({
     // Convert to 0=top, clockwise angle matching our polar() convention
     const a = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
 
-    // Outer ring (most specific — check first)
-    if (show3) {
-      const hit = outerSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
+    // Items ring (most specific — check first)
+    if (showItems) {
+      const hit = itemSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
       if (hit) {
-        const g   = AROMA_GROUPS.find(x => x.id === hit.groupId);
         const cat = AROMA_CATEGORIES.find(x => x.id === hit.catId);
-        setSelected({ color: g?.color ?? hit.color, title: `${cat?.emoji ?? ''} ${cat?.label ?? ''}`, subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`, items: [hit.note] });
+        setSelected({ color: hit.color, title: `${cat?.emoji ?? ''} ${cat?.label ?? ''}`, items: [hit.note] });
         return;
       }
     }
-    // Mid ring
-    const hitMid = midSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
-    if (hitMid) {
-      const g = AROMA_GROUPS.find(x => x.id === hitMid.groupId);
-      const defaults = AROMA_CATEGORIES.find(c => c.id === hitMid.catId)?.subcategories ?? [];
-      setSelected({ color: g?.color ?? hitMid.color, title: `${hitMid.emoji} ${hitMid.label}`, subtitle: `${g?.emoji ?? ''} ${g?.label ?? ''}`, items: hitMid.notes.length > 0 ? hitMid.notes : defaults });
-      return;
-    }
-    // Inner ring
-    const hitIn = innerSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
-    if (hitIn) {
-      const gd = groupMap[hitIn.groupId];
-      setSelected({ color: hitIn.color, title: `${hitIn.emoji} ${hitIn.label}`, items: gd.cats.map(c => `${c.cat.emoji} ${c.cat.label}`) });
+    // Category ring
+    const hitCat = catSegs.find(s => r >= s.rMin && r <= s.rMax && inSweep(a, s.mid, s.sweep));
+    if (hitCat) {
+      setSelected({ color: hitCat.color, title: `${hitCat.emoji} ${hitCat.label}`, items: hitCat.notes });
     }
   };
 
@@ -426,8 +392,8 @@ export function AromaDonutChart({
           style={{ width: size, height: size }}
         >
         <Svg width={size} height={size} pointerEvents="none">
-          {/* Outer ring — specific notes (L2) */}
-          {outerSegs.map((s, i) => (
+          {/* Outer ring — specific notes actually selected (L2) */}
+          {itemSegs.map((s, i) => (
             <Path
               key={`n${i}`}
               d={s.path}
@@ -435,19 +401,10 @@ export function AromaDonutChart({
             />
           ))}
 
-          {/* Middle ring — categories (L1) */}
-          {midSegs.map((s, i) => (
+          {/* Inner ring — categories (L1) */}
+          {catSegs.map((s, i) => (
             <Path
-              key={`m${i}`}
-              d={s.path}
-              fill={s.color}
-            />
-          ))}
-
-          {/* Inner ring — groups */}
-          {innerSegs.map((s, i) => (
-            <Path
-              key={`g${i}`}
+              key={`c${i}`}
               d={s.path}
               fill={s.color}
             />
@@ -473,18 +430,18 @@ export function AromaDonutChart({
             {centerLabel}
           </SvgText>
 
-          {/* Inner ring text labels (group names) */}
-          {innerSegs.map((s, i) => {
-            if (s.sweep < 24) return null;
-            const tr = (holeR + innerEdge) / 2;
+          {/* Category ring text labels — tangential, follows the arc */}
+          {catSegs.map((s, i) => {
+            if (s.sweep < 10) return null;
+            const tr = (holeR + catEdge) / 2;
             const pos = polar(cx, cy, tr, s.mid);
             const rot = labelRotation(s.mid);
             return (
-              <G key={`il${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
+              <G key={`cl${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
                 <SvgText
                   textAnchor="middle"
                   alignmentBaseline="middle"
-                  fontSize={innerFontSize}
+                  fontSize={catFontSize}
                   fontFamily={Fonts.dmSansMedium}
                   fill="white"
                   fillOpacity={0.95}
@@ -495,50 +452,25 @@ export function AromaDonutChart({
             );
           })}
 
-          {/* Middle ring text labels (category names) */}
-          {midSegs.map((s, i) => {
-            if (s.sweep < 15) return null;
-            const tr = show3
-              ? (innerEdge + midEdge) / 2
-              : (innerEdge + outerR) / 2;
-            const pos = polar(cx, cy, tr, s.mid);
-            const rot = labelRotation(s.mid);
-            return (
-              <G key={`ml${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
-                <SvgText
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                  fontSize={midFontSize}
-                  fontFamily={Fonts.dmSans}
-                  fill="#1F1518"
-                  fillOpacity={0.82}
-                >
-                  {s.label}
-                </SvgText>
-              </G>
-            );
-          })}
-
-          {/* Outer ring text labels — radial orientation so text uses ring
-               WIDTH (~42px) instead of narrow arc length (~12px).           */}
-          {show3 && outerSegs.map((s, i) => {
-            if (s.sweep < 4) return null;
-            const tr = (midEdge + outerR) / 2;
+          {/* Items ring text labels — radial/spoke orientation, evenly spaced
+               across each category's own wedge regardless of item count, and
+               sized down (not truncated) for long names. */}
+          {showItems && itemSegs.map((s, i) => {
+            if (s.sweep < 2) return null;
+            const tr = (catEdge + outerR) / 2;
             const pos = polar(cx, cy, tr, s.mid);
             const rot = outerLabelRot(s.mid);
-            const raw = s.note;
-            const label = raw.length > 10 ? raw.slice(0, 9) + '…' : raw;
             return (
-              <G key={`ol${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
+              <G key={`il${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
                 <SvgText
                   textAnchor="middle"
                   alignmentBaseline="middle"
-                  fontSize={outerFontSize}
+                  fontSize={outerLabelFontSize(itemFontSize, s.note)}
                   fontFamily={Fonts.dmSans}
                   fill="#1F1518"
-                  fillOpacity={0.80}
+                  fillOpacity={0.85}
                 >
-                  {label}
+                  {s.note}
                 </SvgText>
               </G>
             );
@@ -593,27 +525,19 @@ export function AromaDonutChart({
       {/* ── Legend ── */}
       {showLegend && (
         <View style={styles.legend}>
-          {activeGroups.map(g => {
-            const gd = groupMap[g.id];
-            return (
-              <View key={g.id} style={styles.legendGroup}>
-                <View style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: g.color }]} />
-                  <Text style={styles.legendGroupLabel}>{g.emoji} {g.label}</Text>
-                </View>
-                {gd.cats.map(cd => (
-                  <View key={cd.cat.id} style={styles.legendCatRow}>
-                    <Text style={[styles.legendCatName, { color: g.color }]}>
-                      {cd.cat.emoji} {cd.cat.label}
-                    </Text>
-                    <Text style={styles.legendSubcats}>
-                      {cd.cat.subcategories.join(' · ')}
-                    </Text>
-                  </View>
-                ))}
+          {catDatas.map(cd => (
+            <View key={cd.cat.id} style={styles.legendCatRow}>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: cd.color }]} />
+                <Text style={[styles.legendCatName, { color: cd.color }]}>
+                  {cd.cat.emoji} {cd.cat.label}
+                </Text>
               </View>
-            );
-          })}
+              {cd.notes.length > 0 && (
+                <Text style={styles.legendSubcats}>{cd.notes.join(' · ')}</Text>
+              )}
+            </View>
+          ))}
         </View>
       )}
     </View>
@@ -736,7 +660,6 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 8,
   },
-  legendGroup: { gap: 4 },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -747,14 +670,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  legendGroupLabel: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-    color: Colors.inkMid,
-    letterSpacing: 0.2,
-  },
   legendCatRow: {
-    paddingLeft: 14,
     gap: 1,
   },
   legendCatName: {
@@ -765,7 +681,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansRegular,
     fontSize: 10,
     color: Colors.inkMuted,
-    paddingLeft: 2,
+    paddingLeft: 14,
     lineHeight: 15,
   },
 });

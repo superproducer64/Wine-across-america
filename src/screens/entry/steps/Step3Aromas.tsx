@@ -40,8 +40,9 @@ export function Step3Aromas() {
   const [activeShortcutId, setActiveShortcutId] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState('');
 
-  const isSommelier =
-    profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
+  // s:true aroma items are hidden from Explorer (enthusiast) and shown to
+  // every Sommelier, regardless of application-approval status.
+  const isSommelier = profile?.user_role === 'sommelier';
 
   const addCustomTag = () => {
     const tag = customInput.trim();
