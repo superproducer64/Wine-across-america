@@ -247,8 +247,6 @@ export function AromaDonutChart({
   showLegend = true,
   pinchable = false,
 }: AromaDonutChartProps) {
-  if (!aromasL1.length) return null;
-
   const [selected, setSelected] = useState<SelectedInfo>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const scaleRef = useRef(1);
@@ -256,6 +254,8 @@ export function AromaDonutChart({
   const panRef = useRef({ x: 0, y: 0 });
   const lastDistRef = useRef<number | null>(null);
   const lastSingleRef = useRef<{ x: number; y: number } | null>(null);
+
+  if (!aromasL1.length) return null;
 
   const cx = size / 2;
   const cy = size / 2;
