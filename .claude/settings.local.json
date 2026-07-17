@@ -49,7 +49,29 @@
       "Bash(yarn lint *)",
       "mcp__claude_ai_Supabase__list_migrations",
       "mcp__claude_ai_Supabase__get_advisors",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Skill(run)",
+      "Bash(disown)",
+      "Bash(timeout 90 bash -c 'until grep -qE \"Web is waiting|Webpack compiled|started at|Metro waiting\" /tmp/expo-web.log 2>/dev/null; do sleep 2; done; tail -40 /tmp/expo-web.log')",
+      "Read(//tmp/**)",
+      "Bash(npx --no-install chromium-cli --help)",
+      "Bash(npm ls *)",
+      "Bash(python3 -c \"import playwright\")",
+      "Bash(npm view *)",
+      "Bash(mkdir -p /tmp/claude-1000/-home-runner-workspace/55cc3854-08a5-46e5-9cc1-e769a5529eca/scratchpad/pw)",
+      "Bash(npm init *)",
+      "Bash(timeout 120 npm install playwright@1.61.1 --no-save)",
+      "Bash(timeout 180 npx playwright install chromium --with-deps)",
+      "Bash(timeout 120 npx playwright install chromium)",
+      "Bash(node drive.js)",
+      "Bash(timeout 180 nix-shell -p glib nss nspr at-spi2-core cups dbus expat libxkbcommon mesa alsa-lib cairo pango gtk3 xorg.libXcomposite xorg.libXdamage xorg.libXfixes xorg.libXrandr xorg.libxcb xorg.libX11 xorg.libXext udev --run \"node drive.js\")",
+      "Bash(nix-shell -p glib nss nspr at-spi2-core cups dbus expat libxkbcommon mesa alsa-lib cairo pango gtk3 xorg.libXcomposite xorg.libXdamage xorg.libXfixes xorg.libXrandr xorg.libxcb xorg.libX11 xorg.libXext udev --run 'echo $LD_LIBRARY_PATH')",
+      "Bash(nix-shell -p glib nss nspr at-spi2-core cups dbus expat libxkbcommon mesa alsa-lib cairo pango gtk3 xorg.libXcomposite xorg.libXdamage xorg.libXfixes xorg.libXrandr xorg.libxcb xorg.libX11 xorg.libXext udev libdrm --run ' *)",
+      "Bash(nix-build '<nixpkgs>' -A glib.out --no-out-link)",
+      "Bash(tee /tmp/tsc_out.txt)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(kill 131)",
+      "Bash(mkdir -p /tmp/claude-1000/-home-runner-workspace/0dbf34ee-78a7-49e5-b983-bb73e4d85abc/scratchpad)"
     ]
   }
 }
