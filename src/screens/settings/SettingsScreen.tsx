@@ -8,7 +8,10 @@ import {
   Pressable,
   Switch,
   Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
@@ -22,6 +25,7 @@ import {
   submitSommelierApplication,
   getPendingSommelierCount,
   updateUserProfile,
+  uploadAvatar,
 } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -40,6 +44,8 @@ export function SettingsScreen() {
   const [pendingCount, setPendingCount] = useState(0);
   const [directoryVisible, setDirectoryVisible] = useState(profile?.directory_visible ?? true);
   const [directorySaving, setDirectorySaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarImageError, setAvatarImageError] = useState(false);
   const { isWide } = useResponsive();
 
   useEffect(() => {
@@ -112,6 +118,42 @@ export function SettingsScreen() {
     setDirectorySaving(false);
   };
 
+  const handlePickAvatar = async () => {
+    if (!user || avatarUploading) return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Needed', 'Photo library permission is required to set a profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+
+    setAvatarUploading(true);
+    try {
+      const { url, error: uploadError } = await uploadAvatar(user.id, result.assets[0].uri);
+      if (uploadError || !url) {
+        Alert.alert('Upload Failed', uploadError ?? 'Could not upload your photo. Please try again.');
+        return;
+      }
+      const { data, error: saveError } = await updateUserProfile(user.id, { avatar_url: url });
+      if (saveError) {
+        Alert.alert('Upload Failed', 'Photo uploaded but could not be saved to your profile. Please try again.');
+        return;
+      }
+      if (data) setProfile(data);
+      setAvatarImageError(false);
+    } catch {
+      Alert.alert('Upload Failed', 'Something went wrong uploading your photo. Please try again.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const roleBadge = isSommelierApproved
     ? { label: 'Sommelier', icon: '🎓', color: Colors.gold }
     : { label: 'Wine Explorer', icon: '🍷', color: Colors.inkMuted };
@@ -124,11 +166,29 @@ export function SettingsScreen() {
 
         {/* Profile */}
         <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(profile?.display_name ?? user?.email ?? '?')[0].toUpperCase()}
-            </Text>
-          </View>
+          <Pressable onPress={handlePickAvatar} disabled={avatarUploading}>
+            {profile?.avatar_url && !avatarImageError ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={styles.avatar}
+                onError={() => setAvatarImageError(true)}
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {(profile?.display_name ?? user?.email ?? '?')[0].toUpperCase()}
+                </Text>
+              </View>
+            )}
+            {avatarUploading && (
+              <View style={styles.avatarLoadingOverlay}>
+                <ActivityIndicator color={Colors.white} size="small" />
+              </View>
+            )}
+            <View style={styles.avatarEditBadge}>
+              <Text style={styles.avatarEditBadgeText}>✎</Text>
+            </View>
+          </Pressable>
           <View style={styles.profileInfo}>
             {profile?.display_name ? (
               <Text style={styles.displayName}>{profile.display_name}</Text>
@@ -494,6 +554,34 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.playfair,
     fontSize: 20,
     color: Colors.ink,
+  },
+  avatarLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(31,21,24,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.ink,
+    borderWidth: 1.5,
+    borderColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarEditBadgeText: {
+    fontSize: 10,
+    color: Colors.white,
   },
   profileInfo: { flex: 1, gap: 2 },
   displayName: {

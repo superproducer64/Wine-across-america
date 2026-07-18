@@ -709,6 +709,36 @@ export async function uploadLabelPhoto(
   }
 }
 
+// ─── Avatar Upload ──────────────────────────────────────────────────────────
+
+export async function uploadAvatar(
+  userId: string,
+  imageUri: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    // Fixed filename per user (always .jpg regardless of source format) —
+    // RLS scopes write access to this folder, and upsert replaces the
+    // previous avatar in place at the same path rather than accumulating
+    // orphaned files if a future upload happens to be a different format.
+    const path = `${userId}/avatar.jpg`;
+
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+
+    if (error) return { url: null, error: error.message };
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    // Bust CDN/browser cache — the path is stable across uploads, so
+    // without this a replaced avatar can keep showing the old cached image.
+    return { url: `${data.publicUrl}?t=${Date.now()}`, error: null };
+  } catch (e: unknown) {
+    return { url: null, error: String(e) };
+  }
+}
+
 // ─── User Search ──────────────────────────────────────────────────────────────
 
 export async function searchUserByEmail(email: string) {
