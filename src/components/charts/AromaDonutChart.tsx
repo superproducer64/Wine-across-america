@@ -201,26 +201,36 @@ function splitCategoryLabel(label: string): string[] {
   return [label];
 }
 
-// Per-category label font size. Every label — one line or two — is checked
-// against the same two constraints: a gentle length-based scale (mirrors
-// outerLabelFontSize below, just calibrated to this ring's shorter labels)
-// for how much radial room a long line needs, and a tangential check for
-// how much room the wedge itself gives before bleeding into a neighbor.
-// Only over either limit does a label shrink, and only that one label, not
-// the whole ring — single-word labels (Citrus, Mineral, Earthy…) previously
-// skipped this check entirely, which is what let the longest of them
-// (Mineral, the one 7-letter single-line label with no wrap point) render
-// uncorrected while its shorter neighbors happened to still fit.
-function categoryLabelFontSize(base: number, lines: string[], sweepDeg: number, radius: number): number {
+// Average glyph advance for DM Sans Medium, as a fraction of font size —
+// used to estimate a line's rendered width from character count alone
+// (no font-metrics API available at layout time for SVG text).
+const CHAR_WIDTH_RATIO = 0.56;
+
+// Per-category label font size. Labels read radially (outward from center),
+// so a line's rendered LENGTH must fit the ring's radial band (catEdge -
+// holeR) — that's what `radialBand` checks below, and it's the actual
+// binding constraint for a long single-word label like "Mineral": the ring
+// gives every category the same angular wedge (see `perCat` above, which
+// has no dependence on item count), so a 7-letter unsplit word needs more
+// radial room than a 6-letter one even after the coarse length-based scale,
+// and nothing previously measured that directly. Two-line labels are also
+// checked tangentially (how much arc the wedge itself gives before the
+// stacked lines bleed into a neighbor) — only over either limit does a
+// label shrink, and only that one label, not the whole ring.
+function categoryLabelFontSize(base: number, lines: string[], sweepDeg: number, radius: number, radialBand: number): number {
   const maxLineLen = Math.max(...lines.map(l => l.length));
   let scale = 1;
   if (maxLineLen > 7) scale = 0.80;
   else if (maxLineLen > 6) scale = 0.90;
 
   const lineHeight = base * scale * 1.15;
-  const needed = lines.length * lineHeight;
-  const available = (sweepDeg * Math.PI / 180) * radius * 0.82;
-  if (needed > available) scale *= Math.max(available / needed, 0.6);
+  const stackNeeded = lines.length * lineHeight;
+  const stackAvailable = (sweepDeg * Math.PI / 180) * radius * 0.82;
+  if (stackNeeded > stackAvailable) scale *= Math.max(stackAvailable / stackNeeded, 0.6);
+
+  const radialAvailable = radialBand * 0.86;
+  const radialNeeded = maxLineLen * base * scale * CHAR_WIDTH_RATIO;
+  if (radialNeeded > radialAvailable) scale *= Math.max(radialAvailable / radialNeeded, 0.55);
 
   return Math.max(6, base * scale);
 }
@@ -243,7 +253,7 @@ type SelectedInfo = {
 export function AromaDonutChart({
   aromasL1,
   aromasL2 = [],
-  size = 220,
+  size = 260,
   showLegend = true,
   pinchable = false,
 }: AromaDonutChartProps) {
@@ -491,7 +501,7 @@ export function AromaDonutChart({
             const pos = polar(cx, cy, tr, s.mid);
             const rot = spokeLabelRot(s.mid);
             const lines = splitCategoryLabel(s.label);
-            const fontSize = categoryLabelFontSize(catFontSize, lines, s.sweep, tr);
+            const fontSize = categoryLabelFontSize(catFontSize, lines, s.sweep, tr, catEdge - holeR);
             const lineHeight = fontSize * 1.15;
             return (
               <G key={`cl${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>

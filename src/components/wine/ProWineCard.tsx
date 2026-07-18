@@ -68,7 +68,13 @@ export function ProWineCard({ entry, compact = false }: Props) {
   const [photoModal, setPhotoModal] = useState(false);
   const [photoModalIdx, setPhotoModalIdx] = useState(0);
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const popoverSize = Math.min(screenW * 0.88, screenH * 0.62, 380);
+  // Popover's own footprint (matches the `popover` style below) minus the
+  // tighter gutter around the wheel (`popoverScroll`, not the full
+  // Spacing.lg used by the header/subtitle) — this is the actual room the
+  // wheel has to work with, so labels get real physical space instead of
+  // being sized against a number that ignores the modal's padding.
+  const popoverWidth = Math.min(screenW * 0.97, 520);
+  const popoverSize = Math.min(popoverWidth - Spacing.xs * 2, screenH * 0.64, 460);
 
   const origin = [entry.subregion, entry.region, entry.country].filter(Boolean).join(', ');
   const wineTitle = [entry.name, entry.vintage].filter(Boolean).join(' ');
@@ -500,23 +506,24 @@ const styles = StyleSheet.create({
   popover: {
     backgroundColor: Colors.white,
     borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
     alignItems: 'center',
     gap: Spacing.sm,
     ...Shadows.lg,
-    maxWidth: 440,
-    width: '92%',
+    maxWidth: 520,
+    width: '97%',
   },
   popoverScroll: {
     alignItems: 'center',
+    paddingHorizontal: Spacing.xs,
     paddingBottom: Spacing.md,
   },
   popoverHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
+    paddingHorizontal: Spacing.lg,
   },
   popoverTitle: {
     flex: 1,
@@ -530,6 +537,7 @@ const styles = StyleSheet.create({
     color: Colors.inkMid,
     alignSelf: 'flex-start',
     fontStyle: 'italic',
+    paddingHorizontal: Spacing.lg,
   },
   closeBtn: {
     width: 28,
