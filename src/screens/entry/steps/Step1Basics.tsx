@@ -102,37 +102,63 @@ export function Step1Basics() {
     return undefined;
   };
 
-  const handlePriceChange = (type: 'glass' | 'bottle', field: 'amount' | 'currency', value: string) => {
+  // Raw text the user is typing, kept separate from the parsed numeric
+  // amount in the store. A controlled input whose `value` is re-derived
+  // from `String(parsedNumber)` on every keystroke can't hold a trailing
+  // "." or trailing "0"s while typing (e.g. "12." collapses back to "12",
+  // eating the decimal point the user just typed) — this local buffer is
+  // what the input actually displays, while a parsed number still gets
+  // pushed to the store for persistence.
+  const [priceText, setPriceText] = useState<{ glass: string; bottle: string }>(() => ({
+    glass: getPriceEntry('glass')?.amount ? String(getPriceEntry('glass')!.amount) : '',
+    bottle: getPriceEntry('bottle')?.amount ? String(getPriceEntry('bottle')!.amount) : '',
+  }));
+
+  const handleAmountChange = (type: 'glass' | 'bottle', raw: string) => {
+    // Digits and at most one decimal point, max 2 digits after it.
+    const cleaned = raw.replace(/[^0-9.]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    const normalized = firstDot === -1
+      ? cleaned
+      : `${cleaned.slice(0, firstDot + 1)}${cleaned.slice(firstDot + 1).replace(/\./g, '').slice(0, 2)}`;
+    setPriceText((prev) => ({ ...prev, [type]: normalized }));
+
     const withoutType = draft.price.filter((p) => {
       if (p.type === type) return false;
       if (type === 'bottle' && !p.type) return false;
       return true;
     });
-    const existing = getPriceEntry(type);
 
-    if (field === 'amount') {
-      if (!value.trim()) {
-        setBasics({ price: withoutType });
-        return;
-      }
-      const parsed = parseFloat(value);
-      if (isNaN(parsed)) {
-        setBasics({ price: withoutType });
-        return;
-      }
-      const updated: PriceEntry = {
-        amount: parsed,
-        currency: existing?.currency ?? 'USD',
-        date: existing?.date ?? '',
-        location: existing?.location ?? '',
-        type,
-      };
-      setBasics({ price: [...withoutType, updated] });
-    } else {
-      if (!existing) return;
-      const updated: PriceEntry = { ...existing, currency: value, type };
-      setBasics({ price: [...withoutType, updated] });
+    if (!normalized || normalized === '.') {
+      setBasics({ price: withoutType });
+      return;
     }
+    const parsed = parseFloat(normalized);
+    if (isNaN(parsed)) {
+      setBasics({ price: withoutType });
+      return;
+    }
+    const existing = getPriceEntry(type);
+    const updated: PriceEntry = {
+      amount: parsed,
+      currency: existing?.currency ?? 'USD',
+      date: existing?.date ?? '',
+      location: existing?.location ?? '',
+      type,
+    };
+    setBasics({ price: [...withoutType, updated] });
+  };
+
+  const handleCurrencyChange = (type: 'glass' | 'bottle', value: string) => {
+    const existing = getPriceEntry(type);
+    if (!existing) return;
+    const withoutType = draft.price.filter((p) => {
+      if (p.type === type) return false;
+      if (type === 'bottle' && !p.type) return false;
+      return true;
+    });
+    const updated: PriceEntry = { ...existing, currency: value, type };
+    setBasics({ price: [...withoutType, updated] });
   };
 
   const leftColumn = (
@@ -302,8 +328,8 @@ export function Step1Basics() {
       <View style={styles.priceRow}>
         <TextInput
           label="Amount"
-          value={getPriceEntry(priceMode) ? String(getPriceEntry(priceMode)!.amount || '') : ''}
-          onChangeText={(v) => handlePriceChange(priceMode, 'amount', v)}
+          value={priceText[priceMode]}
+          onChangeText={(v) => handleAmountChange(priceMode, v)}
           keyboardType="decimal-pad"
           placeholder="0.00"
           containerStyle={{ flex: 1 }}
@@ -311,7 +337,7 @@ export function Step1Basics() {
         <TextInput
           label="Currency"
           value={getPriceEntry(priceMode)?.currency ?? 'USD'}
-          onChangeText={(v) => handlePriceChange(priceMode, 'currency', v)}
+          onChangeText={(v) => handleCurrencyChange(priceMode, v)}
           placeholder="USD"
           containerStyle={{ width: 70 }}
         />
