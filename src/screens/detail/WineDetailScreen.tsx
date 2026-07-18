@@ -26,6 +26,7 @@ import { DatePickerInput } from '@/components/ui/DatePickerInput';
 import { getWineEntry, uploadLabelPhoto } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
 import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
 import { WineEntry, PriceEntry } from '@/types';
@@ -99,6 +100,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const { entries, removeEntry, updateEntry } = useWineStore();
   const { isWide } = useResponsive();
   const { user, profile } = useAuthStore();
+  const { loadForEdit } = useEntryDraftStore();
 
   // Use cached store entry immediately — avoids a network round-trip on every open.
   // Only fall back to fetching if the entry isn't in the store (e.g. deep link).
@@ -248,6 +250,12 @@ export function WineDetailScreen({ route, navigation }: Props) {
     navigation.goBack();
   };
 
+  const handleEditEntry = () => {
+    if (!entry) return;
+    loadForEdit(entry, entry.id);
+    navigation.navigate('Tabs', { screen: 'AddEntry' });
+  };
+
   const handleShare = async () => {
     if (!entry) return;
     const text = buildShareText(entry);
@@ -309,6 +317,13 @@ export function WineDetailScreen({ route, navigation }: Props) {
         </Pressable>
 
         <View style={styles.navRight}>
+          {/* Edit button */}
+          {!confirmDelete && (
+            <Pressable onPress={handleEditEntry} style={styles.navBtn}>
+              <Text style={styles.navBtnText}>Edit</Text>
+            </Pressable>
+          )}
+
           {/* Share button */}
           {!confirmDelete && (
             <Pressable onPress={handleShare} style={styles.navBtn}>

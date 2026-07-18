@@ -67,6 +67,10 @@ function makeDefaultDraft(): WineEntryDraft {
 interface EntryDraftStore {
   draft: WineEntryDraft;
   currentStep: number;
+  // Set when the wizard was launched to edit an existing entry (vs. create a
+  // new one) — null means "new entry" mode. Drives whether the save action
+  // inserts or updates, and where post-save navigation lands.
+  editingEntryId: string | null;
 
   // Setters per step
   setBasics: (data: Partial<Pick<WineEntryDraft,
@@ -93,12 +97,13 @@ interface EntryDraftStore {
   setLabelPhoto: (url: string | null, blurhash?: string | null, backUrl?: string | null) => void;
   setStep: (step: number) => void;
   reset: () => void;
-  loadForEdit: (entry: WineEntryDraft) => void;
+  loadForEdit: (entry: WineEntryDraft, entryId: string) => void;
 }
 
 export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
   draft: makeDefaultDraft(),
   currentStep: 0,
+  editingEntryId: null,
 
   setBasics: (data) =>
     set((state) => ({ draft: { ...state.draft, ...data } })),
@@ -152,7 +157,7 @@ export const useEntryDraftStore = create<EntryDraftStore>((set) => ({
 
   setStep: (step) => set({ currentStep: step }),
 
-  reset: () => set({ draft: makeDefaultDraft(), currentStep: 0 }),
+  reset: () => set({ draft: makeDefaultDraft(), currentStep: 0, editingEntryId: null }),
 
-  loadForEdit: (entry) => set({ draft: entry, currentStep: 0 }),
+  loadForEdit: (entry, entryId) => set({ draft: entry, currentStep: 0, editingEntryId: entryId }),
 }));

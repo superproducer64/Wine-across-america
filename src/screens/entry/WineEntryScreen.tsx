@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   Pressable,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
@@ -42,12 +42,39 @@ export function WineEntryScreen(_props: Props) {
   const [confirmBlend, setConfirmBlend] = useState(false);
   const [confirmBlendNext, setConfirmBlendNext] = useState(false);
   const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
-  const { draft, reset } = useEntryDraftStore();
+  const { draft, reset, editingEntryId } = useEntryDraftStore();
   const { user, profile } = useAuthStore();
-  const { addEntry } = useWineStore();
+  const { addEntry, updateEntry } = useWineStore();
 
   const isSommelier = profile?.user_role === 'sommelier' && profile?.sommelier_status === 'approved';
   const STEPS = BASE_STEPS;
+
+  // loadForEdit (called from WineDetailScreen) sets editingEntryId and jumps
+  // the store's own step tracking to 0, but this screen's step is separate
+  // local state that survives tab-blur — without this, editing a wine while
+  // the wizard was previously left on, say, step 4 would open straight to
+  // step 4 instead of Basics.
+  useEffect(() => {
+    if (editingEntryId) setStep(0);
+  }, [editingEntryId]);
+
+  // "AddEntry" is a tab screen, so React Navigation keeps it mounted (state
+  // and all) when the user switches to another tab or pushes WineDetail on
+  // top of it — without this, leaving the post-save success screen by any
+  // path other than the "Log Another" button leaves it parked there, so the
+  // next time this tab regains focus it shows the *previous* saved wine
+  // instead of a fresh Step 1. Reset on blur, not focus, so returning here
+  // always lands on the true start of the flow with no leftover state.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (savedEntryId) {
+          setSavedEntryId(null);
+          setStep(0);
+        }
+      };
+    }, [savedEntryId])
+  );
 
   const StepComponent = STEPS[step].component;
   const isLast = step === STEPS.length - 1;
@@ -83,14 +110,37 @@ export function WineEntryScreen(_props: Props) {
   };
 
   const handleDiscard = () => {
+    // Reaching this tab (from either the tab bar or WineDetail's Edit
+    // button) doesn't push a new stack entry, so a plain goBack() often has
+    // nothing to return to. When editing, we know exactly where "back"
+    // should mean — that wine's detail view.
+    const returnToId = editingEntryId;
     reset();
-    navigation.goBack();
+    if (returnToId) {
+      navigation.navigate('WineDetail', { entryId: returnToId });
+    } else {
+      navigation.goBack();
+    }
   };
 
   const doSubmit = async () => {
     if (!user) return;
     setError('');
     setSubmitting(true);
+
+    if (editingEntryId) {
+      // Editing an existing entry: update in place and return straight to
+      // its detail view — no "Wine Logged!" success screen (that's a
+      // new-entry affordance; "Log Another" doesn't make sense mid-edit),
+      // and no leftover wizard state on the next visit to this tab.
+      const savedId = editingEntryId;
+      await updateEntry(savedId, draft);
+      setSubmitting(false);
+      reset();
+      navigation.navigate('WineDetail', { entryId: savedId });
+      return;
+    }
+
     const entry = await addEntry(user.id, draft);
     setSubmitting(false);
     if (entry) {
@@ -266,7 +316,7 @@ export function WineEntryScreen(_props: Props) {
         <View style={styles.footer}>
           {isLast ? (
             <Button
-              label="Save Wine Entry"
+              label={editingEntryId ? 'Save Changes' : 'Save Wine Entry'}
               onPress={handleSubmit}
               loading={submitting}
               size="lg"
