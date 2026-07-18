@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { InfoPopover } from '@/components/ui/InfoPopover';
 import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
-import { WineEntry, AROMA_CATEGORIES } from '@/types';
+import { WineEntry } from '@/types';
 import { getFoodPairings } from '@/utils/foodPairings';
 
 interface Props {
@@ -174,63 +174,6 @@ const axisStyles = StyleSheet.create({
   },
 });
 
-// ─── Flavor Bar ──────────────────────────────────────────────────────────────
-
-function FlavorBar({
-  emoji,
-  label,
-  fill,
-}: {
-  emoji: string;
-  label: string;
-  fill: number; // 0-1
-}) {
-  return (
-    <View style={flavorStyles.row}>
-      <Text style={flavorStyles.emoji}>{emoji}</Text>
-      <View style={flavorStyles.barWrap}>
-        <Text style={flavorStyles.label}>{label}</Text>
-        <View style={flavorStyles.track}>
-          <View style={[flavorStyles.fill, { width: `${fill * 100}%` as any }]} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const flavorStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  emoji: {
-    fontSize: 15,
-    width: 22,
-    textAlign: 'center',
-  },
-  barWrap: {
-    flex: 1,
-    gap: 3,
-  },
-  label: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 12,
-    color: Colors.inkMid,
-  },
-  track: {
-    height: 6,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    backgroundColor: Colors.gold,
-    borderRadius: Radius.full,
-  },
-});
-
 // ─── Section Header ──────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
@@ -265,19 +208,6 @@ export function VivinoStyleCard({ entry }: Props) {
     const description = VIVINO_AXIS_DESCRIPTIONS[key] ?? '';
     setActiveAxis({ title: `${left} → ${right}`, description });
   };
-
-  // Aroma profile — top 5 categories by frequency
-  const aromaCounts: Record<string, number> = {};
-  entry.aromas_l1.forEach((id) => {
-    aromaCounts[id] = (aromaCounts[id] ?? 0) + 1;
-  });
-  const sortedAromas = Object.entries(aromaCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
-  const maxAromaCount = sortedAromas[0]?.[1] ?? 1;
-
-  // Top subcategory notes (aromas_l2 pill tags)
-  const topNotes = entry.aromas_l2.slice(0, 6);
 
   // Structure axes (convert 1-10 to 0-1)
   const norm = (v: number) => (v - 1) / 9;
@@ -368,38 +298,6 @@ export function VivinoStyleCard({ entry }: Props) {
 
       {/* ── Body ── */}
       <View style={styles.body}>
-
-        {/* Flavor Profile */}
-        {sortedAromas.length > 0 && (
-          <View style={styles.section}>
-            <SectionHeader label="Flavor Profile" />
-            <View style={{ gap: 10 }}>
-              {sortedAromas.map(([id, count]) => {
-                const cat = AROMA_CATEGORIES.find((c) => c.id === id);
-                if (!cat) return null;
-                return (
-                  <FlavorBar
-                    key={id}
-                    emoji={cat.emoji}
-                    label={cat.label}
-                    fill={count / maxAromaCount}
-                  />
-                );
-              })}
-            </View>
-
-            {/* Top notes pills */}
-            {topNotes.length > 0 && (
-              <View style={styles.pillsRow}>
-                {topNotes.map((note) => (
-                  <View key={note} style={styles.pill}>
-                    <Text style={styles.pillText}>{note}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
 
         <Divider />
 
