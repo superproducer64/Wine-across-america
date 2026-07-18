@@ -23,3 +23,8 @@ yarn-error.*
 
 # Google Play service account key (sensitive - never commit)
 google-service-account.json
+
+# GCP service account keys, wherever they land (e.g. attached_assets/) —
+# these are plain-text credentials and must never be committed
+*service-account*.json
+pour-across-america-*.json
