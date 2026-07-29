@@ -25,6 +25,9 @@
         "NSLocationWhenInUseUsageDescription": "Pour Across America uses your location to log where you tasted each wine.",
         "ITSAppUsesNonExemptEncryption": false
       },
+      "associatedDomains": [
+        "applinks:paa.bgpstudios.com"
+      ],
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default"

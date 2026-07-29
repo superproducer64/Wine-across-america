@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, Linking, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, View } from 'react-native';
 import { supabase, setRecoverySession } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -50,9 +50,10 @@ export function RootNavigator() {
   }, []);
 
   useEffect(() => {
-    // Handles two deep-link families:
-    //  - pouracrossamerica://reset-password (+ tokens in the hash) — recovery
-    //  - pouracrossamerica://invite/{code} — invite signup
+    // Handles two deep-link families, each reachable via either the legacy
+    // custom scheme or the paa.bgpstudios.com Universal Link:
+    //  - .../reset-password (+ tokens in the hash) — recovery
+    //  - .../invite/{code} — invite signup
     // initialRouteName/initialParams on AuthNavigator cover cold starts (state
     // is set before it ever mounts); navigationRef.navigate covers the case
     // where the app is already open and the navigator is already mounted, so
@@ -76,10 +77,17 @@ export function RootNavigator() {
       }
 
       const inviteCode = parseInviteCodeFromUrl(url);
-      if (inviteCode && !useAuthStore.getState().session) {
-        setPendingInviteCode(inviteCode);
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('Auth', { screen: 'Signup', params: { inviteCode } });
+      if (inviteCode) {
+        if (!useAuthStore.getState().session) {
+          setPendingInviteCode(inviteCode);
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Auth', { screen: 'Signup', params: { inviteCode } });
+          }
+        } else {
+          Alert.alert(
+            "You're already signed in",
+            'This invite link is for new accounts.'
+          );
         }
       }
     };

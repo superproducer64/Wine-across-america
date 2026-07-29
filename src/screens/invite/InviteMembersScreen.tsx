@@ -22,7 +22,7 @@ function buildInviteMessage(inviterName: string | null, code: string): string {
   const who = inviterName ? `${inviterName} has` : 'You’ve been';
   return (
     `${who} invited you to Pour Across America — a wine tasting journal. ` +
-    `Join with this link: pouracrossamerica://invite/${code}`
+    `Join with this link: https://paa.bgpstudios.com/invite/${code}`
   );
 }
 
