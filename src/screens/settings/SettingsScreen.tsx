@@ -26,6 +26,7 @@ import {
   getPendingSommelierCount,
   updateUserProfile,
   uploadAvatar,
+  fetchUnreadMessageCount,
 } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -46,6 +47,7 @@ export function SettingsScreen() {
   const [directorySaving, setDirectorySaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarImageError, setAvatarImageError] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { isWide } = useResponsive();
 
   useEffect(() => {
@@ -66,6 +68,14 @@ export function SettingsScreen() {
         getPendingSommelierCount().then(setPendingCount);
       }
     }, [profile?.is_creator])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchUnreadMessageCount(user.id).then(setUnreadCount);
+      }
+    }, [user])
   );
 
   const isSommelierApproved =
@@ -245,6 +255,24 @@ export function SettingsScreen() {
               <Text style={styles.adminCardSub}>Share a personal invite link with friends</Text>
             </View>
             <Text style={styles.adminCardArrow}>›</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.adminCardInner, styles.inviteRow]}
+            onPress={() => navigation.navigate('Inbox')}
+          >
+            <View style={styles.adminCardLeft}>
+              <Text style={styles.adminCardTitle}>Messages</Text>
+              <Text style={styles.adminCardSub}>Messages from other members</Text>
+            </View>
+            <View style={styles.adminCardRight}>
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
+                </View>
+              )}
+              <Text style={styles.adminCardArrow}>›</Text>
+            </View>
           </Pressable>
 
           <View style={styles.directoryToggleRow}>

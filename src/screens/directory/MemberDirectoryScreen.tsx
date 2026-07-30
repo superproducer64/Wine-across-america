@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { fetchMemberDirectory, MemberDirectoryEntry } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { MainStackParamList } from '@/navigation/types';
 
 function formatMemberSince(value: string): string {
@@ -22,12 +23,20 @@ function formatMemberSince(value: string): string {
   });
 }
 
-function MemberCard({ member }: { member: MemberDirectoryEntry }) {
+function MemberCard({
+  member,
+  isSelf,
+  onMessage,
+}: {
+  member: MemberDirectoryEntry;
+  isSelf: boolean;
+  onMessage: () => void;
+}) {
   const [imageError, setImageError] = useState(false);
   const initials = (member.display_name ?? '?').charAt(0).toUpperCase();
 
   return (
-    <Pressable style={styles.card}>
+    <View style={styles.card}>
       {member.avatar_url && !imageError ? (
         <Image
           source={{ uri: member.avatar_url }}
@@ -50,13 +59,19 @@ function MemberCard({ member }: { member: MemberDirectoryEntry }) {
         </View>
         <Text style={styles.memberSince}>Member since {formatMemberSince(member.member_since)}</Text>
       </View>
-    </Pressable>
+      {!isSelf && (
+        <Pressable style={styles.messageBtn} onPress={onMessage} hitSlop={8}>
+          <Text style={styles.messageBtnText}>Message</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
 export function MemberDirectoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { isWide } = useResponsive();
+  const { user } = useAuthStore();
   const [members, setMembers] = useState<MemberDirectoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -119,7 +134,18 @@ export function MemberDirectoryScreen() {
           ) : (
             <View style={styles.list}>
               {members.map((member) => (
-                <MemberCard key={member.id} member={member} />
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  isSelf={member.id === user?.id}
+                  onMessage={() =>
+                    navigation.navigate('ComposeMessage', {
+                      recipientId: member.id,
+                      recipientName: member.display_name,
+                      recipientAvatarUrl: member.avatar_url,
+                    })
+                  }
+                />
               ))}
             </View>
           )}
@@ -243,5 +269,17 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSans,
     fontSize: 13,
     color: Colors.inkMuted,
+  },
+  messageBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+  },
+  messageBtnText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.gold,
   },
 });

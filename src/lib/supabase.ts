@@ -780,3 +780,113 @@ export async function markShareSeen(shareId: string) {
     .update({ seen: true })
     .eq('id', shareId);
 }
+
+// ─── Direct Messages ──────────────────────────────────────────────────────────
+// One-directional messaging: any member can message any other member. There is
+// intentionally no reply/thread concept — each row is a standalone message.
+
+export type DirectMessage = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+};
+
+export type InboxMessage = DirectMessage & {
+  sender_display_name: string | null;
+  sender_avatar_url: string | null;
+};
+
+export type SentMessage = DirectMessage & {
+  recipient_display_name: string | null;
+  recipient_avatar_url: string | null;
+};
+
+export async function sendMessage(
+  senderId: string,
+  recipientId: string,
+  content: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('messages').insert({
+    sender_id: senderId,
+    recipient_id: recipientId,
+    content,
+  });
+  return { error: error?.message ?? null };
+}
+
+export async function fetchInboxMessages(
+  userId: string
+): Promise<{ data: InboxMessage[] | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('recipient_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const messages = (data ?? []) as DirectMessage[];
+  const senderIds = [...new Set(messages.map((m) => m.sender_id))];
+  const profiles = senderIds.length
+    ? await supabase.from('user_profiles').select('id, display_name, avatar_url').in('id', senderIds)
+    : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
+  const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p]));
+
+  return {
+    data: messages.map((m) => ({
+      ...m,
+      sender_display_name: profileMap.get(m.sender_id)?.display_name ?? null,
+      sender_avatar_url: profileMap.get(m.sender_id)?.avatar_url ?? null,
+    })),
+    error: null,
+  };
+}
+
+export async function fetchSentMessages(
+  userId: string
+): Promise<{ data: SentMessage[] | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('sender_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const messages = (data ?? []) as DirectMessage[];
+  const recipientIds = [...new Set(messages.map((m) => m.recipient_id))];
+  const profiles = recipientIds.length
+    ? await supabase.from('user_profiles').select('id, display_name, avatar_url').in('id', recipientIds)
+    : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
+  const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p]));
+
+  return {
+    data: messages.map((m) => ({
+      ...m,
+      recipient_display_name: profileMap.get(m.recipient_id)?.display_name ?? null,
+      recipient_avatar_url: profileMap.get(m.recipient_id)?.avatar_url ?? null,
+    })),
+    error: null,
+  };
+}
+
+export async function markMessageRead(messageId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('messages').update({ read: true }).eq('id', messageId);
+  return { error: error?.message ?? null };
+}
+
+export async function fetchUnreadMessageCount(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('recipient_id', userId)
+    .eq('read', false);
+  return count ?? 0;
+}

@@ -15,6 +15,9 @@ import { AdminScreen } from '@/screens/admin/AdminScreen';
 import { InsightsScreen } from '@/screens/admin/InsightsScreen';
 import { MemberDirectoryScreen } from '@/screens/directory/MemberDirectoryScreen';
 import { InviteMembersScreen } from '@/screens/invite/InviteMembersScreen';
+import { InboxScreen } from '@/screens/messages/InboxScreen';
+import { MessageDetailScreen } from '@/screens/messages/MessageDetailScreen';
+import { ComposeMessageScreen } from '@/screens/messages/ComposeMessageScreen';
 import { useResponsive, SIDEBAR_WIDTH } from '@/hooks/useResponsive';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -169,6 +172,21 @@ export function MainNavigator() {
       <Stack.Screen
         name="InviteMembers"
         component={InviteMembersScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="Inbox"
+        component={InboxScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="MessageDetail"
+        component={MessageDetailScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="ComposeMessage"
+        component={ComposeMessageScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>
