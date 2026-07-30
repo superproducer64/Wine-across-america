@@ -18,6 +18,7 @@ import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
 import { analyzeWineLabelWithAI, WineLabelData } from '@/utils/wineOcr';
 import { uploadLabelPhoto } from '@/lib/supabase';
+import { getCurrencySymbol } from '@/utils/currency';
 import { computeLabelPhotoPlaceholder } from '@/utils/imagePlaceholder';
 import { useWineStore } from '@/stores/wineStore';
 import { WineEntry } from '@/types';
@@ -411,7 +412,7 @@ export function LabelScannerModal({ visible, onClose, onApply, userId }: Props) 
                         ) : null}
                         {lastPrice ? (
                           <Text style={styles.matchMetaText}>
-                            {lastPrice.type === 'glass' ? '🥂' : '🍾'} {lastPrice.currency} {lastPrice.amount.toFixed(2)}
+                            {lastPrice.type === 'glass' ? '🥂' : '🍾'} {getCurrencySymbol(lastPrice.currency)}{lastPrice.amount.toFixed(2)}
                           </Text>
                         ) : null}
                       </View>

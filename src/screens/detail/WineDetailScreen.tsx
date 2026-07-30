@@ -29,6 +29,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
 import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
+import { CurrencyPicker } from '@/components/ui/CurrencyPicker';
+import { getCurrencySymbol } from '@/utils/currency';
 import { WineEntry, PriceEntry } from '@/types';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -147,6 +149,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
     setVisitLocation('');
     setVisitDate(TODAY);
     setVisitType('bottle');
+    setVisitCurrency('USD');
     setSavingVisit(false);
     setTimeout(() => { setShowVisitForm(false); setVisitBanner(null); }, 1500);
   };
@@ -489,7 +492,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
                 {p.location ? <Text style={styles.priceLocation}>📍 {p.location}</Text> : null}
                 {p.date ? <Text style={styles.priceDate}>{new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text> : null}
               </View>
-              <Text style={styles.priceValue}>{p.currency} {p.amount.toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{getCurrencySymbol(p.currency)}{p.amount.toFixed(2)}</Text>
             </View>
           )) : (
             <Text style={styles.notesEmpty}>No price logged yet.</Text>
@@ -547,14 +550,11 @@ export function WineDetailScreen({ route, navigation }: Props) {
               <View style={styles.visitFieldWrap}>
                 <Text style={styles.visitFieldLabel}>Price</Text>
                 <View style={styles.priceInputRow}>
-                  <TextInput
-                    style={styles.currencyInput}
+                  <CurrencyPicker
+                    label=""
                     value={visitCurrency}
-                    onChangeText={setVisitCurrency}
-                    maxLength={4}
-                    autoCapitalize="characters"
-                    placeholder="USD"
-                    placeholderTextColor={Colors.inkFaint}
+                    onChange={setVisitCurrency}
+                    containerStyle={styles.currencyPickerWrap}
                   />
                   <TextInput
                     style={styles.amountInput}
@@ -976,19 +976,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
   },
-  currencyInput: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 14,
-    color: Colors.ink,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    width: 72,
-    textAlign: 'center',
-    height: 44,
+  currencyPickerWrap: {
+    width: 132,
   },
   amountInput: {
     fontFamily: Fonts.dmSansRegular,

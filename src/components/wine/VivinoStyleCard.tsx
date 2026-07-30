@@ -6,6 +6,7 @@ import { LABEL_PHOTO_PLACEHOLDER } from '@/utils/imagePlaceholder';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
 import { getFoodPairings } from '@/utils/foodPairings';
+import { getCurrencySymbol } from '@/utils/currency';
 
 interface Props {
   entry: WineEntry;
@@ -222,7 +223,7 @@ export function VivinoStyleCard({ entry }: Props) {
   // Price — use most recent entry
   const latestPrice = entry.price?.[entry.price.length - 1] ?? null;
   const priceDisplay = latestPrice && latestPrice.amount > 0
-    ? `${latestPrice.currency === 'USD' ? '$' : latestPrice.currency + ' '}${latestPrice.amount.toFixed(2)}`
+    ? `${getCurrencySymbol(latestPrice.currency)}${latestPrice.amount.toFixed(2)}`
     : null;
 
   // Grape blends — prefer detailed blend data, fall back to plain grapes array

@@ -12,6 +12,7 @@ import {
 import { detectLocation } from '@/utils/detectLocation';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { TextInput } from '@/components/ui/TextInput';
+import { CurrencyPicker } from '@/components/ui/CurrencyPicker';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
 import { useAuthStore } from '@/stores/authStore';
 import { COUNTRIES_AND_REGIONS, PriceEntry } from '@/types';
@@ -334,12 +335,10 @@ export function Step1Basics() {
           placeholder="0.00"
           containerStyle={{ flex: 1 }}
         />
-        <TextInput
-          label="Currency"
+        <CurrencyPicker
           value={getPriceEntry(priceMode)?.currency ?? 'USD'}
-          onChangeText={(v) => handleCurrencyChange(priceMode, v)}
-          placeholder="USD"
-          containerStyle={{ width: 70 }}
+          onChange={(v) => handleCurrencyChange(priceMode, v)}
+          containerStyle={{ width: 132, marginBottom: Spacing.md }}
         />
       </View>
 
