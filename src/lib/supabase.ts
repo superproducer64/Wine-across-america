@@ -782,8 +782,9 @@ export async function markShareSeen(shareId: string) {
 }
 
 // ─── Direct Messages ──────────────────────────────────────────────────────────
-// One-directional messaging: any member can message any other member. There is
-// intentionally no reply/thread concept — each row is a standalone message.
+// Two-way messaging: any member can message any other member, and recipients
+// can reply — the RLS policy only requires sender_id = auth.uid(). Messages
+// between two users are grouped client-side into a single conversation thread.
 
 export type DirectMessage = {
   id: string;
@@ -794,14 +795,12 @@ export type DirectMessage = {
   created_at: string;
 };
 
-export type InboxMessage = DirectMessage & {
-  sender_display_name: string | null;
-  sender_avatar_url: string | null;
-};
-
-export type SentMessage = DirectMessage & {
-  recipient_display_name: string | null;
-  recipient_avatar_url: string | null;
+export type Conversation = {
+  otherUserId: string;
+  otherDisplayName: string | null;
+  otherAvatarUrl: string | null;
+  lastMessage: DirectMessage;
+  unreadCount: number;
 };
 
 export async function sendMessage(
@@ -817,68 +816,80 @@ export async function sendMessage(
   return { error: error?.message ?? null };
 }
 
-export async function fetchInboxMessages(
+export async function fetchConversations(
   userId: string
-): Promise<{ data: InboxMessage[] | null; error: string | null }> {
+): Promise<{ data: Conversation[] | null; error: string | null }> {
   const { data, error } = await supabase
     .from('messages')
     .select('*')
+    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const messages = (data ?? []) as DirectMessage[];
+  const byOther = new Map<string, DirectMessage[]>();
+  messages.forEach((m) => {
+    const otherId = m.sender_id === userId ? m.recipient_id : m.sender_id;
+    const list = byOther.get(otherId) ?? [];
+    list.push(m);
+    byOther.set(otherId, list);
+  });
+
+  const otherIds = [...byOther.keys()];
+  const profiles = otherIds.length
+    ? await supabase.from('user_profiles').select('id, display_name, avatar_url').in('id', otherIds)
+    : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
+  const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p]));
+
+  const conversations: Conversation[] = otherIds.map((otherId) => {
+    const list = byOther.get(otherId)!; // already sorted desc by created_at
+    return {
+      otherUserId: otherId,
+      otherDisplayName: profileMap.get(otherId)?.display_name ?? null,
+      otherAvatarUrl: profileMap.get(otherId)?.avatar_url ?? null,
+      lastMessage: list[0],
+      unreadCount: list.filter((m) => m.recipient_id === userId && !m.read).length,
+    };
+  });
+
+  conversations.sort(
+    (a, b) => new Date(b.lastMessage.created_at).getTime() - new Date(a.lastMessage.created_at).getTime()
+  );
+
+  return { data: conversations, error: null };
+}
+
+export async function fetchConversationMessages(
+  userId: string,
+  otherUserId: string
+): Promise<{ data: DirectMessage[] | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .or(
+      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`
+    )
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+  return { data: (data ?? []) as DirectMessage[], error: null };
+}
+
+export async function markConversationRead(
+  userId: string,
+  otherUserId: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('messages')
+    .update({ read: true })
     .eq('recipient_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    return { data: null, error: error.message };
-  }
-
-  const messages = (data ?? []) as DirectMessage[];
-  const senderIds = [...new Set(messages.map((m) => m.sender_id))];
-  const profiles = senderIds.length
-    ? await supabase.from('user_profiles').select('id, display_name, avatar_url').in('id', senderIds)
-    : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
-  const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p]));
-
-  return {
-    data: messages.map((m) => ({
-      ...m,
-      sender_display_name: profileMap.get(m.sender_id)?.display_name ?? null,
-      sender_avatar_url: profileMap.get(m.sender_id)?.avatar_url ?? null,
-    })),
-    error: null,
-  };
-}
-
-export async function fetchSentMessages(
-  userId: string
-): Promise<{ data: SentMessage[] | null; error: string | null }> {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('sender_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    return { data: null, error: error.message };
-  }
-
-  const messages = (data ?? []) as DirectMessage[];
-  const recipientIds = [...new Set(messages.map((m) => m.recipient_id))];
-  const profiles = recipientIds.length
-    ? await supabase.from('user_profiles').select('id, display_name, avatar_url').in('id', recipientIds)
-    : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
-  const profileMap = new Map((profiles.data ?? []).map((p) => [p.id, p]));
-
-  return {
-    data: messages.map((m) => ({
-      ...m,
-      recipient_display_name: profileMap.get(m.recipient_id)?.display_name ?? null,
-      recipient_avatar_url: profileMap.get(m.recipient_id)?.avatar_url ?? null,
-    })),
-    error: null,
-  };
-}
-
-export async function markMessageRead(messageId: string): Promise<{ error: string | null }> {
-  const { error } = await supabase.from('messages').update({ read: true }).eq('id', messageId);
+    .eq('sender_id', otherUserId)
+    .eq('read', false);
   return { error: error?.message ?? null };
 }
 

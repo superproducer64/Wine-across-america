@@ -1,5 +1,4 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
-import { InboxMessage } from '@/lib/supabase';
 
 // ─── Auth Stack ───────────────────────────────────────────────────────────────
 
@@ -31,7 +30,7 @@ export type MainStackParamList = {
   MemberDirectory: undefined;
   InviteMembers: undefined;
   Inbox: undefined;
-  MessageDetail: { message: InboxMessage };
+  MessageDetail: { otherUserId: string; otherDisplayName: string | null; otherAvatarUrl: string | null };
   ComposeMessage: { recipientId: string; recipientName: string | null; recipientAvatarUrl: string | null };
 };
 

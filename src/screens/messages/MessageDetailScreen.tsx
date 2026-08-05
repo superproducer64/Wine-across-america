@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -8,45 +10,89 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
-import { markMessageRead } from '@/lib/supabase';
+import { Button } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/TextInput';
+import {
+  DirectMessage,
+  fetchConversationMessages,
+  markConversationRead,
+  sendMessage,
+} from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { MainStackParamList } from '@/navigation/types';
+
+const MAX_LENGTH = 2000;
 
 function formatTimestamp(value: string): string {
   return new Date(value).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
-    year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   });
 }
 
-// Read-only — this screen has no reply input or reply button by design.
-// Direct messages in this app are intentionally one-directional.
 export function MessageDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const route = useRoute<RouteProp<MainStackParamList, 'MessageDetail'>>();
-  const { message } = route.params;
+  const { otherUserId, otherDisplayName, otherAvatarUrl } = route.params;
   const { isWide } = useResponsive();
+  const { user } = useAuthStore();
+  const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [content, setContent] = useState('');
+  const [sending, setSending] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
-  useEffect(() => {
-    if (!message.read) {
-      markMessageRead(message.id);
+  const load = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    setError('');
+    const { data, error: fetchError } = await fetchConversationMessages(user.id, otherUserId);
+    if (fetchError) setError(fetchError);
+    else setMessages(data ?? []);
+    setLoading(false);
+    markConversationRead(user.id, otherUserId);
+  }, [user, otherUserId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const trimmed = content.trim();
+  const initials = (otherDisplayName ?? '?').charAt(0).toUpperCase();
+
+  const handleSend = async () => {
+    if (!user || !trimmed) return;
+    setSending(true);
+    setError('');
+    const { error: sendError } = await sendMessage(user.id, otherUserId, trimmed);
+    setSending(false);
+    if (sendError) {
+      setError(sendError);
+      return;
     }
-  }, [message.id, message.read]);
-
-  const initials = (message.sender_display_name ?? '?').charAt(0).toUpperCase();
+    setContent('');
+    await load();
+    scrollRef.current?.scrollToEnd({ animated: true });
+  };
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={isWide ? { maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', width: '100%' } : undefined}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
+        <View style={[styles.inner, isWide && styles.innerWide]}>
           <View style={styles.headerRow}>
             <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backText}>← Back</Text>
@@ -54,9 +100,9 @@ export function MessageDetailScreen() {
           </View>
 
           <View style={styles.senderCard}>
-            {message.sender_avatar_url && !imageError ? (
+            {otherAvatarUrl && !imageError ? (
               <Image
-                source={{ uri: message.sender_avatar_url }}
+                source={{ uri: otherAvatarUrl }}
                 style={styles.avatar}
                 onError={() => setImageError(true)}
               />
@@ -65,34 +111,91 @@ export function MessageDetailScreen() {
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
             )}
-            <View style={styles.senderMeta}>
-              <Text style={styles.senderName}>
-                {message.sender_display_name ?? 'Unnamed member'}
-              </Text>
-              <Text style={styles.timestamp}>{formatTimestamp(message.created_at)}</Text>
-            </View>
+            <Text style={styles.senderName}>{otherDisplayName ?? 'Unnamed member'}</Text>
           </View>
 
-          <View style={styles.bodyCard}>
-            <Text style={styles.bodyText}>{message.content}</Text>
+          {error ? (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <ScrollView
+            ref={scrollRef}
+            style={styles.flex}
+            contentContainerStyle={styles.thread}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+          >
+            {loading ? (
+              <Text style={styles.emptyText}>Loading messages…</Text>
+            ) : messages.length === 0 ? (
+              <Text style={styles.emptyText}>No messages yet. Say hello!</Text>
+            ) : (
+              messages.map((m) => {
+                const mine = m.sender_id === user?.id;
+                return (
+                  <View key={m.id} style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
+                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                      <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>
+                        {m.content}
+                      </Text>
+                    </View>
+                    <Text style={[styles.bubbleTime, mine && styles.bubbleTimeMine]}>
+                      {formatTimestamp(m.created_at)}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <View style={styles.composeRow}>
+            <TextInput
+              placeholder="Write a reply…"
+              value={content}
+              onChangeText={(t) => setContent(t.slice(0, MAX_LENGTH))}
+              multiline
+              maxLength={MAX_LENGTH}
+              containerStyle={styles.inputContainer}
+              style={styles.textArea}
+            />
+            <View style={styles.composeFooter}>
+              <Text style={styles.counter}>
+                {content.length} / {MAX_LENGTH}
+              </Text>
+              <Button
+                label="Reply"
+                onPress={handleSend}
+                loading={sending}
+                disabled={!trimmed}
+                size="sm"
+                style={styles.sendBtn}
+              />
+            </View>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
-  content: {
+  flex: { flex: 1 },
+  inner: {
+    flex: 1,
     padding: Spacing.xl,
-    paddingBottom: Spacing.huge,
-    gap: Spacing.lg,
+    gap: Spacing.md,
+  },
+  innerWide: {
+    maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
+    width: '100%',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
   },
   backBtn: { paddingVertical: Spacing.xs },
   backText: {
@@ -106,40 +209,110 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontFamily: Fonts.playfair,
-    fontSize: 20,
+    fontSize: 16,
     color: Colors.ink,
   },
-  senderMeta: { gap: 2 },
   senderName: {
     fontFamily: Fonts.playfairSemiBold,
     fontSize: 18,
     color: Colors.ink,
   },
-  timestamp: {
+  errorBanner: {
+    backgroundColor: 'rgba(139,46,46,0.08)',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: Colors.red,
+  },
+  errorText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 13,
+    color: Colors.red,
+    lineHeight: 18,
+  },
+  thread: {
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  emptyText: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 14,
+    color: Colors.inkMuted,
+    textAlign: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  bubbleRow: {
+    alignItems: 'flex-start',
+    maxWidth: '82%',
+  },
+  bubbleRowMine: {
+    alignSelf: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  bubble: {
+    borderRadius: Radius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.md,
+  },
+  bubbleTheirs: {
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  bubbleMine: {
+    backgroundColor: Colors.gold,
+  },
+  bubbleText: {
+    fontFamily: Fonts.dmSansRegular,
+    fontSize: 15,
+    color: Colors.inkMid,
+    lineHeight: 21,
+  },
+  bubbleTextMine: {
+    color: Colors.ink,
+  },
+  bubbleTime: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 11,
+    color: Colors.inkMuted,
+    marginTop: 3,
+    marginHorizontal: 4,
+  },
+  bubbleTimeMine: {
+    textAlign: 'right',
+  },
+  composeRow: {
+    paddingTop: Spacing.sm,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
+  },
+  inputContainer: {
+    marginBottom: 0,
+  },
+  textArea: {
+    height: 80,
+  },
+  composeFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.sm,
+  },
+  counter: {
     fontFamily: Fonts.dmSans,
     fontSize: 12,
     color: Colors.inkMuted,
   },
-  bodyCard: {
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-  },
-  bodyText: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 15,
-    color: Colors.inkMid,
-    lineHeight: 22,
+  sendBtn: {
+    minWidth: 90,
   },
 });

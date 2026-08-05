@@ -12,11 +12,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
-import { fetchInboxMessages, fetchSentMessages, InboxMessage, SentMessage } from '@/lib/supabase';
+import { fetchConversations, Conversation } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { MainStackParamList } from '@/navigation/types';
-
-type Tab = 'received' | 'sent';
 
 function formatTimestamp(value: string): string {
   return new Date(value).toLocaleDateString('en-US', {
@@ -39,48 +37,46 @@ function Avatar({ name, url }: { name: string | null; url: string | null }) {
   );
 }
 
-function ReceivedRow({ message, onPress }: { message: InboxMessage; onPress: () => void }) {
-  const unread = !message.read;
+function ConversationRow({
+  conversation,
+  currentUserId,
+  onPress,
+}: {
+  conversation: Conversation;
+  currentUserId: string;
+  onPress: () => void;
+}) {
+  const unread = conversation.unreadCount > 0;
+  const mineLast = conversation.lastMessage.sender_id === currentUserId;
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      <Avatar name={message.sender_display_name} url={message.sender_avatar_url} />
+      <Avatar name={conversation.otherDisplayName} url={conversation.otherAvatarUrl} />
       <View style={styles.rowMeta}>
         <View style={styles.rowTop}>
           <View style={styles.nameRow}>
             {unread && <View style={styles.unreadDot} />}
             <Text style={[styles.rowName, unread && styles.rowNameUnread]}>
-              {message.sender_display_name ?? 'Unnamed member'}
+              {conversation.otherDisplayName ?? 'Unnamed member'}
             </Text>
           </View>
-          <Text style={styles.rowTime}>{formatTimestamp(message.created_at)}</Text>
+          <Text style={styles.rowTime}>{formatTimestamp(conversation.lastMessage.created_at)}</Text>
         </View>
-        <Text
-          style={[styles.rowPreview, unread && styles.rowPreviewUnread]}
-          numberOfLines={2}
-        >
-          {message.content}
-        </Text>
+        <View style={styles.rowBottom}>
+          <Text
+            style={[styles.rowPreview, unread && styles.rowPreviewUnread]}
+            numberOfLines={2}
+          >
+            {mineLast ? 'You: ' : ''}
+            {conversation.lastMessage.content}
+          </Text>
+          {unread && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>{conversation.unreadCount}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </Pressable>
-  );
-}
-
-function SentRow({ message }: { message: SentMessage }) {
-  return (
-    <View style={styles.row}>
-      <Avatar name={message.recipient_display_name} url={message.recipient_avatar_url} />
-      <View style={styles.rowMeta}>
-        <View style={styles.rowTop}>
-          <Text style={styles.rowName}>
-            To {message.recipient_display_name ?? 'Unnamed member'}
-          </Text>
-          <Text style={styles.rowTime}>{formatTimestamp(message.created_at)}</Text>
-        </View>
-        <Text style={styles.rowPreview} numberOfLines={2}>
-          {message.content}
-        </Text>
-      </View>
-    </View>
   );
 }
 
@@ -88,9 +84,7 @@ export function InboxScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { isWide } = useResponsive();
   const { user } = useAuthStore();
-  const [tab, setTab] = useState<Tab>('received');
-  const [received, setReceived] = useState<InboxMessage[]>([]);
-  const [sent, setSent] = useState<SentMessage[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -98,25 +92,17 @@ export function InboxScreen() {
     if (!user) return;
     setLoading(true);
     setError('');
-    if (tab === 'received') {
-      const { data, error: fetchError } = await fetchInboxMessages(user.id);
-      if (fetchError) setError(fetchError);
-      else setReceived(data ?? []);
-    } else {
-      const { data, error: fetchError } = await fetchSentMessages(user.id);
-      if (fetchError) setError(fetchError);
-      else setSent(data ?? []);
-    }
+    const { data, error: fetchError } = await fetchConversations(user.id);
+    if (fetchError) setError(fetchError);
+    else setConversations(data ?? []);
     setLoading(false);
-  }, [user, tab]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load])
   );
-
-  const list = tab === 'received' ? received : sent;
 
   return (
     <SafeAreaView style={[styles.safe, isWide && { paddingLeft: SIDEBAR_WIDTH }]}>
@@ -130,25 +116,6 @@ export function InboxScreen() {
 
           <Text style={styles.title}>Messages</Text>
 
-          <View style={styles.tabRow}>
-            <Pressable
-              style={[styles.tabBtn, tab === 'received' && styles.tabBtnActive]}
-              onPress={() => setTab('received')}
-            >
-              <Text style={[styles.tabLabel, tab === 'received' && styles.tabLabelActive]}>
-                Received
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.tabBtn, tab === 'sent' && styles.tabBtnActive]}
-              onPress={() => setTab('sent')}
-            >
-              <Text style={[styles.tabLabel, tab === 'sent' && styles.tabLabelActive]}>
-                Sent
-              </Text>
-            </Pressable>
-          </View>
-
           {error ? (
             <View style={styles.errorBanner}>
               <Text style={styles.errorText}>{error}</Text>
@@ -159,29 +126,31 @@ export function InboxScreen() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>Loading messages…</Text>
             </View>
-          ) : list.length === 0 ? (
+          ) : conversations.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>✉️</Text>
-              <Text style={styles.emptyTitle}>
-                {tab === 'received' ? 'No messages yet' : 'No sent messages'}
-              </Text>
+              <Text style={styles.emptyTitle}>No messages yet</Text>
               <Text style={styles.emptyText}>
-                {tab === 'received'
-                  ? 'Messages from other members will show up here.'
-                  : 'Messages you send to other members will show up here.'}
+                Conversations with other members will show up here.
               </Text>
             </View>
           ) : (
             <View style={styles.list}>
-              {tab === 'received'
-                ? received.map((m) => (
-                    <ReceivedRow
-                      key={m.id}
-                      message={m}
-                      onPress={() => navigation.navigate('MessageDetail', { message: m })}
-                    />
-                  ))
-                : sent.map((m) => <SentRow key={m.id} message={m} />)}
+              {user &&
+                conversations.map((c) => (
+                  <ConversationRow
+                    key={c.otherUserId}
+                    conversation={c}
+                    currentUserId={user.id}
+                    onPress={() =>
+                      navigation.navigate('MessageDetail', {
+                        otherUserId: c.otherUserId,
+                        otherDisplayName: c.otherDisplayName,
+                        otherAvatarUrl: c.otherAvatarUrl,
+                      })
+                    }
+                  />
+                ))}
             </View>
           )}
         </View>
@@ -213,30 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.ink,
     marginBottom: 4,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  tabBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: Radius.full,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceAlt,
-  },
-  tabBtnActive: {
-    backgroundColor: Colors.gold,
-    borderColor: Colors.gold,
-  },
-  tabLabel: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 13,
-    color: Colors.inkMuted,
-  },
-  tabLabelActive: {
-    color: Colors.ink,
   },
   errorBanner: {
     backgroundColor: 'rgba(139,46,46,0.08)',
@@ -323,7 +268,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.inkMuted,
   },
+  rowBottom: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
   rowPreview: {
+    flex: 1,
     fontFamily: Fonts.dmSans,
     fontSize: 13,
     color: Colors.inkMuted,
@@ -331,5 +283,19 @@ const styles = StyleSheet.create({
   },
   rowPreviewUnread: {
     color: Colors.inkMid,
+  },
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    backgroundColor: Colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadBadgeText: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 11,
+    color: Colors.ink,
   },
 });
