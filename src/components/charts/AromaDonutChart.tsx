@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Animated, View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal, Pressable, ScrollView, Platform } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
-import { AROMA_CATEGORIES } from '@/types';
+import { AROMA_CATEGORIES, getCategorySubcategories } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
 
 // ── Web-only portal overlay ──────────────────────────────────────────────────
@@ -111,6 +111,15 @@ AROMA_CATEGORIES.forEach(cat => {
   [...cat.subcategories, ...(cat.sommelierSubcategories ?? [])].forEach(note => {
     NOTE_TO_CATEGORY[note.toLowerCase()] = cat.id;
   });
+});
+
+// Notes that only a Sommelier profile can select (the `s: true` items in
+// AROMA_WHEEL) — presence of any one of these in an entry's aromas_l2 proves
+// the entrant had Sommelier access when the wine was logged, since Explorer
+// users are never shown these options at entry time (see Step3Aromas).
+const SOMMELIER_ONLY_NOTES = new Set<string>();
+AROMA_CATEGORIES.forEach(cat => {
+  (cat.sommelierSubcategories ?? []).forEach(note => SOMMELIER_ONLY_NOTES.add(note.toLowerCase()));
 });
 
 // Curated per-category accent colors — each of the 14 categories gets its
@@ -283,6 +292,13 @@ export function AromaDonutChart({
   });
   const showItems = size >= 120;
 
+  // Whether this entry was logged under a Sommelier profile — determines
+  // which fixed descriptor list (and therefore slot count) each category's
+  // outer ring divides into. See SOMMELIER_ONLY_NOTES above.
+  const isSommelierEntry = Object.keys(noteToCat).some(
+    note => SOMMELIER_ONLY_NOTES.has(note.toLowerCase())
+  );
+
   // Ring boundary radii — center hole, category ring, items ring
   const holeR    = outerR * (showItems ? 0.30 : 0.40);
   const catEdge  = showItems ? outerR * 0.58 : outerR;
@@ -327,20 +343,28 @@ export function AromaDonutChart({
       notes: cd.notes,
     });
 
-    if (showItems && cd.notes.length > 0) {
-      const noteSpan = perCat - GAP * cd.notes.length;
-      const perNote = noteSpan / cd.notes.length;
+    if (showItems) {
+      // Fixed, ordered list of every descriptor this category can possibly
+      // have — the outer ring always divides into this many slots, not
+      // however many happen to be selected. Unselected slots simply don't
+      // get a segment pushed (no fill, no border), but still consume their
+      // fixed-width share of the arc via nAngle below.
+      const allSlots = getCategorySubcategories(cd.cat, isSommelierEntry);
+      const noteSpan = perCat - GAP * allSlots.length;
+      const perNote = noteSpan / allSlots.length;
       let nAngle = cStart;
-      cd.notes.forEach((note, ni) => {
-        itemSegs.push({
-          path: arcPath(cx, cy, outerR, catEdge + 1, nAngle, nAngle + perNote),
-          color: ni % 2 === 0 ? lightenHex(cd.color, 0.30) : lightenHex(cd.color, 0.16),
-          mid: nAngle + perNote / 2,
-          sweep: perNote,
-          rMin: catEdge + 1, rMax: outerR,
-          note,
-          catId: cd.cat.id,
-        });
+      allSlots.forEach((note, si) => {
+        if (cd.notes.includes(note)) {
+          itemSegs.push({
+            path: arcPath(cx, cy, outerR, catEdge + 1, nAngle, nAngle + perNote),
+            color: si % 2 === 0 ? lightenHex(cd.color, 0.30) : lightenHex(cd.color, 0.16),
+            mid: nAngle + perNote / 2,
+            sweep: perNote,
+            rMin: catEdge + 1, rMax: outerR,
+            note,
+            catId: cd.cat.id,
+          });
+        }
         nAngle += perNote + GAP;
       });
     }
