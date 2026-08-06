@@ -244,12 +244,55 @@ function categoryLabelFontSize(base: number, lines: string[], sweepDeg: number, 
   return Math.max(6, base * scale);
 }
 
-// Long names ("Starfruit (carambola)") get a smaller font rather than being
-// truncated, so the full word is always legible.
-function outerLabelFontSize(base: number, label: string): number {
-  if (label.length > 16) return base * 0.72;
-  if (label.length > 11) return base * 0.86;
-  return base;
+// Minimum legible font size for outer-ring descriptor labels. Below this,
+// shrinking further just produces illegible text, so truncation takes over
+// instead (see computeOuterLabel).
+const MIN_OUTER_FONT = 5.5;
+const MIN_OUTER_SCALE = 0.55;
+
+// Hard-truncates a label to `maxChars`, replacing the tail with an ellipsis.
+function truncateLabel(label: string, maxChars: number): string {
+  if (label.length <= maxChars) return label;
+  if (maxChars <= 1) return `${label.slice(0, 1)}…`;
+  return `${label.slice(0, maxChars - 1).trimEnd()}…`;
+}
+
+// Per-item label sizing for the outer ring, mirroring categoryLabelFontSize's
+// approach for the inner ring. Outer-ring labels are also radial/spoke text,
+// so the same axis split applies: font size (line thickness) is bound by the
+// slot's ARC width — which is now fixed per category via
+// getCategorySubcategories()'s total slot count, not by how many neighbors
+// happen to be selected — while label LENGTH is bound by the ring's radial
+// band (outerR - catEdge, constant across all categories). A category with
+// many total descriptors (e.g. Tropical Fruit) gets narrower slots and thus
+// smaller labels than one with few (e.g. Citrus), even when the same number
+// of items happen to be selected in each. If even the minimum font size
+// would overflow the radial band, the label is truncated with an ellipsis
+// rather than left to overlap or clip.
+function computeOuterLabel(
+  base: number,
+  label: string,
+  sweepDeg: number,
+  radius: number,
+  radialBand: number,
+): { fontSize: number; text: string } {
+  let scale = 1;
+  if (label.length > 16) scale = 0.72;
+  else if (label.length > 11) scale = 0.86;
+
+  const lineHeight = base * scale * 1.15;
+  const tangentialAvailable = (sweepDeg * Math.PI / 180) * radius * 0.82;
+  if (lineHeight > tangentialAvailable) {
+    scale *= Math.max(tangentialAvailable / lineHeight, MIN_OUTER_SCALE);
+  }
+
+  const fontSize = Math.max(MIN_OUTER_FONT, base * scale);
+
+  const radialAvailable = radialBand * 0.86;
+  const maxChars = Math.max(3, Math.floor(radialAvailable / (fontSize * CHAR_WIDTH_RATIO)));
+  const text = label.length > maxChars ? truncateLabel(label, maxChars) : label;
+
+  return { fontSize, text };
 }
 
 type SelectedInfo = {
@@ -555,17 +598,18 @@ export function AromaDonutChart({
             const tr = (catEdge + outerR) / 2;
             const pos = polar(cx, cy, tr, s.mid);
             const rot = spokeLabelRot(s.mid);
+            const { fontSize, text } = computeOuterLabel(itemFontSize, s.note, s.sweep, tr, outerR - catEdge);
             return (
               <G key={`il${i}`} transform={`translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) rotate(${rot})`}>
                 <SvgText
                   textAnchor="middle"
                   alignmentBaseline="middle"
-                  fontSize={outerLabelFontSize(itemFontSize, s.note)}
+                  fontSize={fontSize}
                   fontFamily={Fonts.dmSans}
                   fill="#1F1518"
                   fillOpacity={0.85}
                 >
-                  {s.note}
+                  {text}
                 </SvgText>
               </G>
             );
