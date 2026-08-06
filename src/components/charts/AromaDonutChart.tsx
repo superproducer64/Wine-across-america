@@ -3,6 +3,7 @@ import { Animated, View, Text, StyleSheet, TouchableOpacity, PanResponder, Modal
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { AROMA_CATEGORIES, getCategorySubcategories } from '@/types';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
+import { RING_GAP as GAP, buildCategoryRingSlots } from './aromaRingLayout';
 
 // ── Web-only portal overlay ──────────────────────────────────────────────────
 // Renders directly into document.body so no RN stacking-context can trap it.
@@ -103,8 +104,6 @@ export interface AromaDonutChartProps {
   pinchable?: boolean;
 }
 
-const GAP = 0.8;
-
 // Module-level note→category lookup (built once)
 const NOTE_TO_CATEGORY: Record<string, string> = {};
 AROMA_CATEGORIES.forEach(cat => {
@@ -121,28 +120,6 @@ const SOMMELIER_ONLY_NOTES = new Set<string>();
 AROMA_CATEGORIES.forEach(cat => {
   (cat.sommelierSubcategories ?? []).forEach(note => SOMMELIER_ONLY_NOTES.add(note.toLowerCase()));
 });
-
-// Curated per-category accent colors — each of the 14 categories gets its
-// own distinct hue (not shared across a parent group) so adjacent wedges,
-// including the Other → Citrus wrap, never read as the same color. Outer-
-// ring items are tints of their category's color (see lightenHex below),
-// which keeps the grouping cue intact.
-const CAT_TO_COLOR: Record<string, string> = {
-  'citrus':          '#B89B3D',
-  'orchard-fruit':   '#739442',
-  'stone-fruit':     '#CB804D',
-  'tropical-fruit':  '#A0B54A',
-  'red-fruit':       '#B83D52',
-  'black-fruit':     '#59346F',
-  'floral':          '#BA6DA1',
-  'herbal-green':    '#5A8943',
-  'spice':           '#9F4C38',
-  'oak-toast':       '#7D693B',
-  'earthy':          '#4D5738',
-  'mineral':         '#5C8099',
-  'sweet-ripe':      '#B86176',
-  'other':           '#938776',
-};
 
 function lightenHex(hex: string, amount: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -346,21 +323,27 @@ export function AromaDonutChart({
   const holeR    = outerR * (showItems ? 0.30 : 0.40);
   const catEdge  = showItems ? outerR * 0.58 : outerR;
 
-  // Ordered list of selected categories (Appendix I order) with only the
-  // aromas actually selected for this entry — unselected notes simply don't
-  // appear, rather than being rendered greyed-out.
-  type CatData = { cat: typeof AROMA_CATEGORIES[0]; notes: string[]; color: string };
-  const catDatas: CatData[] = AROMA_CATEGORIES
-    .filter(cat => aromasL1.includes(cat.id))
-    .map(cat => ({
-      cat,
-      notes: aromasL2.filter(n => noteToCat[n] === cat.id),
-      color: CAT_TO_COLOR[cat.id] ?? Colors.gold,
-    }));
-
-  const totalCats = catDatas.length;
-  const dataSpan = 360 - GAP * totalCats;
-  const perCat = totalCats > 0 ? dataSpan / totalCats : 0;
+  // Inner ring always renders all 14 fixed categories (Appendix I order) at
+  // their fixed positions, regardless of selection — it must never reflow to
+  // fewer wedges, and every wedge renders identically (full color, full
+  // label) whether or not it has selections. `selected` only gates what
+  // shows up on the OUTER ring and in the legend/center count — it has no
+  // effect on the inner ring's own appearance.
+  // `ringSlots` is the fixed, selection-independent geometry (always 14
+  // slots, same order, same width) — see aromaRingLayout.ts. It's index-
+  // aligned with AROMA_CATEGORIES, so category objects (needed below for
+  // getCategorySubcategories) are looked up by position, not by filtering.
+  const ringSlots = buildCategoryRingSlots(aromasL1);
+  type CatData = { cat: typeof AROMA_CATEGORIES[0]; notes: string[]; color: string; selected: boolean; mid: number; sweep: number };
+  const catDatas: CatData[] = ringSlots.map((slot, i) => ({
+    cat: AROMA_CATEGORIES[i],
+    notes: aromasL2.filter(n => noteToCat[n] === slot.catId),
+    color: slot.color,
+    selected: slot.selected,
+    mid: slot.mid,
+    sweep: slot.sweep,
+  }));
+  const selectedCatDatas = catDatas.filter(cd => cd.selected);
 
   // Segment types — rMin/rMax enable coordinate-based hit testing
   type CatSeg   = { path: string; color: string; mid: number; sweep: number; rMin: number; rMax: number; catId: string; label: string; emoji: string; notes: string[] };
@@ -369,16 +352,15 @@ export function AromaDonutChart({
   const catSegs: CatSeg[] = [];
   const itemSegs: ItemSeg[] = [];
 
-  let angle = 0;
   catDatas.forEach(cd => {
-    const cStart = angle;
-    const cEnd = cStart + perCat;
+    const cStart = cd.mid - cd.sweep / 2;
+    const cEnd = cd.mid + cd.sweep / 2;
 
     catSegs.push({
       path: arcPath(cx, cy, catEdge, holeR, cStart, cEnd),
       color: cd.color,
-      mid: cStart + perCat / 2,
-      sweep: perCat,
+      mid: cd.mid,
+      sweep: cd.sweep,
       rMin: holeR, rMax: catEdge,
       catId: cd.cat.id,
       label: cd.cat.label,
@@ -386,14 +368,14 @@ export function AromaDonutChart({
       notes: cd.notes,
     });
 
-    if (showItems) {
+    if (showItems && cd.selected) {
       // Fixed, ordered list of every descriptor this category can possibly
       // have — the outer ring always divides into this many slots, not
       // however many happen to be selected. Unselected slots simply don't
       // get a segment pushed (no fill, no border), but still consume their
       // fixed-width share of the arc via nAngle below.
       const allSlots = getCategorySubcategories(cd.cat, isSommelierEntry);
-      const noteSpan = perCat - GAP * allSlots.length;
+      const noteSpan = cd.sweep - GAP * allSlots.length;
       const perNote = noteSpan / allSlots.length;
       let nAngle = cStart;
       allSlots.forEach((note, si) => {
@@ -411,13 +393,11 @@ export function AromaDonutChart({
         nAngle += perNote + GAP;
       });
     }
-
-    angle = cEnd + GAP;
   });
 
   const catFontSize   = Math.max(7, Math.min(11, size * 0.042));
   const itemFontSize  = Math.max(6, Math.min(9,  size * 0.034));
-  const centerLabel    = `${totalCats} aroma${totalCats !== 1 ? 's' : ''}`;
+  const centerLabel    = `${selectedCatDatas.length} aroma${selectedCatDatas.length !== 1 ? 's' : ''}`;
 
   // ── Coordinate-based tap detection ────────────────────────────────────────
   // Works on all platforms including mobile Safari (SVG onPress is unreliable
@@ -529,7 +509,8 @@ export function AromaDonutChart({
             />
           ))}
 
-          {/* Inner ring — categories (L1) */}
+          {/* Inner ring — all 14 fixed categories (L1), rendered identically
+               regardless of selection. */}
           {catSegs.map((s, i) => (
             <Path
               key={`c${i}`}
@@ -664,7 +645,7 @@ export function AromaDonutChart({
       {/* ── Legend ── */}
       {showLegend && (
         <View style={styles.legend}>
-          {catDatas.map(cd => (
+          {selectedCatDatas.map(cd => (
             <View key={cd.cat.id} style={styles.legendCatRow}>
               <View style={styles.legendRow}>
                 <View style={[styles.legendDot, { backgroundColor: cd.color }]} />
