@@ -51,7 +51,7 @@ export function RootNavigator() {
 
   useEffect(() => {
     // Handles two deep-link families, each reachable via either the legacy
-    // custom scheme or the paa.bgpstudios.com Universal Link:
+    // custom scheme or the pouracrossamerica.com.bgpstudios.com Universal Link:
     //  - .../reset-password (+ tokens in the hash) — recovery
     //  - .../invite/{code} — invite signup
     // initialRouteName/initialParams on AuthNavigator cover cold starts (state

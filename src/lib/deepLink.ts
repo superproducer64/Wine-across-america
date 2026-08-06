@@ -33,9 +33,12 @@ export function parseRecoveryParamsFromUrl(url: string): RecoveryLinkParams {
 
 // Invite links arrive in two formats — the legacy custom scheme
 // `pouracrossamerica://invite/{code}` (still honored as a fallback for links
-// already circulating) and the Universal Link `https://paa.bgpstudios.com/invite/{code}`.
+// already circulating) and the Universal Link
+// `https://pouracrossamerica.com.bgpstudios.com/invite/{code}`.
 // In both cases the code is a plain path segment right after "invite/", not a
-// query/hash param, so a single scheme-agnostic regex extracts it either way.
+// query/hash param, so a single scheme-agnostic regex extracts it either way —
+// domain-independent, so a Universal Link domain change never requires a
+// change here.
 export function parseInviteCodeFromUrl(url: string): string | null {
   const match = url.match(/invite\/([^/?#]+)/i);
   return match ? decodeURIComponent(match[1]) : null;
