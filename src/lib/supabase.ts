@@ -791,6 +791,7 @@ export type DirectMessage = {
   sender_id: string;
   recipient_id: string;
   content: string;
+  attachment_url: string | null;
   read: boolean;
   created_at: string;
 };
@@ -806,12 +807,14 @@ export type Conversation = {
 export async function sendMessage(
   senderId: string,
   recipientId: string,
-  content: string
+  content: string,
+  attachmentUrl?: string | null
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.from('messages').insert({
     sender_id: senderId,
     recipient_id: recipientId,
     content,
+    attachment_url: attachmentUrl ?? null,
   });
   return { error: error?.message ?? null };
 }
