@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.2.3",
+    "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo-google-fonts/playfair-display": "^0.2.3",
+    "@expo-google-fonts/work-sans": "^0.4.2",
     "@expo/metro-runtime": "~3.2.3",
     "@expo/vector-icons": "^14.0.2",
     "@react-navigation/bottom-tabs": "^6.5.20",

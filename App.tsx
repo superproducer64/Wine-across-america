@@ -11,6 +11,12 @@ import {
   DMSans_400Regular,
   DMSans_500Medium,
 } from '@expo-google-fonts/dm-sans';
+import { Fraunces_900Black } from '@expo-google-fonts/fraunces';
+import {
+  WorkSans_400Regular,
+  WorkSans_500Medium,
+  WorkSans_600SemiBold,
+} from '@expo-google-fonts/work-sans';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from '@/navigation/RootNavigator';
 
@@ -72,6 +78,10 @@ export default function App() {
     PlayfairDisplay_600SemiBold,
     DMSans_400Regular,
     DMSans_500Medium,
+    Fraunces_900Black,
+    WorkSans_400Regular,
+    WorkSans_500Medium,
+    WorkSans_600SemiBold,
   });
 
   useEffect(() => {
