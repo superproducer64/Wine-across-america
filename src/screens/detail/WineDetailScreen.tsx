@@ -327,6 +327,16 @@ export function WineDetailScreen({ route, navigation }: Props) {
             </Pressable>
           )}
 
+          {/* Share card button */}
+          {!confirmDelete && (
+            <Pressable
+              onPress={() => navigation.navigate('ShareCard', { entryId: entry.id })}
+              style={styles.navBtn}
+            >
+              <Text style={styles.navBtnText}>Card</Text>
+            </Pressable>
+          )}
+
           {/* Share button */}
           {!confirmDelete && (
             <Pressable onPress={handleShare} style={styles.navBtn}>

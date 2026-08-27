@@ -9,6 +9,7 @@ import { SearchScreen } from '@/screens/search/SearchScreen';
 import { WineEntryScreen } from '@/screens/entry/WineEntryScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { WineDetailScreen } from '@/screens/detail/WineDetailScreen';
+import { ShareCardScreen } from '@/screens/share/ShareCardScreen';
 import { SharedWineDetailScreen } from '@/screens/detail/SharedWineDetailScreen';
 import { ComparisonScreen } from '@/screens/comparison/ComparisonScreen';
 import { AdminScreen } from '@/screens/admin/AdminScreen';
@@ -143,6 +144,11 @@ export function MainNavigator() {
         name="WineDetail"
         component={WineDetailScreen}
         options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="ShareCard"
+        component={ShareCardScreen}
+        options={{ animation: 'slide_from_bottom' }}
       />
       <Stack.Screen
         name="SharedWineDetail"
