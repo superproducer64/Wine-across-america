@@ -739,6 +739,31 @@ export async function uploadAvatar(
   }
 }
 
+// ─── Wine Card Upload ───────────────────────────────────────────────────────
+
+export async function uploadWineCard(
+  userId: string,
+  entryId: string,
+  imageUri: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    const path = `${userId}/${entryId}-${Date.now()}.png`;
+
+    const { error } = await supabase.storage
+      .from('wine-cards')
+      .upload(path, blob, { contentType: 'image/png', upsert: false });
+
+    if (error) return { url: null, error: error.message };
+
+    const { data } = supabase.storage.from('wine-cards').getPublicUrl(path);
+    return { url: data.publicUrl, error: null };
+  } catch (e: unknown) {
+    return { url: null, error: String(e) };
+  }
+}
+
 // ─── User Search ──────────────────────────────────────────────────────────────
 
 export async function searchUserByEmail(email: string) {
