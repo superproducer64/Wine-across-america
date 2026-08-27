@@ -137,9 +137,20 @@ export function MessageDetailScreen() {
                 return (
                   <View key={m.id} style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
                     <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                      <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>
-                        {m.content}
-                      </Text>
+                      {m.attachment_url ? (
+                        <Image source={{ uri: m.attachment_url }} style={styles.bubbleImage} resizeMode="cover" />
+                      ) : null}
+                      {m.content ? (
+                        <Text
+                          style={[
+                            styles.bubbleText,
+                            mine && styles.bubbleTextMine,
+                            m.attachment_url ? styles.bubbleTextWithImage : undefined,
+                          ]}
+                        >
+                          {m.content}
+                        </Text>
+                      ) : null}
                     </View>
                     <Text style={[styles.bubbleTime, mine && styles.bubbleTimeMine]}>
                       {formatTimestamp(m.created_at)}
@@ -279,6 +290,14 @@ const styles = StyleSheet.create({
   },
   bubbleTextMine: {
     color: Colors.ink,
+  },
+  bubbleImage: {
+    width: 220,
+    aspectRatio: 1080 / 1920,
+    borderRadius: Radius.md,
+  },
+  bubbleTextWithImage: {
+    marginTop: 8,
   },
   bubbleTime: {
     fontFamily: Fonts.dmSans,

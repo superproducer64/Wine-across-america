@@ -48,6 +48,9 @@ function ConversationRow({
 }) {
   const unread = conversation.unreadCount > 0;
   const mineLast = conversation.lastMessage.sender_id === currentUserId;
+  const previewText =
+    conversation.lastMessage.content ||
+    (conversation.lastMessage.attachment_url ? '📷 Wine card' : '');
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Avatar name={conversation.otherDisplayName} url={conversation.otherAvatarUrl} />
@@ -67,7 +70,7 @@ function ConversationRow({
             numberOfLines={2}
           >
             {mineLast ? 'You: ' : ''}
-            {conversation.lastMessage.content}
+            {previewText}
           </Text>
           {unread && (
             <View style={styles.unreadBadge}>
