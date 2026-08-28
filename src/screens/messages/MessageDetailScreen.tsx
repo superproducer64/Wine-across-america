@@ -16,6 +16,7 @@ import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { CARD_WIDTH, CARD_HEIGHT } from '@/components/wine/WineCardTemplate';
 import {
   DirectMessage,
   fetchConversationMessages,
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   bubbleImage: {
     width: 220,
-    aspectRatio: 1080 / 1920,
+    aspectRatio: CARD_WIDTH / CARD_HEIGHT,
     borderRadius: Radius.md,
   },
   bubbleTextWithImage: {
