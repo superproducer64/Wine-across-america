@@ -18,6 +18,8 @@ import { ShareCardToMemberModal } from '@/components/wine/ShareCardToMemberModal
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
 import { MainStackParamList } from '@/navigation/types';
+import { getWineEntry } from '@/lib/supabase';
+import { WineEntry } from '@/types';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'ShareCard'>;
 
@@ -29,7 +31,28 @@ export function ShareCardScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const { entries } = useWineStore();
   const { user } = useAuthStore();
-  const entry = entries.find((e) => e.id === entryId) ?? null;
+
+  // Use cached store entry immediately — avoids a network round-trip when the
+  // entry is already loaded. Only fall back to fetching if the entry isn't in
+  // the store (e.g. reached via search results or a deep link).
+  const cached = entries.find((e) => e.id === entryId) ?? null;
+  const [entry, setEntry] = useState<WineEntry | null>(cached);
+  const [entryLoading, setEntryLoading] = useState(cached === null);
+
+  useEffect(() => {
+    if (cached !== null) return; // already have it, skip the fetch
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await getWineEntry(entryId);
+      if (!cancelled && !error && data) {
+        setEntry(data as WineEntry);
+      }
+      if (!cancelled) setEntryLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entryId]);
 
   const cardRef = useRef<View>(null);
   const [cardUri, setCardUri] = useState<string | null>(null);
@@ -38,13 +61,20 @@ export function ShareCardScreen({ route, navigation }: Props) {
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [externalError, setExternalError] = useState('');
 
+  // Populated by the capture effect below with a function that kicks off the
+  // (buffered) capture as soon as the off-screen template's photo has settled.
+  const photoReadyHandlerRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!entry) return;
     let cancelled = false;
+    let captured = false;
     setCapturing(true);
     setCaptureError('');
-    // Give the off-screen template a frame to finish its first paint before capturing.
-    const timer = setTimeout(async () => {
+
+    const doCapture = async () => {
+      if (captured || cancelled) return;
+      captured = true;
       try {
         const uri = await captureRef(cardRef, {
           format: 'png',
@@ -59,12 +89,31 @@ export function ShareCardScreen({ route, navigation }: Props) {
       } finally {
         if (!cancelled) setCapturing(false);
       }
-    }, 150);
+    };
+
+    // Safety net: if the photo never signals ready (e.g. a network hang),
+    // capture anyway as a best-effort fallback rather than stalling forever.
+    const maxWaitTimer = setTimeout(doCapture, 4000);
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    photoReadyHandlerRef.current = () => {
+      clearTimeout(maxWaitTimer);
+      // Give the off-screen template a brief moment to finish laying out
+      // after the image swaps in before snapshotting.
+      settleTimer = setTimeout(doCapture, 50);
+    };
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      photoReadyHandlerRef.current = null;
+      clearTimeout(maxWaitTimer);
+      if (settleTimer) clearTimeout(settleTimer);
     };
   }, [entry]);
+
+  const handlePhotoReady = () => {
+    photoReadyHandlerRef.current?.();
+  };
 
   const handleShareExternally = async () => {
     if (!cardUri) return;
@@ -76,8 +125,12 @@ export function ShareCardScreen({ route, navigation }: Props) {
         return;
       }
       await Sharing.shareAsync(cardUri, { mimeType: 'image/png', UTI: 'public.png' });
-    } catch {
-      // user cancelled — do nothing
+    } catch (err) {
+      // expo-sharing throws for both user-cancellation and genuine failures,
+      // and there's no reliable cross-platform way to tell them apart — but a
+      // real failure must not be completely silent, so surface it.
+      console.warn('Share externally failed:', err);
+      setExternalError('Could not share the card. Please try again.');
     }
   };
 
@@ -85,10 +138,19 @@ export function ShareCardScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centered}>
-          <Text style={styles.errorText}>Wine not found.</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backLink}>
-            <Text style={styles.backLinkText}>Go Back</Text>
-          </Pressable>
+          {entryLoading ? (
+            <>
+              <ActivityIndicator color={Colors.gold} />
+              <Text style={styles.capturingText}>Loading wine…</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.errorText}>Wine not found.</Text>
+              <Pressable onPress={() => navigation.goBack()} style={styles.backLink}>
+                <Text style={styles.backLinkText}>Go Back</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -121,7 +183,7 @@ export function ShareCardScreen({ route, navigation }: Props) {
       {/* Off-screen, full-resolution instance used only as the capture target. */}
       <View style={styles.offscreen} pointerEvents="none">
         <View ref={cardRef} collapsable={false}>
-          <WineCardTemplate entry={entry} />
+          <WineCardTemplate key={entry.id} entry={entry} onReady={handlePhotoReady} />
         </View>
       </View>
 

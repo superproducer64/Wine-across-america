@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { WineEntry } from '@/types';
@@ -23,10 +23,31 @@ const CardFonts = {
 
 interface Props {
   entry: WineEntry;
+  /**
+   * Called once the card has "settled" and is safe to capture — immediately
+   * on mount when there's no photo to wait for, otherwise after the photo
+   * image has either loaded or failed to load. Optional: callers that don't
+   * need a capture-readiness signal can omit it entirely.
+   */
+  onReady?: () => void;
 }
 
-export function WineCardTemplate({ entry }: Props) {
+export function WineCardTemplate({ entry, onReady }: Props) {
   const card = buildWineCardData(entry);
+  const readyFired = useRef(false);
+
+  const fireReady = () => {
+    if (readyFired.current) return;
+    readyFired.current = true;
+    onReady?.();
+  };
+
+  useEffect(() => {
+    if (!card.photoUrl) fireReady();
+    // Only run this settling check for the initial mount / photo presence —
+    // onReady itself is intentionally excluded so identity changes don't re-fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.photoUrl]);
 
   return (
     <View style={styles.card}>
@@ -34,19 +55,30 @@ export function WineCardTemplate({ entry }: Props) {
 
       <View style={styles.gap40} />
 
-      <Text style={styles.wineName}>{card.wineName}</Text>
+      <Text style={styles.wineName} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {card.wineName}
+      </Text>
 
       {card.producerVintage ? (
         <>
           <View style={styles.gap28} />
-          <Text style={styles.producerVintage}>{card.producerVintage}</Text>
+          <Text style={styles.producerVintage} numberOfLines={1}>
+            {card.producerVintage}
+          </Text>
         </>
       ) : null}
 
       {card.photoUrl ? (
         <>
           <View style={styles.gap40} />
-          <Image source={{ uri: card.photoUrl }} style={styles.photo} contentFit="cover" />
+          <Image
+            source={{ uri: card.photoUrl }}
+            style={styles.photo}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            onLoad={fireReady}
+            onError={fireReady}
+          />
         </>
       ) : null}
 
@@ -73,7 +105,7 @@ export function WineCardTemplate({ entry }: Props) {
         <>
           <Text style={styles.fieldLabel}>Region</Text>
           <View style={styles.gap12} />
-          <Text style={styles.fieldValue}>{card.region}</Text>
+          <Text style={styles.fieldValue} numberOfLines={1}>{card.region}</Text>
           <View style={styles.gap48} />
         </>
       ) : null}

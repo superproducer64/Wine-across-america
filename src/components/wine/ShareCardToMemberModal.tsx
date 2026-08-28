@@ -78,6 +78,7 @@ export function ShareCardToMemberModal({ visible, onClose, entry, senderId, card
 
     const { url, error: uploadError } = await uploadWineCard(senderId, entry.id, cardImageUri);
     if (uploadError || !url) {
+      console.warn('uploadWineCard failed:', uploadError);
       setSending(false);
       setStatus('error');
       return;
@@ -88,6 +89,7 @@ export function ShareCardToMemberModal({ visible, onClose, entry, senderId, card
     setSending(false);
 
     if (sendError) {
+      console.warn('sendMessage failed:', sendError);
       setStatus('error');
     } else {
       setStatus('success');
