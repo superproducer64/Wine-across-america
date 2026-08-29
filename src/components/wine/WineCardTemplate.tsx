@@ -126,24 +126,19 @@ export function WineCardTemplate({ entry, onReady }: Props) {
 
       <View style={styles.spacer} />
 
-      <View style={styles.tier3Row}>
-        {[card.grapeBlend, card.tastingDate, card.location]
-          .filter((v): v is string => Boolean(v))
-          .map((val, i, arr) => (
-            <React.Fragment key={val}>
-              <Text style={styles.tier3Text}>{val}</Text>
-              {i < arr.length - 1 ? <View style={styles.tier3Dot} /> : null}
-            </React.Fragment>
-          ))}
-      </View>
+      {[card.grapeBlend, card.tastingDate, card.location].filter(Boolean).length > 0 ? (
+        <Text style={styles.tier3Text} numberOfLines={1} ellipsizeMode="tail">
+          {[card.grapeBlend, card.tastingDate, card.location].filter(Boolean).join('  ·  ')}
+        </Text>
+      ) : null}
 
-      <View style={styles.gap48} />
-      <View style={styles.footerDivider} />
-      <View style={styles.gap32} />
-
-      <View style={styles.footerRow}>
-        <Text style={styles.footerWordmark}>Pour Across America</Text>
-        <Text style={styles.footerLine}>Download on the App Store</Text>
+      <View style={styles.footer}>
+        <View style={styles.footerDivider} />
+        <View style={styles.gap32} />
+        <View style={styles.footerRow}>
+          <Text style={styles.footerWordmark}>Pour Across America</Text>
+          <Text style={styles.footerLine}>Download on the App Store</Text>
+        </View>
       </View>
     </View>
   );
@@ -155,8 +150,11 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     backgroundColor: CardColors.paper,
     paddingTop: 96,
-    paddingBottom: 64,
+    // Bottom padding reserves room above the absolutely-positioned footer so
+    // normal-length content doesn't visually collide with it.
+    paddingBottom: 176,
     paddingHorizontal: 88,
+    position: 'relative',
   },
   gap10: { height: 10 },
   gap12: { height: 12 },
@@ -254,24 +252,17 @@ const styles = StyleSheet.create({
     color: CardColors.ink,
   },
   spacer: { flex: 1 },
-  tier3Row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 24,
-  },
   tier3Text: {
     fontFamily: CardFonts.workSansRegular,
     fontSize: 24,
     color: CardColors.ink,
     opacity: 0.55,
   },
-  tier3Dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: CardColors.ink,
-    opacity: 0.4,
+  footer: {
+    position: 'absolute',
+    left: 88,
+    right: 88,
+    bottom: 64,
   },
   footerDivider: {
     width: '100%',
