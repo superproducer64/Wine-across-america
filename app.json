@@ -17,13 +17,17 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.replit.pouracrossamerica",
-      "buildNumber": "46",
+      "buildNumber": "47",
       "appleTeamId": "4JZRW3MPP2",
       "infoPlist": {
         "NSCameraUsageDescription": "Pour Across America uses your camera to photograph wine labels.",
         "NSPhotoLibraryUsageDescription": "Pour Across America needs access to your photos to attach wine label photos.",
         "NSLocationWhenInUseUsageDescription": "Pour Across America uses your location to log where you tasted each wine.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories",
+          "instagram"
+        ]
       },
       "associatedDomains": [
         "applinks:pouracrossamerica.com.bgpstudios.com"
@@ -74,6 +78,7 @@
     },
     "plugins": [
       "./plugins/withAndroidSdk35",
+      "./plugins/withInstagramQueries",
       "expo-secure-store",
       [
         "expo-notifications",

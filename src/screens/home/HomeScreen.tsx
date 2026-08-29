@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors, Fonts, Spacing, Radius, Shadows } from '@/theme';
+import { Colors, Fonts, Spacing, Radius } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { useAuthStore } from '@/stores/authStore';
 import { useWineStore } from '@/stores/wineStore';
@@ -22,7 +22,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { MainStackParamList, TabParamList } from '@/navigation/types';
 import { WineEntry } from '@/types';
-import { getSharedWithMe, markShareSeen } from '@/lib/supabase';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
@@ -31,41 +30,16 @@ type HomeNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<MainStackParamList>
 >;
 
-interface SharedWineItem {
-  id: string;
-  sender_name: string;
-  wine_snapshot: Record<string, unknown>;
-  seen: boolean;
-  created_at: string;
-}
-
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavProp>();
   const { user, profile } = useAuthStore();
   const { entries, totalCount, loading, loadingMore, hasMore, loadError, loadEntries, loadMore } = useWineStore();
   const { isSubscribed } = useSubscriptionStore();
-  const [sharedWines, setSharedWines] = useState<SharedWineItem[]>([]);
 
   useEffect(() => {
     if (!user) return;
     loadEntries(user.id, isSubscribed);
-    getSharedWithMe(user.id).then(({ data }) => {
-      if (data) setSharedWines(data as SharedWineItem[]);
-    });
   }, [user]);
-
-  const handleSharedWinePress = async (item: SharedWineItem) => {
-    if (!item.seen) {
-      await markShareSeen(item.id);
-      setSharedWines((prev) =>
-        prev.map((s) => (s.id === item.id ? { ...s, seen: true } : s))
-      );
-    }
-    navigation.navigate('SharedWineDetail', {
-      snapshot: item.wine_snapshot,
-      senderName: item.sender_name,
-    });
-  };
 
   const firstName = profile?.display_name?.split(' ')[0] ?? 'there';
 
@@ -163,49 +137,6 @@ export function HomeScreen() {
               <Text style={styles.upsellBadgeText}>PRO</Text>
             </View>
           </Pressable>
-        )}
-
-        {/* Shared with Me */}
-        {sharedWines.length > 0 && (
-          <View style={styles.sharedSection}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sharedTitleRow}>
-                <Text style={styles.sectionTitle}>Shared with Me</Text>
-                {sharedWines.some((s) => !s.seen) && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadBadgeText}>
-                      {sharedWines.filter((s) => !s.seen).length}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            {sharedWines.map((item) => {
-              const snap = item.wine_snapshot;
-              const wineName = (snap.name as string) || 'Untitled Wine';
-              const vintage = snap.vintage ? ` ${snap.vintage}` : '';
-              const producer = snap.producer as string | undefined;
-              return (
-                <Pressable
-                  key={item.id}
-                  style={[styles.sharedItem, !item.seen && styles.sharedItemUnread]}
-                  onPress={() => handleSharedWinePress(item)}
-                >
-                  <View style={styles.sharedItemLeft}>
-                    <Text style={styles.sharedWineName}>{wineName}{vintage}</Text>
-                    {producer ? (
-                      <Text style={styles.sharedWineProducer}>{producer}</Text>
-                    ) : null}
-                    <Text style={styles.sharedFrom}>from {item.sender_name}</Text>
-                  </View>
-                  <View style={styles.sharedItemRight}>
-                    {!item.seen && <View style={styles.unreadDot} />}
-                    <Text style={styles.sharedChevron}>›</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
         )}
 
         {/* Recent Wines */}
@@ -512,81 +443,5 @@ const styles = StyleSheet.create({
   gridCell: {
     flex: 1,
     minWidth: 240,
-  },
-
-  // Shared with Me
-  sharedSection: {
-    marginBottom: Spacing.xl,
-  },
-  sharedTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  unreadBadge: {
-    backgroundColor: Colors.gold,
-    borderRadius: Radius.full,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadBadgeText: {
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 11,
-    color: Colors.ink,
-  },
-  sharedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    ...Shadows.sm,
-  },
-  sharedItemUnread: {
-    borderColor: Colors.gold,
-    backgroundColor: Colors.goldPale,
-  },
-  sharedItemLeft: {
-    flex: 1,
-    gap: 2,
-  },
-  sharedWineName: {
-    fontFamily: Fonts.playfair,
-    fontSize: 15,
-    color: Colors.ink,
-    lineHeight: 20,
-  },
-  sharedWineProducer: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 12,
-    color: Colors.inkMuted,
-  },
-  sharedFrom: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 11,
-    color: Colors.gold,
-    marginTop: 2,
-  },
-  sharedItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.gold,
-  },
-  sharedChevron: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 20,
-    color: Colors.inkFaint,
   },
 });

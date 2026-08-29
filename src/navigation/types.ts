@@ -24,7 +24,6 @@ export type MainStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   WineDetail: { entryId: string };
   ShareCard: { entryId: string };
-  SharedWineDetail: { snapshot: Record<string, unknown>; senderName: string };
   Comparison: undefined;
   Admin: undefined;
   Insights: undefined;

@@ -27,7 +27,7 @@ import { getWineEntry, uploadLabelPhoto } from '@/lib/supabase';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useEntryDraftStore } from '@/stores/entryDraftStore';
-import { ShareWithUserModal } from '@/components/wine/ShareWithUserModal';
+import { ShareSheet } from '@/components/wine/ShareSheet';
 import { LabelPhotoModal, LabelPhoto } from '@/components/wine/LabelPhotoModal';
 import { CurrencyPicker } from '@/components/ui/CurrencyPicker';
 import { getCurrencySymbol } from '@/utils/currency';
@@ -101,7 +101,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
   const { entries, removeEntry, updateEntry } = useWineStore();
   const { isWide } = useResponsive();
-  const { user, profile } = useAuthStore();
+  const { user } = useAuthStore();
   const { loadForEdit } = useEntryDraftStore();
 
   // Use cached store entry immediately — avoids a network round-trip on every open.
@@ -112,7 +112,7 @@ export function WineDetailScreen({ route, navigation }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [shareToast, setShareToast] = useState('');
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
   // ── Log another visit ──────────────────────────────────────────────────────
   const [showVisitForm, setShowVisitForm] = useState(false);
@@ -324,23 +324,6 @@ export function WineDetailScreen({ route, navigation }: Props) {
           {!confirmDelete && (
             <Pressable onPress={handleEditEntry} style={styles.navBtn}>
               <Text style={styles.navBtnText}>Edit</Text>
-            </Pressable>
-          )}
-
-          {/* Share card button */}
-          {!confirmDelete && (
-            <Pressable
-              onPress={() => navigation.navigate('ShareCard', { entryId: entry.id })}
-              style={styles.navBtn}
-            >
-              <Text style={styles.navBtnText}>Card</Text>
-            </Pressable>
-          )}
-
-          {/* Share button */}
-          {!confirmDelete && (
-            <Pressable onPress={handleShare} style={styles.navBtn}>
-              <Text style={styles.shareText}>Share</Text>
             </Pressable>
           )}
 
@@ -635,29 +618,23 @@ export function WineDetailScreen({ route, navigation }: Props) {
           ) : null}
         </View>
 
-        {/* Share buttons at bottom */}
-        <View style={styles.shareButtons}>
-          <Pressable onPress={handleShare} style={styles.shareButton}>
-            <Text style={styles.shareButtonText}>⬆ Share via Text / Email</Text>
-          </Pressable>
-          <Pressable onPress={() => setShowShareModal(true)} style={[styles.shareButton, styles.shareButtonInApp]}>
-            <Text style={[styles.shareButtonText, styles.shareButtonInAppText]}>🍷 Share with App Member</Text>
-          </Pressable>
-        </View>
-
-        <View style={{ height: Spacing.huge }} />
+        <View style={{ height: Spacing.huge * 2 }} />
       </ScrollView>
 
-      {/* In-app share modal */}
-      {user && (
-        <ShareWithUserModal
-          visible={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          entry={entry}
-          senderId={user.id}
-          senderName={profile?.display_name ?? profile?.email ?? 'A member'}
-        />
-      )}
+      {/* Fixed bottom share bar */}
+      <View style={styles.bottomBar}>
+        <Pressable style={styles.bottomBarBtn} onPress={() => setShareSheetOpen(true)}>
+          <Text style={styles.bottomBarBtnText}>⬆ Share</Text>
+        </Pressable>
+      </View>
+
+      <ShareSheet
+        visible={shareSheetOpen}
+        onClose={() => setShareSheetOpen(false)}
+        entry={entry}
+        onShareText={handleShare}
+        onShareWithMember={() => navigation.navigate('ShareCard', { entryId: entry.id })}
+      />
 
       {/* Label photo lightbox */}
       {entry.label_photo_url && (() => {
@@ -708,11 +685,6 @@ const styles = StyleSheet.create({
   navBtnText: {
     fontFamily: Fonts.dmSansRegular,
     fontSize: 16,
-    color: Colors.gold,
-  },
-  shareText: {
-    fontFamily: Fonts.dmSansRegular,
-    fontSize: 15,
     color: Colors.gold,
   },
   deleteText: {
@@ -1057,29 +1029,29 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     backgroundColor: Colors.surfaceAlt,
   },
-  shareButtons: {
-    gap: Spacing.sm,
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 0.5,
+    borderTopColor: Colors.border,
   },
-  shareButton: {
-    borderWidth: 1,
-    borderColor: Colors.borderStrong,
+  bottomBarBtn: {
+    backgroundColor: Colors.ink,
     borderRadius: Radius.lg,
     paddingVertical: Spacing.md,
     alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
   },
-  shareButtonInApp: {
-    backgroundColor: Colors.ink,
-    borderColor: Colors.ink,
-  },
-  shareButtonText: {
+  bottomBarBtnText: {
     fontFamily: Fonts.dmSansMedium,
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.gold,
     letterSpacing: 0.3,
-  },
-  shareButtonInAppText: {
-    color: Colors.gold,
   },
   customAromasBlock: {
     backgroundColor: Colors.surfaceAlt,
