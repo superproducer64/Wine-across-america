@@ -2,6 +2,8 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import * as FileSystem from 'expo-file-system';
+import { decode as decodeBase64 } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 
 // ─── Secure Storage Adapter ───────────────────────────────────────────────────
@@ -528,11 +530,9 @@ export async function uploadSommelierCert(
   mimeType?: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    const response = await fetch(fileUri);
-    const blob = await response.blob();
+    const buffer = await readUriAsArrayBuffer(fileUri);
     const resolvedMime =
       mimeType ??
-      blob.type ??
       (fileUri.endsWith('.png') ? 'image/png' : fileUri.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
     const ext =
       resolvedMime === 'image/png' ? 'png'
@@ -542,7 +542,7 @@ export async function uploadSommelierCert(
 
     const { error } = await supabase.storage
       .from('sommelier-certs')
-      .upload(path, blob, { contentType: resolvedMime, upsert: true });
+      .upload(path, buffer, { contentType: resolvedMime, upsert: true });
 
     if (error) return { url: null, error: error.message };
 
@@ -683,22 +683,47 @@ export async function getSommelierCertSignedUrl(
   }
 }
 
+// ─── Local File Upload Helpers ─────────────────────────────────────────────
+// fetch(uri).blob() is unreliable for locally-picked files: on Android the
+// picker can hand back a content:// URI that fetch() can't read at all
+// ("Network request failed"), and on iOS it can resolve to an empty body
+// ("No content provided" from storage). expo-file-system reads the bytes
+// directly instead, which works for file://, content://, and data: URIs.
+async function readUriAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
+  if (uri.startsWith('data:')) {
+    const match = /^data:[^;]+;base64,(.*)$/s.exec(uri);
+    if (!match) throw new Error('Malformed data URI');
+    return decodeBase64(match[1]);
+  }
+  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+  return decodeBase64(base64);
+}
+
+async function localImageToArrayBuffer(uri: string): Promise<{ buffer: ArrayBuffer; ext: string; contentType: string }> {
+  const buffer = await readUriAsArrayBuffer(uri);
+  if (uri.startsWith('data:')) {
+    const mime = /^data:([^;]+);base64,/.exec(uri)?.[1] ?? 'image/jpeg';
+    return { buffer, ext: mime === 'image/png' ? 'png' : 'jpg', contentType: mime };
+  }
+  const extMatch = /\.(\w+)(?:\?.*)?$/.exec(uri);
+  const ext = (extMatch?.[1] || 'jpg').toLowerCase();
+  const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  return { buffer, ext: ext === 'png' ? 'png' : 'jpg', contentType };
+}
+
 // ─── Label Photo Upload ───────────────────────────────────────────────────────
 
 export async function uploadLabelPhoto(
   userId: string,
-  imageDataUrl: string
+  imageUri: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    // Convert data URL to blob
-    const response = await fetch(imageDataUrl);
-    const blob = await response.blob();
-    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    const { buffer, ext, contentType } = await localImageToArrayBuffer(imageUri);
     const path = `${userId}/${Date.now()}.${ext}`;
 
     const { error } = await supabase.storage
       .from('wine-labels')
-      .upload(path, blob, { contentType: blob.type, upsert: false });
+      .upload(path, buffer, { contentType, upsert: false });
 
     if (error) return { url: null, error: error.message };
 
@@ -716,8 +741,7 @@ export async function uploadAvatar(
   imageUri: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
+    const { buffer } = await localImageToArrayBuffer(imageUri);
     // Fixed filename per user (always .jpg regardless of source format) —
     // RLS scopes write access to this folder, and upsert replaces the
     // previous avatar in place at the same path rather than accumulating
@@ -726,7 +750,7 @@ export async function uploadAvatar(
 
     const { error } = await supabase.storage
       .from('avatars')
-      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+      .upload(path, buffer, { contentType: 'image/jpeg', upsert: true });
 
     if (error) return { url: null, error: error.message };
 
@@ -747,13 +771,12 @@ export async function uploadWineCard(
   imageUri: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
+    const { buffer } = await localImageToArrayBuffer(imageUri);
     const path = `${userId}/${entryId}-${Date.now()}.png`;
 
     const { error } = await supabase.storage
       .from('wine-cards')
-      .upload(path, blob, { contentType: 'image/png', upsert: false });
+      .upload(path, buffer, { contentType: 'image/png', upsert: false });
 
     if (error) return { url: null, error: error.message };
 
