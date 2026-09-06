@@ -16,7 +16,6 @@ import { Colors, Fonts, Radius, Spacing } from '@/theme';
 import { useResponsive, SIDEBAR_WIDTH, MAX_CONTENT_WIDTH } from '@/hooks/useResponsive';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { CARD_WIDTH, CARD_HEIGHT } from '@/components/wine/WineCardTemplate';
 import {
   DirectMessage,
   fetchConversationMessages,
@@ -139,7 +138,7 @@ export function MessageDetailScreen() {
                   <View key={m.id} style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
                     <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
                       {m.attachment_url ? (
-                        <Image source={{ uri: m.attachment_url }} style={styles.bubbleImage} resizeMode="cover" />
+                        <Image source={{ uri: m.attachment_url }} style={styles.bubbleImage} resizeMode="contain" />
                       ) : null}
                       {m.content ? (
                         <Text
@@ -294,8 +293,9 @@ const styles = StyleSheet.create({
   },
   bubbleImage: {
     width: 220,
-    aspectRatio: CARD_WIDTH / CARD_HEIGHT,
+    height: 300,
     borderRadius: Radius.md,
+    backgroundColor: Colors.surfaceAlt,
   },
   bubbleTextWithImage: {
     marginTop: 8,

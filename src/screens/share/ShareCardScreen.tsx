@@ -13,7 +13,7 @@ import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors, Fonts, Spacing, Radius } from '@/theme';
-import { WineCardTemplate, CARD_WIDTH, CARD_HEIGHT } from '@/components/wine/WineCardTemplate';
+import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { ShareCardToMemberModal } from '@/components/wine/ShareCardToMemberModal';
 import { useWineStore } from '@/stores/wineStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -24,8 +24,10 @@ import { WineEntry } from '@/types';
 type Props = NativeStackScreenProps<MainStackParamList, 'ShareCard'>;
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 const PREVIEW_WIDTH = Math.min(SCREEN_WIDTH - Spacing.xl * 2, 420);
-const CARD_ASPECT = CARD_WIDTH / CARD_HEIGHT;
+const PREVIEW_HEIGHT = SCREEN_HEIGHT * 0.6;
+const CAPTURE_WIDTH = SCREEN_WIDTH - Spacing.xl * 2;
 
 export function ShareCardScreen({ route, navigation }: Props) {
   const { entryId } = route.params;
@@ -61,59 +63,32 @@ export function ShareCardScreen({ route, navigation }: Props) {
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [externalError, setExternalError] = useState('');
 
-  // Populated by the capture effect below with a function that kicks off the
-  // (buffered) capture as soon as the off-screen template's photo has settled.
-  const photoReadyHandlerRef = useRef<(() => void) | null>(null);
-
   useEffect(() => {
     if (!entry) return;
     let cancelled = false;
-    let captured = false;
     setCapturing(true);
     setCaptureError('');
 
-    const doCapture = async () => {
-      if (captured || cancelled) return;
-      captured = true;
+    (async () => {
+      // The card's label photo (if any) is typically already cached from
+      // being rendered elsewhere on the wine detail page, so this is just a
+      // settle margin for the off-screen copy, not a cold load.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (cancelled) return;
       try {
-        const uri = await captureRef(cardRef, {
-          format: 'png',
-          quality: 1,
-          result: 'tmpfile',
-          width: CARD_WIDTH,
-          height: CARD_HEIGHT,
-        });
+        const uri = await captureRef(cardRef, { format: 'png', quality: 1, result: 'tmpfile' });
         if (!cancelled) setCardUri(uri);
       } catch {
         if (!cancelled) setCaptureError('Could not generate the card image.');
       } finally {
         if (!cancelled) setCapturing(false);
       }
-    };
-
-    // Safety net: if the photo never signals ready (e.g. a network hang),
-    // capture anyway as a best-effort fallback rather than stalling forever.
-    const maxWaitTimer = setTimeout(doCapture, 4000);
-    let settleTimer: ReturnType<typeof setTimeout> | null = null;
-
-    photoReadyHandlerRef.current = () => {
-      clearTimeout(maxWaitTimer);
-      // Give the off-screen template a brief moment to finish laying out
-      // after the image swaps in before snapshotting.
-      settleTimer = setTimeout(doCapture, 50);
-    };
+    })();
 
     return () => {
       cancelled = true;
-      photoReadyHandlerRef.current = null;
-      clearTimeout(maxWaitTimer);
-      if (settleTimer) clearTimeout(settleTimer);
     };
   }, [entry]);
-
-  const handlePhotoReady = () => {
-    photoReadyHandlerRef.current?.();
-  };
 
   const handleShareExternally = async () => {
     if (!cardUri) return;
@@ -167,7 +142,7 @@ export function ShareCardScreen({ route, navigation }: Props) {
       </View>
 
       <View style={styles.previewArea}>
-        <View style={[styles.previewFrame, { width: PREVIEW_WIDTH, height: PREVIEW_WIDTH / CARD_ASPECT }]}>
+        <View style={[styles.previewFrame, { width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT }]}>
           {cardUri ? (
             <Image source={{ uri: cardUri }} style={styles.previewImage} resizeMode="contain" />
           ) : (
@@ -180,10 +155,10 @@ export function ShareCardScreen({ route, navigation }: Props) {
         {captureError ? <Text style={styles.errorText}>{captureError}</Text> : null}
       </View>
 
-      {/* Off-screen, full-resolution instance used only as the capture target. */}
+      {/* Off-screen instance used only as the capture target — same card style used for "Share on Social". */}
       <View style={styles.offscreen} pointerEvents="none">
-        <View ref={cardRef} collapsable={false}>
-          <WineCardTemplate key={entry.id} entry={entry} onReady={handlePhotoReady} />
+        <View ref={cardRef} collapsable={false} style={{ width: CAPTURE_WIDTH }}>
+          <VivinoStyleCard key={entry.id} entry={entry} />
         </View>
       </View>
 
