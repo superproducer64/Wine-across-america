@@ -1785,38 +1785,24 @@ git commit -m "Render wine card attachments in message bubbles and inbox preview
 
 **Files:** none (manual QA pass — this repo has no e2e harness).
 
-- [ ] **Step 1: Real-data render check**
+> **2026-09-06 update:** After Tasks 1–9 shipped, client review determined the card design should be `VivinoStyleCard` (existing wine-detail card: Playfair Display / DM Sans, star rating, style-axis sliders, food pairings, variable height) rather than the `WineCardTemplate` this task was originally written against (Fraunces / Work Sans, fixed 1080×1920 canvas, PAA-score layout). `ShareCardScreen` and `ShareSheet`'s "Share on Social" both now capture `VivinoStyleCard`. Steps 3 and 4 below are written for the old template and no longer apply as stated — see the strikethrough notes. `WineCardTemplate.tsx` itself is unused but left in place.
 
-On a device or simulator, open a wine entry that has: a producer, vintage, region, `technical_score` > 0, at least 4 `aromas_l2` descriptors, a `label_photo_url`, `grapes`, `tasting_date`, and `location_name`. Tap "Card". Confirm every field on the card matches that entry's real data (no lorem ipsum / sample data).
+- [x] **Step 1: Real-data render check** — confirmed via TestFlight (build 50): card fields (price, wine name, star rating, technical score, style sliders, pairings, flags) match real entry data.
 
 - [ ] **Step 2: Missing-field graceful omission check**
 
-Open a second wine entry with no `label_photo_url` and no `grape_blends`/`grapes`. Tap "Card". Confirm the card renders without a photo slot and without a grape/varietal segment in the tier-3 row — no broken image, no crash, no empty gap left behind.
+Open a wine entry with no `label_photo_url` and no `grape_blends`/`grapes`. Confirm the card renders without a photo slot and without a grape/varietal segment — no broken image, no crash, no empty gap left behind. *(Not yet verified.)*
 
-- [ ] **Step 3: Font rendering check**
+- [ ] ~~**Step 3: Font rendering check**~~ — moot: card is now `VivinoStyleCard`, which intentionally uses the app's default Playfair Display / DM Sans, not Fraunces/Work Sans.
 
-On the Card screen, zoom into the captured preview image (pinch or the OS's own image viewer if you export it) and confirm the wine name and PAA score render in Fraunces (a serif display face, not a fallback sans-serif), and supporting text renders in Work Sans — not Playfair Display / DM Sans (the app's default pair).
+- [ ] ~~**Step 4: Resolution check**~~ — moot: `VivinoStyleCard` has no fixed 1080px-wide canvas; it captures at the device's natural preview width. Re-scope if a minimum export resolution is still wanted for the new design.
 
-- [ ] **Step 4: Resolution check**
+- [x] **Step 5: External share check** — confirmed via TestFlight (build 50): "Share on Social" opens Instagram Stories with the correct `VivinoStyleCard` image attached.
 
-Export the card via "Share externally" → save to Photos/Files, then check the saved image's pixel dimensions (e.g. via the Photos app's info panel or `expo-image-manipulator`'s `manipulateAsync` with no-op options and inspecting the result). Confirm it is at least 1080px wide.
+- [x] **Step 6: In-app share check** — confirmed via TestFlight (build 50): "Send to PAA member" sends successfully with the correct card design ("Send to members is also correct").
 
-- [ ] **Step 5: External share check**
+- [x] **Step 7: Privacy check** — confirmed via screenshot: no username/display name/handle appears on the rendered card image itself.
 
-Tap "Share externally". Confirm the native OS share sheet opens with the card image attached, and Instagram appears as a destination (if installed) and successfully receives the image when selected.
+- [ ] **Step 8: Cross-platform check** — iOS confirmed above; Android not yet re-verified against the current build (the photo-upload fix was confirmed on Android earlier, but not this card design specifically).
 
-- [ ] **Step 6: In-app share check**
-
-Tap "Send to PAA member". Search for a second test account's email, select it, optionally add a note, and send. Confirm: no error banner; the success message appears; then, as the recipient, open Inbox and confirm the conversation preview shows either the note text or "📷 Wine card", and opening the conversation shows the card image rendered as a bubble at a readable size.
-
-- [ ] **Step 7: Privacy check**
-
-Confirm no username, display name, or handle belonging to the sender appears anywhere on the rendered card image itself (the messaging UI around it, e.g. "Sharing card for…", is expected to show it — only the card image must stay anonymous).
-
-- [ ] **Step 8: Cross-platform check**
-
-Repeat Steps 1, 2, 5, and 6 on both an iOS and an Android device/simulator.
-
-- [ ] **Step 9: Final commit**
-
-If any of the above steps required fixes, commit them individually with descriptive messages as you go. Once all steps pass, this feature is complete — no separate commit is needed for this task itself.
+- [ ] **Step 9: Final commit** — fixes for this pass landed in `67546ee`, `fff9f37`, `f732dcb` on `claude/pour-across-america-app-WUTLG`. Remaining open items above (Step 2, Step 8) still need a pass before this task can be closed.
