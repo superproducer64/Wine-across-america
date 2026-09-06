@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { Colors, Fonts, Radius, Spacing, Shadows } from '@/theme';
 import { WineEntry } from '@/types';
-import { WineCardTemplate, CARD_WIDTH, CARD_HEIGHT } from '@/components/wine/WineCardTemplate';
+import { VivinoStyleCard } from '@/components/wine/VivinoStyleCard';
 import { shareToInstagramStoriesOrFallback } from '@/utils/instagramShare';
 
 interface Props {
@@ -13,6 +13,9 @@ interface Props {
   onShareText: () => void;
   onShareWithMember: () => void;
 }
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CAPTURE_WIDTH = SCREEN_WIDTH - Spacing.xl * 2;
 
 export function ShareSheet({ visible, onClose, entry, onShareText, onShareWithMember }: Props) {
   const cardRef = useRef<View>(null);
@@ -29,60 +32,27 @@ export function ShareSheet({ visible, onClose, entry, onShareText, onShareWithMe
     onShareWithMember();
   };
 
-  const photoReadyRef = useRef(false);
-  const pendingCaptureRef = useRef<(() => void) | null>(null);
-
-  const handlePhotoReady = () => {
-    photoReadyRef.current = true;
-    pendingCaptureRef.current?.();
-    pendingCaptureRef.current = null;
-  };
-
-  const handleShareOnSocial = () => {
+  const handleShareOnSocial = async () => {
     setSocialError('');
     setSharingSocial(true);
-
-    const doCapture = async () => {
-      try {
-        const uri = await captureRef(cardRef, {
-          format: 'png',
-          quality: 1,
-          width: CARD_WIDTH,
-          height: CARD_HEIGHT,
-        });
-        const shared = await shareToInstagramStoriesOrFallback(uri);
-        setSharingSocial(false);
-        if (shared) {
-          onClose();
-        } else {
-          setSocialError('Sharing is not available on this device.');
-        }
-      } catch (err) {
-        console.warn('Share on Social failed:', err);
-        setSharingSocial(false);
-        setSocialError('Could not share the card. Please try again.');
+    try {
+      // The card is already rendered on-screen elsewhere on this page, so its
+      // label photo (if any) is typically already cached — this settle delay
+      // is just a safety margin for the off-screen copy, not a cold load.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const uri = await captureRef(cardRef, { format: 'png', quality: 1 });
+      const shared = await shareToInstagramStoriesOrFallback(uri);
+      setSharingSocial(false);
+      if (shared) {
+        onClose();
+      } else {
+        setSocialError('Sharing is not available on this device.');
       }
-    };
-
-    if (photoReadyRef.current) {
-      doCapture();
-      return;
+    } catch (err) {
+      console.warn('Share on Social failed:', err);
+      setSharingSocial(false);
+      setSocialError('Could not share the card. Please try again.');
     }
-
-    // Photo hasn't signalled ready yet (rare — the card is normally already
-    // mounted by the time this button is reachable). Wait for it, with a
-    // safety net in case the signal never arrives (e.g. a network hang).
-    let captured = false;
-    const runOnce = () => {
-      if (captured) return;
-      captured = true;
-      doCapture();
-    };
-    const maxWaitTimer = setTimeout(runOnce, 4000);
-    pendingCaptureRef.current = () => {
-      clearTimeout(maxWaitTimer);
-      setTimeout(runOnce, 50);
-    };
   };
 
   return (
@@ -119,10 +89,10 @@ export function ShareSheet({ visible, onClose, entry, onShareText, onShareWithMe
         </Pressable>
       </Pressable>
 
-      {/* Off-screen capture target — same finished card used by "Send to PAA member". */}
+      {/* Off-screen capture target — the original wine card, unmodified. */}
       <View style={styles.offscreen} pointerEvents="none">
-        <View ref={cardRef} collapsable={false}>
-          <WineCardTemplate entry={entry} onReady={handlePhotoReady} />
+        <View ref={cardRef} collapsable={false} style={{ width: CAPTURE_WIDTH }}>
+          <VivinoStyleCard entry={entry} />
         </View>
       </View>
     </Modal>
