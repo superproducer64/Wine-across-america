@@ -170,13 +170,6 @@ export function ScoreSlider({
 
         {highLabel ? <Text style={styles.anchor}>{highLabel}</Text> : null}
       </View>
-
-      {(lowLabel || highLabel) && (
-        <View style={styles.anchorsRow}>
-          {lowLabel ? <Text style={styles.anchorLabel}>{lowLabel}</Text> : <View />}
-          {highLabel ? <Text style={styles.anchorLabel}>{highLabel}</Text> : <View />}
-        </View>
-      )}
     </View>
   );
 }
@@ -289,15 +282,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.inkMuted,
     flexShrink: 1,
-  },
-  anchorsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  anchorLabel: {
-    fontFamily: Fonts.dmSans,
-    fontSize: 10,
-    color: Colors.inkFaint,
   },
 });
