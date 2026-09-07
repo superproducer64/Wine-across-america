@@ -19,28 +19,24 @@ function StarRating({ score }: { score: number }) {
   const starValue = (score / 100) * 5;
   const rounded = Math.round(starValue * 2) / 2; // round to nearest 0.5
   const display = rounded.toFixed(1);
-  const stars = [1, 2, 3, 4, 5];
+  const fillPercent = Math.min(Math.max((rounded / 5) * 100, 0), 100);
 
   return (
     <View style={starStyles.row}>
       <Text style={starStyles.number}>{display}</Text>
-      <View style={starStyles.stars}>
-        {stars.map((s) => {
-          const filled = rounded >= s;
-          const half = !filled && rounded >= s - 0.5;
-          return (
-            <Text
-              key={s}
-              style={[
-                starStyles.star,
-                filled && starStyles.starFilled,
-                half && starStyles.starHalf,
-              ]}
-            >
-              {filled ? '★' : half ? '⯨' : '☆'}
-            </Text>
-          );
-        })}
+      <View style={starStyles.starsWrap}>
+        <View style={starStyles.stars}>
+          {[1, 2, 3, 4, 5].map((s) => (
+            <Text key={s} style={starStyles.star}>☆</Text>
+          ))}
+        </View>
+        <View style={[starStyles.starsOverlay, { width: `${fillPercent}%` }]}>
+          <View style={starStyles.stars}>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Text key={s} style={[starStyles.star, starStyles.starFilled]}>★</Text>
+            ))}
+          </View>
+        </View>
       </View>
       <Text style={starStyles.outOf}>/ 5.0</Text>
     </View>
@@ -60,19 +56,25 @@ const starStyles = StyleSheet.create({
     color: Colors.ink,
     lineHeight: 32,
   },
+  starsWrap: {
+    position: 'relative',
+    paddingTop: 2,
+  },
   stars: {
     flexDirection: 'row',
     gap: 2,
-    paddingTop: 2,
+  },
+  starsOverlay: {
+    position: 'absolute',
+    top: 2,
+    left: 0,
+    overflow: 'hidden',
   },
   star: {
     fontSize: 18,
     color: Colors.border,
   },
   starFilled: {
-    color: Colors.gold,
-  },
-  starHalf: {
     color: Colors.gold,
   },
   outOf: {
