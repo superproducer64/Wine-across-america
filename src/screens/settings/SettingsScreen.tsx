@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -27,6 +28,7 @@ import {
   updateUserProfile,
   uploadAvatar,
   fetchUnreadMessageCount,
+  deleteOwnAccount,
 } from '@/lib/supabase';
 import { MainStackParamList } from '@/navigation/types';
 
@@ -35,6 +37,9 @@ export function SettingsScreen() {
   const { user, profile, signOut, loadProfile, setProfile } = useAuthStore();
   const { isSubscribed } = useSubscriptionStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [showUpgradeInfo, setShowUpgradeInfo] = useState(false);
   const [showSommelierApply, setShowSommelierApply] = useState(false);
   const [certDataUrl, setCertDataUrl] = useState<string | null>(null);
@@ -162,6 +167,17 @@ export function SettingsScreen() {
     } finally {
       setAvatarUploading(false);
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    const { error } = await deleteOwnAccount();
+    setDeleting(false);
+    if (error) {
+      Alert.alert('Something Went Wrong', "We couldn't delete your account. Please check your connection and try again.");
+      return;
+    }
+    await signOut();
   };
 
   const roleBadge = isSommelierApproved
@@ -541,6 +557,73 @@ export function SettingsScreen() {
             style={styles.signOutBtn}
           />
         )}
+
+        {/* Danger Zone — Account Deletion (Apple Guideline 5.1.1(v)) */}
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+
+          {confirmDelete ? (
+            <View style={styles.deleteConfirmBox}>
+              <Text style={styles.confirmTitle}>Delete your account?</Text>
+              <Text style={styles.confirmSub}>This permanently deletes:</Text>
+              <View style={styles.deleteList}>
+                {[
+                  'All tasting notes and wine entries',
+                  'Messages and shared wine cards',
+                  'Your sommelier certification status',
+                  'Your profile and account',
+                ].map((item) => (
+                  <View key={item} style={styles.deleteListItem}>
+                    <Text style={styles.deleteListDot}>·</Text>
+                    <Text style={styles.deleteListText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {isSubscribed && (
+                <Text style={styles.subscriptionWarning}>
+                  This does not cancel your subscription. Manage or cancel it separately in
+                  iPhone Settings → [Your Name] → Subscriptions.
+                </Text>
+              )}
+
+              <Text style={styles.deleteTypeLabel}>Type DELETE to confirm</Text>
+              <TextInput
+                style={styles.deleteInput}
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder="DELETE"
+                placeholderTextColor={Colors.inkMuted}
+              />
+
+              <View style={styles.confirmActions}>
+                <Button
+                  label="Cancel"
+                  onPress={() => { setConfirmDelete(false); setDeleteConfirmText(''); }}
+                  variant="secondary"
+                  style={styles.confirmBtn}
+                />
+                <Button
+                  label="Delete My Account"
+                  onPress={handleDeleteAccount}
+                  variant="destructive"
+                  loading={deleting}
+                  disabled={deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                  style={styles.confirmBtn}
+                />
+              </View>
+            </View>
+          ) : (
+            <Button
+              label="Delete Account"
+              onPress={() => setConfirmDelete(true)}
+              variant="destructive"
+              style={styles.deleteAccountBtn}
+            />
+          )}
+        </View>
       </View>
       </ScrollView>
     </SafeAreaView>
@@ -1077,4 +1160,60 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   confirmBtn: { flex: 1 },
+  dangerZone: {
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(220,53,69,0.2)',
+    gap: Spacing.md,
+  },
+  dangerZoneTitle: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: Colors.red,
+    opacity: 0.7,
+  },
+  deleteAccountBtn: {
+    borderColor: Colors.red,
+  },
+  deleteConfirmBox: {
+    backgroundColor: 'rgba(220,53,69,0.05)',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.red,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  deleteList: { gap: 4, marginVertical: 4 },
+  deleteListItem: { flexDirection: 'row', gap: 8 },
+  deleteListDot: { color: Colors.red, fontSize: 16, lineHeight: 20 },
+  deleteListText: { fontFamily: Fonts.dmSans, fontSize: 13, color: Colors.ink, flex: 1 },
+  subscriptionWarning: {
+    fontFamily: Fonts.dmSans,
+    fontSize: 12,
+    color: '#996800',
+    backgroundColor: 'rgba(255,193,7,0.1)',
+    padding: Spacing.sm,
+    borderRadius: Radius.sm,
+    lineHeight: 17,
+  },
+  deleteTypeLabel: {
+    fontFamily: Fonts.dmSansMedium,
+    fontSize: 12,
+    color: Colors.inkMuted,
+    marginTop: Spacing.sm,
+  },
+  deleteInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    fontFamily: Fonts.dmSans,
+    fontSize: 14,
+    color: Colors.ink,
+    letterSpacing: 1,
+  },
 });

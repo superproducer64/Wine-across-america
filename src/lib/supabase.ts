@@ -206,6 +206,13 @@ export async function updateUserPassword(newPassword: string): Promise<{ error: 
   return { error: error?.message ?? null };
 }
 
+// ─── Account Deletion ─────────────────────────────────────────────────────────
+
+export async function deleteOwnAccount(): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc('delete_own_account');
+  return { error: error?.message ?? null };
+}
+
 // ─── Invites ──────────────────────────────────────────────────────────────────
 
 // Excludes 0/O and 1/I/L — avoids ambiguity when a code is read off a shared
