@@ -57,10 +57,24 @@ export async function analyzeWineLabelWithAI(imageUri: string, backImageUri?: st
   }
 
   const prompt = `You are a wine expert. Analyze this wine label image and extract the following information.
+
+IMPORTANT — distinguishing "name" from "producer":
+- "producer" is always the winery/brand name (e.g. "La Terre", "Château Margaux", "Kendall-Jackson").
+- "name" is the wine's own product identity — a proprietary cuvée/vineyard name if one exists
+  (e.g. "Reserve", "Estate Blend", "Grand Vin"), OR the grape varietal if the wine has no
+  proprietary name beyond its varietal (e.g. "Chardonnay", "Cabernet Sauvignon", "Pinot Noir").
+- Do NOT repeat the producer/brand name in "name". If the only identifying text is the brand
+  name itself with no varietal or cuvée name visible, use the varietal from the grapes you
+  detect, or leave "name" empty rather than duplicating the producer.
+- Example 1 (estate wine): producer="Château Margaux", name="Château Margaux" (the estate name
+  IS the product name for this style — this is the correct exception).
+- Example 2 (varietal wine): producer="La Terre", name="Chardonnay" (NOT "La Terre" — that
+  belongs in producer only).
+
 Return ONLY valid JSON with these exact keys (use null or empty string/array if not found):
 {
-  "name": "wine name (e.g. Château Margaux, Barolo Riserva, etc.)",
-  "producer": "winery or producer name",
+  "name": "the wine's own product name — proprietary cuvée name, or the grape varietal if no cuvée name exists",
+  "producer": "winery or producer/brand name",
   "vintage": 2019,
   "country": "country of origin (full name e.g. France, Italy, United States)",
   "region": "wine region (e.g. Bordeaux, Tuscany, Napa Valley)",
